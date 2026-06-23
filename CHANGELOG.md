@@ -24,6 +24,14 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.27.0 - 2026-06-23
+
+### Changed
+- Overridden Git Flow for this repository: `main` is the only long-lived branch; no `develop` branch exists or should be created.
+- All branch families (`feature/*`, `release/*`, `hotfix/*`) now base from `main` and target `main`.
+- Updated preflight merge check to use `origin/main` instead of `origin/develop`.
+- Removed back-merge requirements to `develop` from `release/*` and `hotfix/*` PR targets.
+
 ## 1.26.0 - 2026-06-23
 
 ### Added
