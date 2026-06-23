@@ -24,6 +24,17 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.29.0 - 2026-06-23
+
+### Added
+- Added `--profile` flag to `scripts/sync-agent-guidelines.py` with five options: `minimal`, `library`, `app`, `game`, and `full` (default). Allows syncing only the files relevant to the target project type.
+- Added profile selection table to the sync section in `AGENTS.md`.
+
+### Changed
+- Default `--base-branch` changed from `develop` to `main` to match GitHub Flow.
+- "Next steps" message now references the actual base branch instead of hardcoded `develop`.
+- Bumped sync script to v1.6.0, pack reference to v1.29.0.
+
 ## 1.28.0 - 2026-06-23
 
 ### Changed
