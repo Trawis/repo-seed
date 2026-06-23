@@ -64,6 +64,8 @@ Add examples for common usage.
 - [`docs/tsd-template.md`](docs/tsd-template.md) — Technical Specification Document template
 - [`docs/gdd-template.md`](docs/gdd-template.md) — Game Design Document template
 - [`docs/ci-cd-guidelines.md`](docs/ci-cd-guidelines.md) — CI/CD and workflow automation guidance
+- [`docs/architecture-template.md`](docs/architecture-template.md) — architecture documentation template
+- [`docs/user-guide-template.md`](docs/user-guide-template.md) — user guide template for GUI and client-facing apps
 - [`scripts/sync-agent-guidelines.py`](scripts/sync-agent-guidelines.py) — sync this pack from `repo-seed` into other repositories
 - [`.agent-guidelines-version`](.agent-guidelines-version) — synced guideline pack version marker
 

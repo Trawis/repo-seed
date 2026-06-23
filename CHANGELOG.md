@@ -24,6 +24,34 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.28.0 - 2026-06-23
+
+### Changed
+- Restructured Git Workflow section to present Git Flow and GitHub Flow as explicit, documented options with a decision table.
+- Git Flow: `main`/`master` + `develop`/`dev`, with `feature/*`, `release/*`, and `hotfix/*` branch families. Recommended for applications with formal release cycles.
+- GitHub Flow: `main`/`master` only, all work via `feature/*` branches. Recommended for docs, seed/template repos, libraries, and solo projects.
+- This repository uses GitHub Flow.
+- Unified PR target table showing both models.
+
+## 1.27.0 - 2026-06-23
+
+### Changed
+- Overridden Git Flow for this repository: `main` is the only long-lived branch; no `develop` branch exists or should be created.
+- All branch families (`feature/*`, `release/*`, `hotfix/*`) now base from `main` and target `main`.
+- Updated preflight merge check to use `origin/main` instead of `origin/develop`.
+- Removed back-merge requirements to `develop` from `release/*` and `hotfix/*` PR targets.
+
+## 1.26.0 - 2026-06-23
+
+### Added
+- Added `docs/architecture-template.md` for documenting system context, components, tech stack, data flow, design decisions, deployment, integrations, security, and constraints.
+- Added `docs/user-guide-template.md` for GUI and client-facing apps, covering navigation, key workflows, settings, troubleshooting, FAQ, and glossary.
+- Added architecture and user guide guidance in `AGENTS.md`, including when to create and update each document.
+- Added architecture and user guide update checks to the agent completion checklist.
+
+### Fixed
+- Noted missing version 1.20 (skipped, not released) in version history.
+
 ## 1.25.0 - 2026-06-19
 
 ### Added
@@ -79,6 +107,10 @@ Use newest entries first. Do not dump raw git commits here.
 - Set `develop` as the default integration branch, normal PR target, and recommended hosted default branch for Git Flow repositories.
 - Clarified that normal documentation, tests, refactors, chores, and non-emergency bug fixes use `feature/*` branches under strict Git Flow.
 - Renamed the central guideline source example from `project-seed` to `repo-seed`.
+
+## 1.20.0
+
+> Skipped — this version number was not released.
 
 ## 1.19.0 - 2026-06-19
 
