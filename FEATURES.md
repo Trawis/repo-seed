@@ -4,6 +4,8 @@ Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents wh
 
 ## Implemented
 
+- Architecture documentation template (`docs/architecture-template.md`).
+- User guide template for GUI and client-facing apps (`docs/user-guide-template.md`).
 - CI/CD and workflow automation guidance.
 - Comment and summary discipline for code, scripts, PRs, and agent completion notes.
 - Git/PR preflight guidance before creating branches or PRs.

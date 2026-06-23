@@ -2,14 +2,13 @@
 
 Repository-level instructions for AI coding agents.
 
-**Version**: 1.25  
+**Version**: 1.26  
 **Status**: Active  
-**Last Updated**: 2026-06-19
+**Last Updated**: 2026-06-23
 
 **Recent changes**:
-- Added CI/CD and workflow automation guidance.
-- Added CI/CD safety rules for workflow, deployment, and secret changes.
-- Added a lightweight `docs/ci-cd-guidelines.md` reference document.
+- Added architecture documentation template and user guide template for GUI/client-facing apps.
+- Fixed missing version 1.20 entry in version history.
 
 ---
 
@@ -17,11 +16,13 @@ Repository-level instructions for AI coding agents.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.26 | 2026-06-23 | Added architecture documentation template and user guide template for GUI/client-facing apps. |
 | 1.25 | 2026-06-19 | Added CI/CD and workflow automation guidance, safety boundaries, and `docs/ci-cd-guidelines.md`. |
 | 1.24 | 2026-06-19 | Added comment and summary discipline for code, scripts, PRs, and agent completion notes. |
 | 1.23 | 2026-06-19 | Added Git/PR preflight checks, duplicate-work protection, and generic-example guidance. |
 | 1.22 | 2026-06-19 | Renamed the repo-seed sync script to a stable filename and clarified script filename/versioning guidance. |
 | 1.21 | 2026-06-19 | Enforced strict Git Flow branch families and added repo-seed sync workflow/script guidance. |
+| 1.20 | — | Skipped — not released. |
 | 1.19 | 2026-06-19 | Unified branch prefix selection, PR creation/proposal behavior, and fallback PR reporting. |
 | 1.18 | 2026-06-18 | Clarified that single-statement C# guards may omit braces when the statement is on the next line; replaced project-specific terminal examples with generic examples. |
 | 1.17 | 2026-06-18 | Added C# spacing rule requiring a blank line after a completed control block before the next independent statement. |
@@ -324,6 +325,8 @@ Rules:
   - `docs/fsd-template.md`
   - `docs/tsd-template.md`
   - `docs/gdd-template.md`
+  - `docs/architecture-template.md`
+  - `docs/user-guide-template.md`
 
 ---
 
@@ -391,6 +394,34 @@ Suggested structure:
 ## Rejected / Out of Scope
 - 
 ```
+
+### Architecture Documentation
+
+Use `docs/architecture-template.md` as the starting point when a repository needs architecture documentation.
+
+Update architecture docs when changing:
+
+- system components, layers, or service boundaries
+- technology stack or key dependencies
+- data flow, integration points, or external APIs
+- deployment topology or environments
+- authentication/authorization patterns
+- significant design decisions with architectural impact
+
+Keep it factual and current. Do not document planned or aspirational architecture as if it exists.
+
+### User Guide
+
+Use `docs/user-guide-template.md` as the starting point for GUI applications, desktop apps, web apps, or any client-facing product with a user-facing interface.
+
+Create or update the user guide when changing:
+
+- navigation structure, screens, or views
+- key user workflows or task flows
+- settings or configuration accessible to end users
+- visible error messages or troubleshooting steps
+
+Do not write user guide content for internal tools, CLIs, or developer-facing libraries unless the task explicitly requires it.
 
 ### docs/
 
@@ -831,6 +862,8 @@ Before finishing a task, confirm:
 - Format/lint checks were run when configured, or skipped with a clear reason.
 - CI/CD changes were explicitly requested, minimal, and documented, or CI/CD was left untouched.
 - `README.md`, `CHANGELOG.md`, `FEATURES.md`, or `docs/` were updated when the change affected public behavior, setup, commands, features, versioned output, specifications, or documented limitations.
+- Architecture documentation was updated when components, integrations, data flow, deployment, or key design decisions changed.
+- User guide was updated when navigation, workflows, settings, or visible behavior changed in a GUI or client-facing app.
 - `.editorconfig` impact was considered when changing formatting/style conventions.
 - The repository PR template was used when creating or proposing a pull request.
 - Branch family follows strict Git Flow: `feature/*`, `release/*`, or `hotfix/*`.
