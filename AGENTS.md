@@ -2,13 +2,12 @@
 
 Repository-level instructions for AI coding agents.
 
-**Version**: 1.28  
+**Version**: 1.29  
 **Status**: Active  
 **Last Updated**: 2026-06-23
 
 **Recent changes**:
-- Restructured Git Workflow section to present Git Flow and GitHub Flow as explicit options with a decision table.
-- This repository uses GitHub Flow: `main` only, all work via `feature/*` branches.
+- Added profile-based sync (`--profile minimal|library|app|game|full`) so only relevant files are synced per project type.
 
 ---
 
@@ -16,6 +15,7 @@ Repository-level instructions for AI coding agents.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.29 | 2026-06-23 | Added profile-based sync (`--profile minimal|library|app|game|full`) to the sync script. |
 | 1.28 | 2026-06-23 | Restructured Git Workflow: Git Flow and GitHub Flow as explicit options with a decision table; this repository uses GitHub Flow. |
 | 1.27 | 2026-06-23 | Overridden Git Flow for this repository: no `develop` branch, all branches target `main`. |
 | 1.26 | 2026-06-23 | Added architecture documentation template and user guide template for GUI/client-facing apps. |
@@ -261,9 +261,22 @@ Rules:
 Recommended sync command from a target repository:
 
 ```bash
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --dry-run
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target .
+# Dry run first to preview changes
+python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --dry-run --profile <profile>
+
+# Then sync with the appropriate profile
+python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --profile <profile>
 ```
+
+Available profiles:
+
+| Profile | Use for | Files included |
+|---------|---------|---------------|
+| `minimal` | Bare agent config only | AGENTS.md, CLAUDE.md, .editorconfig, PR template |
+| `library` | Libraries, DLLs, packages | Minimal + coding conventions + CI/CD guidelines |
+| `app` | Full applications | Library + FSD/TSD templates, architecture doc, user guide |
+| `game` | Games and mods | Library + GDD template |
+| `full` | Everything (default) | All files |
 
 Recommended branch for syncing this pack into another repository:
 

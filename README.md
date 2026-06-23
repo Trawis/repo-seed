@@ -77,9 +77,11 @@ Core pack rules include instruction strictness levels, Git/PR preflight checks, 
 Use `repo-seed` as the central source repository for this pack, then sync a committed snapshot into each target repository.
 
 ```bash
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target /path/to/target-repo --dry-run
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target /path/to/target-repo
+python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target /path/to/target-repo --dry-run --profile <profile>
+python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target /path/to/target-repo --profile <profile>
 ```
+
+Available profiles: `minimal`, `library`, `app`, `game`, `full` (default).
 
 Routine syncs should use a strict Git Flow branch such as:
 

@@ -4,6 +4,7 @@ Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents wh
 
 ## Implemented
 
+- Profile-based sync (`--profile minimal|library|app|game|full`) for syncing only relevant files per project type.
 - Architecture documentation template (`docs/architecture-template.md`).
 - User guide template for GUI and client-facing apps (`docs/user-guide-template.md`).
 - CI/CD and workflow automation guidance.

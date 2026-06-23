@@ -3,11 +3,21 @@
 Sync agent guideline files from repo-seed into another repository.
 
 This script is intended to run locally from a clean target repository.
-It prepares a strict Git Flow feature branch, copies managed guideline files,
-and stops before commit, push, or PR creation.
+It prepares a feature branch, copies managed guideline files for the
+chosen profile, and stops before commit, push, or PR creation.
+
+Profiles:
+    minimal  Core agent files only (AGENTS.md, CLAUDE.md, .editorconfig, PR template).
+    library  Minimal + coding conventions and CI/CD guidelines. Good for DLLs and packages.
+    app      Library + FSD/TSD templates, architecture doc, and user guide. Good for applications.
+    game     Library + GDD template. Good for games and mods.
+    full     Everything. Default when --profile is not specified.
 
 Examples:
     python /path/to/repo-seed/scripts/sync-agent-guidelines.py --target . --dry-run
+    python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --profile library
+    python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --profile app
+    python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target . --profile game
     python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/repo-seed --target .
 """
 
@@ -23,27 +33,51 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SCRIPT_NAME = "sync-agent-guidelines"
-SCRIPT_VERSION = "1.5.0"
-PACK_VERSION = "1.25.0"
+SCRIPT_VERSION = "1.6.0"
+PACK_VERSION = "1.29.0"
 MANIFEST_FILE = ".agent-guidelines-manifest.json"
 CONFLICT_DIR = ".agent-guidelines-conflicts"
 
-CORE_FILES = [
+_BASE_FILES = [
     "AGENTS.md",
     "CLAUDE.md",
     ".agent-guidelines-version",
     ".editorconfig",
     ".github/pull_request_template.md",
+    "scripts/sync-agent-guidelines.py",
+]
+
+_CONVENTION_FILES = [
     "docs/coding-conventions-csharp.md",
     "docs/coding-conventions-scripts.md",
     "docs/coding-conventions-python.md",
     "docs/coding-conventions-shell.md",
+    "docs/ci-cd-guidelines.md",
+]
+
+_SPEC_FILES = [
     "docs/fsd-template.md",
     "docs/tsd-template.md",
-    "docs/gdd-template.md",
-    "docs/ci-cd-guidelines.md",
-    "scripts/sync-agent-guidelines.py",
+    "docs/architecture-template.md",
+    "docs/user-guide-template.md",
 ]
+
+_GAME_FILES = [
+    "docs/gdd-template.md",
+]
+
+PROFILES: dict[str, list[str]] = {
+    "minimal": _BASE_FILES,
+    "library": _BASE_FILES + _CONVENTION_FILES,
+    "app":     _BASE_FILES + _CONVENTION_FILES + _SPEC_FILES,
+    "game":    _BASE_FILES + _CONVENTION_FILES + _GAME_FILES,
+    "full":    _BASE_FILES + _CONVENTION_FILES + _SPEC_FILES + _GAME_FILES,
+}
+
+DEFAULT_PROFILE = "full"
+
+# Backwards-compatible alias used internally when no profile filtering is needed.
+CORE_FILES = PROFILES["full"]
 
 PROJECT_DOC_TEMPLATES = [
     "README.md",
@@ -338,8 +372,9 @@ def main() -> int:
     parser.add_argument("--source", help="Path to repo-seed / guideline source root. Defaults to the parent of this script's scripts directory.")
     parser.add_argument("--target", default=".", help="Target repository root. Defaults to the current directory.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without switching branches or copying files.")
+    parser.add_argument("--profile", default=DEFAULT_PROFILE, choices=sorted(PROFILES), help=f"File profile to sync. Defaults to '{DEFAULT_PROFILE}'. Choices: {', '.join(sorted(PROFILES))}.")
     parser.add_argument("--branch-name", default=version_branch_name(PACK_VERSION), help="Task branch to create or reuse. Defaults to feature/sync-agent-guidelines-<version>.")
-    parser.add_argument("--base-branch", default="develop", help="Base branch for the sync branch. Defaults to develop.")
+    parser.add_argument("--base-branch", default="main", help="Base branch for the sync branch. Defaults to main.")
     parser.add_argument("--no-branch", action="store_true", help="Do not create/switch branches. Use only when the caller has already prepared the correct branch.")
     parser.add_argument("--skip-fetch", action="store_true", help="Do not run git fetch --all --prune before creating/reusing the sync branch.")
     parser.add_argument("--include-project-docs", action="store_true", help="Also copy README.md, CHANGELOG.md, and FEATURES.md only when missing.")
@@ -376,7 +411,8 @@ def main() -> int:
     if args.skip_editorconfig:
         excluded.add(".editorconfig")
 
-    files = [path for path in CORE_FILES if path not in excluded]
+    files = [path for path in PROFILES[args.profile] if path not in excluded]
+    print(f"profile       {args.profile} ({len(files)} files selected)")
     previous_hashes = read_manifest(target_root)
     new_hashes = dict(previous_hashes)
 
@@ -405,7 +441,7 @@ def main() -> int:
     else:
         print(f"\nSync complete. Files changed or created: {changed}. Conflicts: {conflicts}.")
         print(f"Current/intended branch: {args.branch_name}")
-        print("Next steps: review the diff, resolve conflicts if any, run relevant checks, commit, push, and open a PR to develop.")
+        print(f"Next steps: review the diff, resolve conflicts if any, run relevant checks, commit, push, and open a PR to {args.base_branch}.")
 
     if conflicts:
         print("Conflict files were written under .agent-guidelines-conflicts/ for manual review." if not args.dry_run else "Conflicts would be written under .agent-guidelines-conflicts/.")
