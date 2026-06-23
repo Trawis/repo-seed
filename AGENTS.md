@@ -2,12 +2,13 @@
 
 Repository-level instructions for AI coding agents.
 
-**Version**: 1.27  
+**Version**: 1.28  
 **Status**: Active  
 **Last Updated**: 2026-06-23
 
 **Recent changes**:
-- Overridden Git Flow for this repository: no `develop` branch, all branches base from and target `main`.
+- Restructured Git Workflow section to present Git Flow and GitHub Flow as explicit options with a decision table.
+- This repository uses GitHub Flow: `main` only, all work via `feature/*` branches.
 
 ---
 
@@ -15,6 +16,7 @@ Repository-level instructions for AI coding agents.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.28 | 2026-06-23 | Restructured Git Workflow: Git Flow and GitHub Flow as explicit options with a decision table; this repository uses GitHub Flow. |
 | 1.27 | 2026-06-23 | Overridden Git Flow for this repository: no `develop` branch, all branches target `main`. |
 | 1.26 | 2026-06-23 | Added architecture documentation template and user guide template for GUI/client-facing apps. |
 | 1.25 | 2026-06-19 | Added CI/CD and workflow automation guidance, safety boundaries, and `docs/ci-cd-guidelines.md`. |
@@ -570,11 +572,67 @@ Future convention files can be added for TypeScript, Python applications, Go, Ru
 
 ## Git Workflow
 
-> **Repository override**: This repository does not use a `develop` branch. `main` is the only long-lived branch. All branch families (`feature/*`, `release/*`, `hotfix/*`) base from `main` and target `main`.
+### Choosing a Branching Model
 
-The generic pack default (separate `develop` and `main`) applies when syncing this pack into other repositories. For this repository, use `main` everywhere `develop` is mentioned in the generic rules below.
+Pick the model that matches the repository type. Document the choice in the repository's own `AGENTS.md` or child instruction file.
 
-For small solo/local repositories, keep the same branch families and target rules when possible. If the environment cannot create branches or PRs, report the intended branch name, source branch, target branch, PR title, PR description, and validation summary.
+| Model | Use when |
+|-------|----------|
+| **Git Flow** | Applications with formal release cycles, staging environments, parallel hotfix/feature lanes, or a team that gates `main` as production-only. Requires `main`/`master` + `develop`/`dev` as long-lived branches. |
+| **GitHub Flow** | Docs, seed/template repos, libraries, solo projects, or any repo with a single long-lived branch. All work merges directly to `main`/`master`. |
+
+If the repository does not specify a model, use Git Flow for applications and GitHub Flow for everything else.
+
+---
+
+### Git Flow
+
+Use for applications that need a stable `main`/`master` protected from in-progress work, or that release on a defined schedule.
+
+**Long-lived branches:**
+
+| Branch | Role |
+|--------|------|
+| `main` or `master` | Production/release — only released code lands here. |
+| `develop` or `dev` | Integration — all completed feature work merges here first. |
+
+**Branch families:**
+
+| Family | Base | PR target | Use for |
+|--------|------|-----------|---------|
+| `feature/*` | `develop` | `develop` | All normal work: implementation, docs, tests, refactors, tooling, non-emergency fixes |
+| `release/*` | `develop` | `main` | Release preparation, version bumps, release notes, final stabilization |
+| `hotfix/*` | `main` | `main` | Urgent fixes for production/released code |
+
+After merging a `release/*` or `hotfix/*` into `main`, bring the changes back to `develop` through a separate PR or approved merge.
+
+Do not create `docs/*`, `test/*`, `refactor/*`, `chore/*`, or `bugfix/*` branches. Use `feature/*` for all normal work including documentation, tests, maintenance, and non-emergency fixes.
+
+---
+
+### GitHub Flow
+
+> **This repository uses GitHub Flow.**
+
+Use for docs, seed/template repos, libraries, solo projects, or any repo with no separate staging/integration branch.
+
+**Long-lived branches:**
+
+| Branch | Role |
+|--------|------|
+| `main` or `master` | The only long-lived branch. Serves as both integration and production. |
+
+**Branch families:**
+
+| Family | Base | PR target | Use for |
+|--------|------|-----------|---------|
+| `feature/*` | `main` | `main` | All work: features, fixes, docs, refactors, releases, urgent changes |
+
+There are no `release/*` or `hotfix/*` branches. Cut releases by tagging a commit on `main`. Urgent fixes use a normal `feature/*` branch.
+
+Do not create a `develop` branch in a GitHub Flow repository.
+
+---
 
 ### Git and PR Preflight
 
@@ -600,62 +658,48 @@ gh pr list --state merged --limit 20
 
 Rules:
 
-- Do not create duplicate branches or PRs for work already merged into `main`.
+- Do not create duplicate branches or PRs for work already merged into the integration branch.
 - If an equivalent branch or open PR already exists, update/report that branch/PR instead of creating another one.
-- If the requested change appears already merged into `main`, report that finding and ask before creating a new branch.
+- If the requested change appears already merged, report that finding and ask before creating a new branch.
 - If remote/PR checks cannot be run, state the limitation and continue using the available local Git evidence.
 - Do not assume stale local branch state reflects hosted PR state; fetch/prune first when possible.
 
 ### Long-Lived Branches
 
-- `main` is the only long-lived branch in this repository. It serves as both the integration branch and the production/release branch.
-- There is no `develop` branch. Do not create one.
-- If `main` does not exist and branch setup is part of the task/workflow, create it from the current default branch.
 - Do not delete, rename, or force-push long-lived branches.
-
-### Strict Git Flow Branch Families
-
-Use only these branch families unless a repository-specific `AGENTS.md` explicitly overrides this rule:
-
-| Branch family | Base branch | PR target | Use for |
-|---------------|-------------|-----------|---------|
-| `feature/*` | `main` | `main` | All normal planned work, including implementation, docs, tests, refactors, tooling, and non-emergency fixes |
-| `release/*` | `main` | `main` | Release preparation, version bumps, release notes, final release stabilization |
-| `hotfix/*` | `main` | `main` | Urgent fixes for production/released code |
-
-Do not create `docs/*`, `test/*`, `refactor/*`, `chore/*`, or `bugfix/*` branches in strict Git Flow mode. Use `feature/*` for normal work, even when the change is documentation-only, test-only, maintenance, refactoring, or a non-emergency bug fix.
+- If the primary long-lived branch does not exist and branch setup is part of the task, create it from the current default branch.
+- In Git Flow repositories, do not merge feature work directly to `main`/`master`; route it through `develop`/`dev` first.
+- In GitHub Flow repositories, do not create a `develop` or `dev` branch.
 
 ### Branch Naming
 
-Normal task branches MUST use this pattern:
+All branches use lowercase kebab-case. Do not include dates, usernames, AI/model/tool names, or vague words like `changes`, `updates`, `fixes`, `final`, or `wip` unless they are part of a real issue key or release version.
+
+**Feature branch** (both models):
 
 ```text
 feature/<short-kebab-description>
 ```
 
-Release branches MUST use this pattern:
+**Release branch** (Git Flow only):
 
 ```text
 release/<major>.<minor>.<patch>
 ```
 
-Urgent production hotfix branches MUST use this pattern:
+**Hotfix branch** (Git Flow only):
 
 ```text
 hotfix/<short-kebab-description>
 ```
-
-Use lowercase kebab-case for branch descriptions. Do not include dates, usernames, AI/model/tool names, vague words like `changes`, `updates`, `fixes`, `final`, or `wip`, unless they are part of a real issue key or release version.
 
 Examples:
 
 ```text
 feature/add-order-export
 feature/update-agent-guidelines
-feature/add-order-export-tests
-feature/refactor-order-validation
-feature/sync-agent-guidelines-1-24-0
-release/1.24.0
+feature/sync-agent-guidelines-1-28-0
+release/1.28.0
 hotfix/fix-login-crash
 ```
 
@@ -670,11 +714,14 @@ Every task branch MUST create or propose a pull request. Agents must not randoml
 - Do not bypass branch protection.
 - For local-only or solo experimental repositories where hosted PRs are unavailable, still keep changes isolated on a branch when possible and report the intended PR details.
 
-Default PR targets:
+Default PR targets by model:
 
-- `feature/*` targets `main`.
-- `release/*` targets `main`.
-- `hotfix/*` targets `main`.
+| Model | Branch family | Target |
+|-------|--------------|--------|
+| Git Flow | `feature/*` | `develop` |
+| Git Flow | `release/*` | `main` |
+| Git Flow | `hotfix/*` | `main` |
+| GitHub Flow | `feature/*` | `main` |
 
 PR titles should use a concise imperative phrase without branch prefixes, issue clutter, or AI/model/tool names.
 

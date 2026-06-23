@@ -24,6 +24,15 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.28.0 - 2026-06-23
+
+### Changed
+- Restructured Git Workflow section to present Git Flow and GitHub Flow as explicit, documented options with a decision table.
+- Git Flow: `main`/`master` + `develop`/`dev`, with `feature/*`, `release/*`, and `hotfix/*` branch families. Recommended for applications with formal release cycles.
+- GitHub Flow: `main`/`master` only, all work via `feature/*` branches. Recommended for docs, seed/template repos, libraries, and solo projects.
+- This repository uses GitHub Flow.
+- Unified PR target table showing both models.
+
 ## 1.27.0 - 2026-06-23
 
 ### Changed
