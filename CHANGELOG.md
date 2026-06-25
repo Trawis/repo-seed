@@ -7,7 +7,7 @@ Use newest entries first. Do not dump raw git commits here.
 ## Unreleased
 
 ### Added
-- 
+- Added `.github/workflows/release.yml`: triggers on every push to `main`, reads version from `.agent-guidelines-version`, skips if the release already exists, builds one ZIP per profile (`minimal`, `library`, `app`, `game`, `full`), and creates a tagged GitHub Release with all ZIPs attached.
 
 ### Changed
 - 
