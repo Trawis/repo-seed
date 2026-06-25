@@ -7,26 +7,18 @@ Use newest entries first. Do not dump raw git commits here.
 ## Unreleased
 
 ### Added
-- Added `.github/workflows/release.yml`: triggers on every push to `main`, reads version from `.agent-guidelines-version`, skips if the release already exists, builds one ZIP per profile (`minimal`, `library`, `app`, `game`, `full`), and creates a tagged GitHub Release with all ZIPs attached.
+- Added `ROADMAP.md` with near-term and later direction.
+- Added `.github/ISSUE_TEMPLATE/config.yml` to disable blank issues.
+- Added `docs/coding-conventions-python.md` and `docs/coding-conventions-shell.md` to the Code Conventions reference table in `AGENTS.md`.
+- `release.yml` now imports `PROFILES` from the sync script instead of duplicating the file lists.
 
 ### Changed
-- 
-
-### Fixed
-- 
-
-### Removed
-- 
-
-### Deprecated
-- 
-
-### Security
-- 
+- Moved `Maybe Later` items in `FEATURES.md` from a blank placeholder to tracked entries.
 
 ## 1.30.0 - 2026-06-25
 
 ### Added
+- Added `.github/workflows/release.yml`: triggers on every push to `main`, reads version from `.agent-guidelines-version`, skips if the release already exists, builds one ZIP per profile (`minimal`, `library`, `app`, `game`, `full`), and creates a tagged GitHub Release with all ZIPs attached.
 - Added GitHub issue templates: bug report (`.github/ISSUE_TEMPLATE/bug_report.md`) and feature request (`.github/ISSUE_TEMPLATE/feature_request.md`).
 - Added `docs/coding-conventions-unity.md` covering MonoBehaviour conventions, lifecycle order, serialized fields, component caching, coroutines, physics, tags/layers, events, ScriptableObjects, editor scripts, asset naming, and performance guidance.
 - Unity conventions are included in the `game` and `full` sync profiles.

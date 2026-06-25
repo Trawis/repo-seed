@@ -36,7 +36,8 @@ Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents wh
 
 ## Maybe Later
 
-- 
+- Convention files for TypeScript/JavaScript, Python applications, Go, Rust, Java, mobile, and frontend.
+- Optional provider-specific CI/CD workflow examples.
 
 ## Rejected / Out of Scope
 
