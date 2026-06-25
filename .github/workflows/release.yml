@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: ver
+        run: |
+          VERSION=$(tr -d '[:space:]' < .agent-guidelines-version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.ver.outputs.version }}" &>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build profile ZIPs
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          python3 - <<'EOF'
+          import zipfile
+          from pathlib import Path
+
+          VERSION = Path(".agent-guidelines-version").read_text().strip()
+
+          BASE = [
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".agent-guidelines-version",
+              ".editorconfig",
+              ".github/pull_request_template.md",
+              "scripts/sync-agent-guidelines.py",
+          ]
+          CONVENTIONS = [
+              "docs/coding-conventions-csharp.md",
+              "docs/coding-conventions-scripts.md",
+              "docs/coding-conventions-python.md",
+              "docs/coding-conventions-shell.md",
+              "docs/ci-cd-guidelines.md",
+          ]
+          SPEC = [
+              "docs/fsd-template.md",
+              "docs/tsd-template.md",
+              "docs/architecture-template.md",
+              "docs/user-guide-template.md",
+          ]
+          GAME = [
+              "docs/gdd-template.md",
+              "docs/coding-conventions-unity.md",
+          ]
+
+          PROFILES = {
+              "minimal": BASE,
+              "library": BASE + CONVENTIONS,
+              "app":     BASE + CONVENTIONS + SPEC,
+              "game":    BASE + CONVENTIONS + GAME,
+              "full":    BASE + CONVENTIONS + SPEC + GAME,
+          }
+
+          Path("dist").mkdir(exist_ok=True)
+          for profile, files in PROFILES.items():
+              zip_path = f"dist/agent-guidelines-pack_{profile}_{VERSION}.zip"
+              with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                  for f in files:
+                      p = Path(f)
+                      if p.exists():
+                          zf.write(p, f)
+              print(f"created {zip_path}")
+          EOF
+
+      - name: Create GitHub release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.ver.outputs.version }}" \
+            --title "Agent Guidelines Pack ${{ steps.ver.outputs.version }}" \
+            --generate-notes \
+            dist/*.zip
