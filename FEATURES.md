@@ -4,6 +4,8 @@ Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents wh
 
 ## Implemented
 
+- GitHub issue templates for bug reports and feature requests.
+- Unity/C# coding conventions (`docs/coding-conventions-unity.md`) included in `game` and `full` sync profiles.
 - Profile-based sync (`--profile minimal|library|app|game|full`) for syncing only relevant files per project type.
 - Architecture documentation template (`docs/architecture-template.md`).
 - User guide template for GUI and client-facing apps (`docs/user-guide-template.md`).
