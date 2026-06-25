@@ -2,12 +2,14 @@
 
 Repository-level instructions for AI coding agents.
 
-**Version**: 1.29  
+**Version**: 1.30  
 **Status**: Active  
-**Last Updated**: 2026-06-23
+**Last Updated**: 2026-06-25
 
 **Recent changes**:
-- Added profile-based sync (`--profile minimal|library|app|game|full`) so only relevant files are synced per project type.
+- Added GitHub issue templates (bug report, feature request) under `.github/ISSUE_TEMPLATE/`.
+- Added `docs/coding-conventions-unity.md` for Unity/C# projects.
+- Added Unity conventions to the `game` and `full` sync profiles.
 
 ---
 
@@ -15,6 +17,7 @@ Repository-level instructions for AI coding agents.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.30 | 2026-06-25 | Added GitHub issue templates and `docs/coding-conventions-unity.md`; Unity conventions included in `game` and `full` sync profiles. |
 | 1.29 | 2026-06-23 | Added profile-based sync (`--profile minimal|library|app|game|full`) to the sync script. |
 | 1.28 | 2026-06-23 | Restructured Git Workflow: Git Flow and GitHub Flow as explicit options with a decision table; this repository uses GitHub Flow. |
 | 1.27 | 2026-06-23 | Overridden Git Flow for this repository: no `develop` branch, all branches target `main`. |
@@ -564,6 +567,7 @@ Detailed code conventions live in separate files so this root `AGENTS.md` stays 
 Use repository-specific convention files first. If no more specific convention exists, use these defaults:
 
 - C#/.NET: `docs/coding-conventions-csharp.md`
+- Unity/C#: `docs/coding-conventions-unity.md` (extends the C#/.NET conventions)
 - Shell/Python scripts: `docs/coding-conventions-scripts.md`
 - CI/CD and workflow automation: `docs/ci-cd-guidelines.md`
 
