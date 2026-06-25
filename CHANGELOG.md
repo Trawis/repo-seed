@@ -24,6 +24,16 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.30.0 - 2026-06-25
+
+### Added
+- Added GitHub issue templates: bug report (`.github/ISSUE_TEMPLATE/bug_report.md`) and feature request (`.github/ISSUE_TEMPLATE/feature_request.md`).
+- Added `docs/coding-conventions-unity.md` covering MonoBehaviour conventions, lifecycle order, serialized fields, component caching, coroutines, physics, tags/layers, events, ScriptableObjects, editor scripts, asset naming, and performance guidance.
+- Unity conventions are included in the `game` and `full` sync profiles.
+
+### Changed
+- Bumped sync script pack reference to v1.30.0.
+
 ## 1.29.0 - 2026-06-23
 
 ### Added

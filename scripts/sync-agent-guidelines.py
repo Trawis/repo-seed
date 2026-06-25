@@ -34,7 +34,7 @@ from pathlib import Path
 
 SCRIPT_NAME = "sync-agent-guidelines"
 SCRIPT_VERSION = "1.6.0"
-PACK_VERSION = "1.29.0"
+PACK_VERSION = "1.30.0"
 MANIFEST_FILE = ".agent-guidelines-manifest.json"
 CONFLICT_DIR = ".agent-guidelines-conflicts"
 
@@ -64,6 +64,7 @@ _SPEC_FILES = [
 
 _GAME_FILES = [
     "docs/gdd-template.md",
+    "docs/coding-conventions-unity.md",
 ]
 
 PROFILES: dict[str, list[str]] = {
