@@ -7,13 +7,22 @@ Use newest entries first. Do not dump raw git commits here.
 ## Unreleased
 
 ### Added
-- Added `ROADMAP.md` with near-term and later direction.
-- Added `.github/ISSUE_TEMPLATE/config.yml` to disable blank issues.
-- Added `docs/coding-conventions-python.md` and `docs/coding-conventions-shell.md` to the Code Conventions reference table in `AGENTS.md`.
-- `release.yml` now imports `PROFILES` from the sync script instead of duplicating the file lists.
+- 
 
 ### Changed
-- Moved `Maybe Later` items in `FEATURES.md` from a blank placeholder to tracked entries.
+- 
+
+### Fixed
+- 
+
+### Removed
+- 
+
+### Deprecated
+- 
+
+### Security
+- 
 
 ## 1.30.0 - 2026-06-25
 
