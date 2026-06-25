@@ -38,47 +38,17 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         run: |
           python3 - <<'EOF'
+          import importlib.util
           import zipfile
           from pathlib import Path
 
+          spec = importlib.util.spec_from_file_location("sync", "scripts/sync-agent-guidelines.py")
+          mod = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+
           VERSION = Path(".agent-guidelines-version").read_text().strip()
-
-          BASE = [
-              "AGENTS.md",
-              "CLAUDE.md",
-              ".agent-guidelines-version",
-              ".editorconfig",
-              ".github/pull_request_template.md",
-              "scripts/sync-agent-guidelines.py",
-          ]
-          CONVENTIONS = [
-              "docs/coding-conventions-csharp.md",
-              "docs/coding-conventions-scripts.md",
-              "docs/coding-conventions-python.md",
-              "docs/coding-conventions-shell.md",
-              "docs/ci-cd-guidelines.md",
-          ]
-          SPEC = [
-              "docs/fsd-template.md",
-              "docs/tsd-template.md",
-              "docs/architecture-template.md",
-              "docs/user-guide-template.md",
-          ]
-          GAME = [
-              "docs/gdd-template.md",
-              "docs/coding-conventions-unity.md",
-          ]
-
-          PROFILES = {
-              "minimal": BASE,
-              "library": BASE + CONVENTIONS,
-              "app":     BASE + CONVENTIONS + SPEC,
-              "game":    BASE + CONVENTIONS + GAME,
-              "full":    BASE + CONVENTIONS + SPEC + GAME,
-          }
-
           Path("dist").mkdir(exist_ok=True)
-          for profile, files in PROFILES.items():
+          for profile, files in mod.PROFILES.items():
               zip_path = f"dist/agent-guidelines-pack_{profile}_{VERSION}.zip"
               with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
                   for f in files:

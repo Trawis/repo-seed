@@ -568,7 +568,9 @@ Use repository-specific convention files first. If no more specific convention e
 
 - C#/.NET: `docs/coding-conventions-csharp.md`
 - Unity/C#: `docs/coding-conventions-unity.md` (extends the C#/.NET conventions)
-- Shell/Python scripts: `docs/coding-conventions-scripts.md`
+- Shell scripts: `docs/coding-conventions-shell.md`
+- Python scripts: `docs/coding-conventions-python.md`
+- Shell/Python shared rules: `docs/coding-conventions-scripts.md`
 - CI/CD and workflow automation: `docs/ci-cd-guidelines.md`
 
 Rules:
