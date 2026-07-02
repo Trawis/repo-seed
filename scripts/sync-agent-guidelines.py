@@ -33,8 +33,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SCRIPT_NAME = "sync-agent-guidelines"
-SCRIPT_VERSION = "1.6.0"
-PACK_VERSION = "1.30.0"
+SCRIPT_VERSION = "1.7.0"
+PACK_VERSION = "1.31.0"
 MANIFEST_FILE = ".agent-guidelines-manifest.json"
 CONFLICT_DIR = ".agent-guidelines-conflicts"
 
@@ -81,9 +81,9 @@ DEFAULT_PROFILE = "full"
 CORE_FILES = PROFILES["full"]
 
 PROJECT_DOC_TEMPLATES = [
-    "README.md",
-    "CHANGELOG.md",
-    "FEATURES.md",
+    ("docs/readme-template.md", "README.md"),
+    ("docs/changelog-template.md", "CHANGELOG.md"),
+    ("docs/features-template.md", "FEATURES.md"),
 ]
 
 
@@ -341,27 +341,28 @@ def sync_managed_file(
     return SyncAction(relative_path, "dry-run" if dry_run else "copied", "would update" if dry_run else "updated")
 
 
-def sync_project_doc_template(source_root: Path, target_root: Path, relative_path: str, force: bool, dry_run: bool) -> SyncAction:
-    rel = validate_relative_path(relative_path)
-    source = source_root / rel
-    target = target_root / rel
+def sync_project_doc_template(source_root: Path, target_root: Path, source_relative_path: str, target_relative_path: str, force: bool, dry_run: bool) -> SyncAction:
+    source_rel = validate_relative_path(source_relative_path)
+    target_rel = validate_relative_path(target_relative_path)
+    source = source_root / source_rel
+    target = target_root / target_rel
 
     if not source.exists():
-        return SyncAction(relative_path, "missing-source", "source file does not exist")
+        return SyncAction(target_relative_path, "missing-source", "source file does not exist")
 
     if target.exists() and not force:
-        return SyncAction(relative_path, "skipped", "project document already exists; use --force-project-docs to overwrite")
+        return SyncAction(target_relative_path, "skipped", "project document already exists; use --force-project-docs to overwrite")
 
     if target.exists() and file_hash(source) == file_hash(target):
-        return SyncAction(relative_path, "unchanged", "target already matches source")
+        return SyncAction(target_relative_path, "unchanged", "target already matches source")
 
     if dry_run:
         reason = "would overwrite project doc" if target.exists() else "would create project doc"
-        return SyncAction(relative_path, "dry-run", reason)
+        return SyncAction(target_relative_path, "dry-run", reason)
 
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
-    return SyncAction(relative_path, "copied", "project document copied")
+    return SyncAction(target_relative_path, "copied", "project document copied")
 
 
 def version_branch_name(pack_version: str) -> str:
@@ -378,7 +379,7 @@ def main() -> int:
     parser.add_argument("--base-branch", default="main", help="Base branch for the sync branch. Defaults to main.")
     parser.add_argument("--no-branch", action="store_true", help="Do not create/switch branches. Use only when the caller has already prepared the correct branch.")
     parser.add_argument("--skip-fetch", action="store_true", help="Do not run git fetch --all --prune before creating/reusing the sync branch.")
-    parser.add_argument("--include-project-docs", action="store_true", help="Also copy README.md, CHANGELOG.md, and FEATURES.md only when missing.")
+    parser.add_argument("--include-project-docs", action="store_true", help="Also copy docs/readme-template.md, docs/changelog-template.md, and docs/features-template.md to README.md, CHANGELOG.md, and FEATURES.md only when missing.")
     parser.add_argument("--force-project-docs", action="store_true", help="Overwrite README.md, CHANGELOG.md, and FEATURES.md when --include-project-docs is used.")
     parser.add_argument("--skip-editorconfig", action="store_true", help="Do not sync .editorconfig.")
     parser.add_argument("--exclude", action="append", default=[], help="Relative file path to exclude from syncing. May be passed multiple times.")
@@ -422,9 +423,9 @@ def main() -> int:
         actions.append(sync_managed_file(source_root, target_root, relative_path, previous_hashes, new_hashes, args.dry_run))
 
     if args.include_project_docs:
-        for relative_path in PROJECT_DOC_TEMPLATES:
-            if relative_path not in excluded:
-                actions.append(sync_project_doc_template(source_root, target_root, relative_path, args.force_project_docs, args.dry_run))
+        for source_relative_path, target_relative_path in PROJECT_DOC_TEMPLATES:
+            if target_relative_path not in excluded:
+                actions.append(sync_project_doc_template(source_root, target_root, source_relative_path, target_relative_path, args.force_project_docs, args.dry_run))
 
     actions.append(write_manifest(target_root, new_hashes, args.dry_run))
 
