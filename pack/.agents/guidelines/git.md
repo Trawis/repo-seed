@@ -4,15 +4,17 @@
 
 **Sync destination**: `.agents/guidelines/git.md`
 
-## Select the Repository Model
+## Select the Target Branch
 
 Follow the repository's project-specific instructions first.
 
-- GitHub Flow uses one long-lived `main` or `master` branch. Normal work uses `feature/*` and targets the long-lived branch.
-- Git Flow uses `main` plus `develop`. Normal work uses `feature/*` and targets `develop`; releases and urgent production fixes use repository-approved release or hotfix branches.
-- When no model is documented, prefer GitHub Flow for libraries, documentation, templates, and solo repositories; use Git Flow only for applications that clearly maintain a separate integration branch.
+For normal work:
 
-Do not create a `develop` branch in a GitHub Flow repository.
+1. Target `develop` when it exists.
+2. Otherwise target `dev` when it exists.
+3. Otherwise target `main` or `master`.
+
+Do not create a missing integration branch as a side effect of ordinary work. Use release or hotfix branches only when the repository explicitly documents them.
 
 ## Preflight
 

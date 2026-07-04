@@ -420,24 +420,34 @@ def ensure_base_branch(target_root: Path, base_branch: str) -> list[str]:
     return [f"created {base_branch} from current HEAD because no local or origin branch was found"]
 
 
+def preferred_base_branch(target_root: Path) -> str:
+    for branch_name in ("develop", "dev", "main", "master"):
+        if branch_exists(target_root, branch_name) or remote_branch_exists(target_root, branch_name):
+            return branch_name
+    current = run_git(target_root, "branch", "--show-current", check=False).stdout.strip()
+    return current or "main"
+
+
 def prepare_branch(
     target_root: Path,
     branch_name: str,
-    base_branch: str,
+    requested_base_branch: str | None,
     dry_run: bool,
     no_branch: bool,
     skip_fetch: bool,
-) -> list[str]:
+) -> tuple[list[str], str]:
     if no_branch:
-        return ["branch creation skipped because --no-branch was used"]
+        base_branch = requested_base_branch or preferred_base_branch(target_root)
+        return ["branch creation skipped because --no-branch was used"], base_branch
     if not is_git_repo(target_root):
         raise RuntimeError("Target is not a Git repository. Initialize Git or use --no-branch explicitly.")
     status = run_git(target_root, "status", "--porcelain").stdout.strip()
     if status:
         raise RuntimeError(f"Target working tree has uncommitted changes:\n{status}")
     if dry_run:
+        base_branch = requested_base_branch or preferred_base_branch(target_root)
         fetch_text = "" if skip_fetch else "fetch/prune remotes, then "
-        return [f"dry-run: would {fetch_text}create or reuse branch {branch_name} from {base_branch}"]
+        return [f"dry-run: would {fetch_text}create or reuse branch {branch_name} from {base_branch}"], base_branch
 
     messages: list[str] = []
     if not skip_fetch:
@@ -447,6 +457,7 @@ def prepare_branch(
         else:
             message = result.stderr.strip() or result.stdout.strip() or "git fetch failed"
             messages.append(f"remote fetch/prune failed: {message}")
+    base_branch = requested_base_branch or preferred_base_branch(target_root)
     messages.extend(ensure_base_branch(target_root, base_branch))
     if branch_exists(target_root, branch_name):
         switch_branch(target_root, branch_name)
@@ -454,7 +465,7 @@ def prepare_branch(
     else:
         create_branch(target_root, branch_name, base_branch)
         messages.append(f"created task branch {branch_name} from {base_branch}")
-    return messages
+    return messages, base_branch
 
 
 def default_source_root() -> Path:
@@ -477,7 +488,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--profile", help="Profile from pack-manifest.json. Defaults to its default_profile.")
     parser.add_argument("--dry-run", action="store_true", help="Show changes without switching branches or writing files.")
     parser.add_argument("--branch-name", help="Task branch. Defaults to feature/sync-agent-guidelines-<version>.")
-    parser.add_argument("--base-branch", default="main", help="Base branch for the sync branch. Defaults to main.")
+    parser.add_argument("--base-branch", help="Base branch override. Defaults to develop/dev when present, otherwise main/master.")
     parser.add_argument("--no-branch", action="store_true", help="Do not create or switch branches.")
     parser.add_argument("--skip-fetch", action="store_true", help="Do not fetch/prune remotes before branch preparation.")
     parser.add_argument("--scaffold-project-files", action="store_true", help="Create missing project-owned files for the selected profile.")
@@ -510,7 +521,7 @@ def main() -> int:
 
     branch_name = args.branch_name or version_branch_name(manifest.pack_version)
     try:
-        branch_messages = prepare_branch(
+        branch_messages, base_branch = prepare_branch(
             target_root,
             branch_name,
             args.base_branch,
@@ -589,7 +600,7 @@ def main() -> int:
         print(f"Conflict files {location} {CONFLICT_DIR}/.")
     if not args.dry_run:
         print(f"Current/intended branch: {branch_name}")
-        print(f"Next steps: review the diff, run relevant checks, commit, push, and open a PR to {args.base_branch}.")
+        print(f"Next steps: review the diff, run relevant checks, commit, push, and open a PR to {base_branch}.")
     return 1 if conflicts or invalid_templates else 0
 
 

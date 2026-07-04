@@ -7,6 +7,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -79,6 +80,20 @@ class ManifestTests(unittest.TestCase):
                 if asset.role == "template" and asset.scaffold_group == "project"
             }
             self.assertEqual(actual, expected)
+
+    def test_templates_sync_without_renaming(self):
+        templates = [asset for asset in self.manifest.assets if asset.role == "template"]
+        for asset in templates:
+            with self.subTest(asset=asset.asset_id):
+                self.assertEqual(asset.source, asset.target)
+        github_sources = {asset.source for asset in templates if asset.scaffold_group == "github"}
+        self.assertEqual(
+            github_sources,
+            {
+                "docs/templates/.github/bug-report.template.md",
+                "docs/templates/.github/feature-request.template.md",
+            },
+        )
 
     def test_manifest_rejects_unsafe_paths(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -232,6 +247,17 @@ class TemplateTests(unittest.TestCase):
 
 
 class ManagedFileTests(unittest.TestCase):
+    def test_preferred_base_branch_uses_develop_before_main(self):
+        existing = {"develop", "main"}
+        with patch.object(sync, "branch_exists", side_effect=lambda _, name: name in existing):
+            with patch.object(sync, "remote_branch_exists", return_value=False):
+                self.assertEqual(sync.preferred_base_branch(REPOSITORY_ROOT), "develop")
+
+    def test_preferred_base_branch_falls_back_to_main(self):
+        with patch.object(sync, "branch_exists", side_effect=lambda _, name: name == "main"):
+            with patch.object(sync, "remote_branch_exists", return_value=False):
+                self.assertEqual(sync.preferred_base_branch(REPOSITORY_ROOT), "main")
+
     def test_local_managed_edit_creates_conflict(self):
         manifest = sync.load_pack_manifest(REPOSITORY_ROOT)
         asset = next(asset for asset in manifest.assets if asset.asset_id == "agent-instructions")

@@ -196,8 +196,8 @@
     },
     {
       "id": "github-bug-template",
-      "source": "docs/templates/github/bug-report.template.md",
-      "target": "docs/templates/github/bug-report.template.md",
+      "source": "docs/templates/.github/bug-report.template.md",
+      "target": "docs/templates/.github/bug-report.template.md",
       "role": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
       "scaffold_group": "github",
@@ -205,8 +205,8 @@
     },
     {
       "id": "github-feature-template",
-      "source": "docs/templates/github/feature-request.template.md",
-      "target": "docs/templates/github/feature-request.template.md",
+      "source": "docs/templates/.github/feature-request.template.md",
+      "target": "docs/templates/.github/feature-request.template.md",
       "role": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
       "scaffold_group": "github",

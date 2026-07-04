@@ -22,6 +22,8 @@ Use newest entries first. Do not dump raw git commits here.
 - Moved managed supporting guidance and conventions under target `.agents/`.
 - Moved all reference templates under `docs/templates/`; live non-root project documentation now belongs under `docs/project/`.
 - Made template and scaffold selection profile-specific.
+- Kept managed template filenames and relative structure unchanged during sync, including GitHub references under `docs/templates/.github/`.
+- Changed automatic branch selection to prefer existing `develop`/`dev` branches and fall back to `main`/`master`.
 - Made obsolete managed-file cleanup hash-safe for migrations and profile reductions.
 - Changed release packaging and version discovery to consume the manifest.
 - Bumped the pack and sync script to 2.0.0 for the breaking layout and CLI changes.

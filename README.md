@@ -76,6 +76,8 @@ Routine sync:
 - updates reference templates without rewriting live project documents;
 - reports template-review warnings without failing.
 
+When branch creation is enabled, the sync script bases work on an existing `develop` or `dev` branch first and falls back to `main` or `master` only when no integration branch exists. `--base-branch` remains available as an explicit override.
+
 ## Release Bundles
 
 Build all self-contained profile archives:

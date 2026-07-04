@@ -103,10 +103,7 @@ Load applicable managed conventions:
 
 Follow the branching model documented in `.agents/project.md`, a child `AGENTS.md`, or repository documentation.
 
-When no model is documented:
-
-- prefer GitHub Flow for libraries, documentation, templates, and solo repositories;
-- use Git Flow only when the application clearly maintains a separate integration branch.
+For normal work, target an existing `develop` or `dev` integration branch first. Target `main` or `master` only when no integration branch exists. Do not create a missing integration branch as a side effect of ordinary work.
 
 Normal work uses `feature/<short-kebab-description>`. Branch names, commits, PR text, changelog entries, and release notes must describe the work and must not contain assistant, model, or tool names.
 

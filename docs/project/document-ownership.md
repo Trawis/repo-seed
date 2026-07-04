@@ -53,9 +53,10 @@ Root `AGENTS.md` contains essential rules directly. It requires agents to read o
 
 - Template filenames end in `.template.md`.
 - Visible template metadata states the role and scaffold destination.
-- Sync copies the labeled template into target `docs/templates/`.
+- Sync copies each labeled template to the same relative path and filename under target `docs/templates/`; it is not renamed.
+- Future template changes continue syncing into that managed reference copy.
 - Agents must not edit target templates.
-- Scaffolding removes template-only metadata and adds a hidden asset ID and content hash.
+- Scaffolding separately copies the template body to its proper project structure, removes template-only metadata, and adds a hidden asset ID and content hash.
 - Existing scaffold destinations are always preserved.
 - When a template hash changes, sync prints a review warning and exits successfully.
 - Agents update live documents only when relevant to their task; they acknowledge a completed review by updating the hidden provenance hash.

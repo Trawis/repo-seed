@@ -33,12 +33,10 @@ Do not use a root repository document as a sync source.
 
 ## Git Workflow
 
-This repository uses GitHub Flow:
-
-- `main` is the only long-lived branch.
-- Use `feature/<short-kebab-description>` for all work.
-- Target pull requests to `main`.
-- Do not create `develop`, `release/*`, or `hotfix/*` branches.
+- Use `feature/<short-kebab-description>` for normal work.
+- Target `develop` or `dev` when either integration branch exists.
+- Target `main` or `master` only when no integration branch exists.
+- Do not create a missing integration branch as a side effect of ordinary work.
 
 ## Relevant Conventions
 

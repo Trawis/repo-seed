@@ -39,7 +39,7 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 - [ ] Git/PR preflight checked remote state, open PRs, and recently merged PRs where available
 - [ ] Work was done on a task branch
 - [ ] Branch name follows `feature/<short-kebab-description>`
-- [ ] PR targets `main`
+- [ ] PR targets `develop`/`dev` when present; otherwise `main`/`master`
 - [ ] No auto-merge requested/performed
 - [ ] No branch protection bypass requested/performed
 
