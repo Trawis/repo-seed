@@ -5,6 +5,4 @@ Scaffold destination: .gitignore
 Sync behavior after scaffolding: Project-owned; never updated by routine sync
 <!-- repo-seed-template:end -->
 
-__pycache__/
-*.py[cod]
-dist/
+.agent-guidelines-conflicts/

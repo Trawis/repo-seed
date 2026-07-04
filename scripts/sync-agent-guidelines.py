@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SCRIPT_NAME = "sync-agent-guidelines"
-SCRIPT_VERSION = "2.0.0"
+SCRIPT_VERSION = "2.0.1"
 PACK_MANIFEST_FILE = "pack-manifest.json"
 STATE_FILE = ".agent-guidelines-manifest.json"
 CONFLICT_DIR = ".agent-guidelines-conflicts"
@@ -492,7 +492,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-branch", action="store_true", help="Do not create or switch branches.")
     parser.add_argument("--skip-fetch", action="store_true", help="Do not fetch/prune remotes before branch preparation.")
     parser.add_argument("--scaffold-project-files", action="store_true", help="Create missing project-owned files for the selected profile.")
-    parser.add_argument("--include-project-docs", action="store_true", help="Deprecated alias for --scaffold-project-files.")
+    parser.add_argument("--include-project-docs", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--scaffold-github-templates", action="store_true", help="Create missing generic GitHub issue templates.")
     parser.add_argument("--skip-editorconfig", action="store_true", help="Do not sync .editorconfig.")
     parser.add_argument("--exclude", action="append", default=[], help="Managed or scaffold target to exclude. May be repeated.")

@@ -23,15 +23,24 @@
 
 ## Planned
 
-- Optional provider-specific CI/CD examples after concrete project needs are known.
-- Additional profile-specific conventions when real repositories demonstrate the need.
+- No additional features are planned during 2.0 stabilization.
 
 ## Maybe Later
 
+- Non-mutating synchronization check mode.
+- JSON Schema validation for `pack-manifest.json`.
+- Release archive checksums.
+- A project-specific agent-instructions template.
+- Additional profiles and convention families.
+- Splitting conventions when real target repositories show context problems.
 - A dedicated template-review acknowledgement command if manual provenance updates prove error-prone.
+- Separating Git branch preparation from file synchronization.
+- Reconsidering whether `.editorconfig` should be managed or scaffolded.
+- Provider-specific CI/CD examples after concrete project needs are known.
 
 ## Rejected / Out of Scope
 
 - Routine synchronization of project-owned documentation.
 - Automatic merging of template changes into live project documentation.
 - Automatic commits, pushes, pull requests, or merges.
+- A separate roadmap that duplicates feature state.

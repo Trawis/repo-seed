@@ -8,6 +8,18 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 2.0.1 - 2026-07-04
+
+### Changed
+
+- Reduced the generic gitignore scaffold to pack-owned conflict artifacts only.
+- Removed the deprecated project-doc alias from normal CLI and README documentation while retaining compatibility.
+- Consolidated deferred ideas in `docs/project/features.md` to keep 2.0 stabilization feature-frozen.
+
+### Fixed
+
+- Prevented Python and release-output ignore rules from leaking into unrelated target repositories.
+
 ## 2.0.0 - 2026-07-04
 
 ### Added
