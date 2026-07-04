@@ -10,10 +10,10 @@ Use newest entries first. Do not dump raw git commits here.
 - 
 
 ### Changed
-- 
+- Renamed generated GitHub releases from `Agent Guidelines Pack <version>` to `Documentation Bundle <version>`.
 
 ### Fixed
-- 
+- Fixed profile ZIP creation failing while dynamically importing the sync script's dataclass definitions.
 
 ### Removed
 - 
