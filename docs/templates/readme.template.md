@@ -1,14 +1,20 @@
 # Project Name
 
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+
+**Template source**: `docs/templates/readme.template.md`
+
+**Scaffold destination**: `README.md`
+
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
 Short description of what this project does and who it is for.
 
 ## Status
 
 Current status: `planning`, `prototype`, `active`, `maintenance`, or `archived`.
-
-## Features
-
-See [`FEATURES.md`](FEATURES.md) for implemented, planned, maybe-later, and out-of-scope features.
 
 ## Requirements
 
@@ -40,9 +46,7 @@ Document required runtimes, SDKs, databases, services, tools, or platform requir
 
 ## Configuration
 
-Describe required configuration, environment variables, local settings, and safe defaults.
-
-Do not document real secrets.
+Describe required configuration, environment variables, local settings, and safe defaults. Do not document real secrets.
 
 ## Usage
 
@@ -51,7 +55,6 @@ Add examples for common usage.
 ## Documentation
 
 - [`CHANGELOG.md`](CHANGELOG.md) — version history
-- [`FEATURES.md`](FEATURES.md) — feature state
 
 ## Known Limitations
 

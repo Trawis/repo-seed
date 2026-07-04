@@ -1,10 +1,10 @@
 # C# / .NET Coding Conventions
 
-Detailed C#/.NET conventions for repositories that use this agent guideline pack.
+**Document role**: Managed coding-agent reference
+**Sync destination**: `.agents/conventions/csharp.md`
+**Local editing**: Do not customize this synced copy
 
-**Version**: 1.24  
-**Status**: Active  
-**Last Updated**: 2026-06-19
+Detailed C#/.NET conventions for repositories that use this agent guideline pack.
 
 Use repository-specific conventions first. If the target repository or child `AGENTS.md` defines different C# rules, follow the nearest applicable project rule.
 

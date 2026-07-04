@@ -1,12 +1,12 @@
 # Shell Script Conventions
 
+**Document role**: Managed coding-agent reference
+**Sync destination**: `.agents/conventions/shell.md`
+**Local editing**: Do not customize this synced copy
+
 Shell-specific conventions for standalone scripts.
 
-**Version**: 1.24  
-**Status**: Active  
-**Last Updated**: 2026-06-19
-
-Use this file together with `docs/coding-conventions-scripts.md`.
+Use this file together with `.agents/conventions/scripts.md`.
 
 ---
 

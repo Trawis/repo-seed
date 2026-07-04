@@ -4,11 +4,11 @@
 
 ## Claude Code
 
-**Document role**: `repo-seed` repository-only coding-agent wrapper
+**Document role**: Managed coding-agent wrapper
 
-**Sync behavior**: Never copied into target repositories
+**Sync destination**: `CLAUDE.md`
 
-**Distributed counterpart**: `pack/CLAUDE.md`
+**Local editing**: Keep tool-specific local additions concise
 
 Use the imported `AGENTS.md` as the primary project instruction file.
 

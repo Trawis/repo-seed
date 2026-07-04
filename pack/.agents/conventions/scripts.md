@@ -1,10 +1,10 @@
 # Script Coding Conventions
 
-Shared conventions for standalone automation scripts.
+**Document role**: Managed coding-agent reference
+**Sync destination**: `.agents/conventions/scripts.md`
+**Local editing**: Do not customize this synced copy
 
-**Version**: 1.24  
-**Status**: Active  
-**Last Updated**: 2026-06-19
+Shared conventions for standalone automation scripts.
 
 Use repository-specific script conventions first. If the target repository or child `AGENTS.md` defines different rules, follow the nearest applicable project rule.
 
@@ -21,8 +21,8 @@ These rules apply to standalone utility scripts such as:
 
 Language-specific details live in:
 
-- `docs/coding-conventions-python.md`
-- `docs/coding-conventions-shell.md`
+- `.agents/conventions/python.md`
+- `.agents/conventions/shell.md`
 
 If a script is part of a package/application with its own packaging/versioning system, follow the repository standard and keep script-specific versions consistent with it.
 
@@ -79,7 +79,7 @@ Examples:
 sync-agent-guidelines.py
 backup-photos.py
 cleanup-downloads.sh
-agent-guidelines-pack_1.24.0.zip
+agent-guidelines-pack_2.0.0.zip
 backup-photos_1.1.0.csv
 backup-photos_1.1.0_report.txt
 cleanup-downloads_2.0.0_log.txt

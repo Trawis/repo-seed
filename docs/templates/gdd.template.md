@@ -1,10 +1,17 @@
 # Game Design Document
 
-**Game / Mod / Prototype**: 
-**Feature / Area**: 
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+**Template source**: `docs/templates/gdd.template.md`
+**Scaffold destination**: `docs/project/gdd.md`
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
+**Game / Mod / Prototype**:
+**Feature / Area**:
 **Version**: 0.1.0
 **Status**: Draft
-**Owner**: 
+**Owner**:
 **Last Updated**: YYYY-MM-DD
 
 ---
@@ -15,7 +22,7 @@ Describe the game, mod, mechanic, or prototype in one short paragraph.
 
 ## 2. Design Pillars
 
-- 
+-
 
 ## 3. Target Player and Platform
 
@@ -69,8 +76,8 @@ Document manual playtest steps, expected behavior, telemetry, known edge cases, 
 
 ## 15. Open Questions
 
-- 
+-
 
 ## 16. References
 
-- 
+-

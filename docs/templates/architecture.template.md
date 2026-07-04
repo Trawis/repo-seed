@@ -1,8 +1,15 @@
 # Architecture
 
-**Project**: [Project Name]  
-**Version**: [Version]  
-**Status**: [Draft | Review | Approved]  
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+**Template source**: `docs/templates/architecture.template.md`
+**Scaffold destination**: `docs/project/architecture.md`
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
+**Project**: [Project Name]
+**Version**: [Version]
+**Status**: [Draft | Review | Approved]
 **Last Updated**: [Date]
 
 ---
@@ -101,4 +108,4 @@ Document known technical constraints, capacity limits, or architectural trade-of
 
 Track unresolved architectural questions or decisions pending approval.
 
-- 
+-

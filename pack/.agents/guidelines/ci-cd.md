@@ -1,8 +1,8 @@
 # CI/CD Guidelines
 
-**Version**: 1.25  
-**Status**: Active  
-**Last Updated**: 2026-06-19
+**Document role**: Managed coding-agent reference
+**Sync destination**: `.agents/guidelines/ci-cd.md`
+**Local editing**: Do not customize this synced copy
 
 Use this document when creating or changing CI/CD workflows, build pipelines, release automation, or deployment automation.
 
@@ -37,21 +37,13 @@ Do not add deployment, package publishing, release creation, or secret-dependent
 
 ## Branch and PR Expectations
 
-CI/CD changes follow the same strict Git Flow rules as code changes.
-
-Normal CI/CD work uses:
+Follow the repository's documented branching model. Normal CI/CD work uses a focused feature branch such as:
 
 ```text
 feature/update-ci-validation
 ```
 
-Emergency production pipeline fixes use:
-
-```text
-hotfix/fix-release-workflow
-```
-
-All CI/CD changes should go through PR review. Never auto-merge CI/CD changes.
+Use release or hotfix branches only when the repository explicitly defines them. All CI/CD changes should go through PR review. Never auto-merge CI/CD changes.
 
 ## Validation
 

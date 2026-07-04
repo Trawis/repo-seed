@@ -1,28 +1,50 @@
 # Changelog
 
+**Document role**: `repo-seed` repository documentation
+
+**Sync behavior**: Never copied into target repositories
+
 All meaningful user-facing and developer-facing changes should be documented in this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
-## Unreleased
+## 2.0.0 - 2026-07-04
 
 ### Added
-- 
+- Added `pack-manifest.json` as the shared inventory for sync, profiles, scaffolding, migration, and release bundles.
+- Added focused managed guidance for documentation, Git, and CI/CD work.
+- Added content-hash provenance and non-failing review warnings for scaffolded project documents.
+- Added explicit project-file and GitHub issue-template scaffolding.
+- Added a manifest-driven release-bundle builder and sync regression suite.
 
 ### Changed
-- Renamed generated GitHub releases from `Agent Guidelines Pack <version>` to `Documentation Bundle <version>`.
+- Replaced the oversized distributed `AGENTS.md` with concise, self-contained core rules and task-specific routing.
+- Moved managed supporting guidance and conventions under target `.agents/`.
+- Moved all reference templates under `docs/templates/`; live non-root project documentation now belongs under `docs/project/`.
+- Made template and scaffold selection profile-specific.
+- Kept managed template filenames and relative structure unchanged during sync, including GitHub references under `docs/templates/.github/`.
+- Added a managed gitignore reference template that scaffolds target `.gitignore` only when missing.
+- Clarified that distributed AGENTS/CLAUDE files are always synced from `pack/`, while source root documents are repo-seed-only.
+- Changed automatic branch selection to prefer existing `develop`/`dev` branches and fall back to `main`/`master`.
+- Made obsolete managed-file cleanup hash-safe for migrations and profile reductions.
+- Changed release packaging and version discovery to consume the manifest.
+- Bumped the pack and sync script to 2.0.0 for the breaking layout and CLI changes.
 
 ### Fixed
-- Fixed profile ZIP creation failing while dynamically importing the sync script's dataclass definitions.
+- Repo-seed root documents can no longer be confused with target sync sources.
+- Managed templates no longer overwrite or masquerade as live project documentation.
+- Missing sources, unsafe paths, malformed manifests, invalid templates, and managed conflicts now fail clearly.
+- The distributed pull-request template no longer assumes Git Flow.
 
 ### Removed
-- 
+- Removed the redundant roadmap; future work now lives in `docs/project/features.md`.
+- Removed project-document force overwrite behavior and the temporary `.agents/base.md` design.
 
 ### Deprecated
-- 
+- Deprecated `--include-project-docs` in favor of `--scaffold-project-files`.
 
 ### Security
-- 
+-
 
 ## 1.31.0 - 2026-07-02
 

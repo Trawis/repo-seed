@@ -1,12 +1,12 @@
 # Unity / C# Coding Conventions
 
+**Document role**: Managed coding-agent reference
+**Sync destination**: `.agents/conventions/unity.md`
+**Local editing**: Do not customize this synced copy
+
 Conventions for Unity projects that use this agent guideline pack.
 
-**Version**: 1.0  
-**Status**: Active  
-**Last Updated**: 2026-06-25
-
-These conventions extend `docs/coding-conventions-csharp.md`. Apply both files when working in a Unity project; Unity-specific rules here take precedence over generic C# defaults where they conflict.
+These conventions extend `.agents/conventions/csharp.md`. Apply both files when working in a Unity project; Unity-specific rules here take precedence over generic C# defaults where they conflict.
 
 ---
 

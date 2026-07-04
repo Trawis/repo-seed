@@ -17,10 +17,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate pack
+        run: python3 -m unittest discover -s tests -v
+
       - name: Read version
         id: ver
         run: |
-          VERSION=$(tr -d '[:space:]' < .agent-guidelines-version)
+          VERSION=$(python3 -c "import json; print(json.load(open('pack-manifest.json'))['pack_version'])")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if release already exists
@@ -36,29 +39,7 @@ jobs:
 
       - name: Build profile ZIPs
         if: steps.check.outputs.exists == 'false'
-        run: |
-          python3 - <<'EOF'
-          import importlib.util
-          import sys
-          import zipfile
-          from pathlib import Path
-
-          spec = importlib.util.spec_from_file_location("sync", "scripts/sync-agent-guidelines.py")
-          mod = importlib.util.module_from_spec(spec)
-          sys.modules[spec.name] = mod
-          spec.loader.exec_module(mod)
-
-          VERSION = Path(".agent-guidelines-version").read_text().strip()
-          Path("dist").mkdir(exist_ok=True)
-          for profile, files in mod.PROFILES.items():
-              zip_path = f"dist/agent-guidelines-pack_{profile}_{VERSION}.zip"
-              with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-                  for f in files:
-                      p = Path(f)
-                      if p.exists():
-                          zf.write(p, f)
-              print(f"created {zip_path}")
-          EOF
+        run: python3 scripts/build-release-bundles.py
 
       - name: Create GitHub release
         if: steps.check.outputs.exists == 'false'
