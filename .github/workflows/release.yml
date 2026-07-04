@@ -39,11 +39,13 @@ jobs:
         run: |
           python3 - <<'EOF'
           import importlib.util
+          import sys
           import zipfile
           from pathlib import Path
 
           spec = importlib.util.spec_from_file_location("sync", "scripts/sync-agent-guidelines.py")
           mod = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = mod
           spec.loader.exec_module(mod)
 
           VERSION = Path(".agent-guidelines-version").read_text().strip()
@@ -64,6 +66,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v${{ steps.ver.outputs.version }}" \
-            --title "Agent Guidelines Pack ${{ steps.ver.outputs.version }}" \
+            --title "Documentation Bundle ${{ steps.ver.outputs.version }}" \
             --generate-notes \
             dist/*.zip
