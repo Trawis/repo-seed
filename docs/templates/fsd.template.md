@@ -1,10 +1,17 @@
 # Functional Specification Document
 
-**Project**: 
-**Feature / Area**: 
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+**Template source**: `docs/templates/fsd.template.md`
+**Scaffold destination**: `docs/project/fsd.md`
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
+**Project**:
+**Feature / Area**:
 **Version**: 0.1.0
 **Status**: Draft
-**Owner**: 
+**Owner**:
 **Last Updated**: YYYY-MM-DD
 
 ---
@@ -15,15 +22,15 @@ Describe the user-facing purpose of this feature or product.
 
 ## 2. Goals
 
-- 
+-
 
 ## 3. Non-Goals / Out of Scope
 
-- 
+-
 
 ## 4. Target Users / Personas
 
-- 
+-
 
 ## 5. User Stories / Use Cases
 
@@ -59,12 +66,12 @@ Document platform, browser, OS, version, data, localization, accessibility, or b
 
 ## 12. Acceptance Checklist
 
-- [ ] 
+- [ ]
 
 ## 13. Open Questions
 
-- 
+-
 
 ## 14. References
 
-- 
+-

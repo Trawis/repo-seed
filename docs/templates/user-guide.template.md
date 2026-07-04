@@ -1,8 +1,15 @@
 # User Guide
 
-**Project**: [Project Name]  
-**Version**: [Version]  
-**Audience**: [End users / Role]  
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+**Template source**: `docs/templates/user-guide.template.md`
+**Scaffold destination**: `docs/project/user-guide.md`
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
+**Project**: [Project Name]
+**Version**: [Version]
+**Audience**: [End users / Role]
 **Last Updated**: [Date]
 
 ---
@@ -82,7 +89,7 @@ Common problems and how to resolve them.
 
 ## FAQ
 
-**Q: [Question]**  
+**Q: [Question]**
 A: [Answer]
 
 ---

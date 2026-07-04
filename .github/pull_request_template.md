@@ -1,14 +1,15 @@
 # Pull Request
 
+<!-- Document role: Repo-seed-only pull-request template. Sync behavior: Never copied into targets. -->
 <!-- Do not mention AI assistant/tool/model names in the title, branch name, description, changelog, release notes, or helper text. -->
 
 ## Summary
-- 
+-
 
 Keep the summary concise and factual. Do not add generic filler or mention AI assistant/tool/model names.
 
 ## Changes
-- 
+-
 
 ## Requirements / Spec Alignment
 - [ ] FSD reviewed if provided
@@ -20,7 +21,7 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 ## Documentation
 - [ ] README.md updated if needed
 - [ ] CHANGELOG.md updated if needed
-- [ ] FEATURES.md updated if needed
+- [ ] `docs/project/features.md` updated if needed
 - [ ] docs/ updated if needed
 - [ ] No invented features, claims, screenshots, benchmarks, or compatibility guarantees
 
@@ -37,9 +38,8 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 ## Branching / Merge Safety
 - [ ] Git/PR preflight checked remote state, open PRs, and recently merged PRs where available
 - [ ] Work was done on a task branch
-- [ ] Branch name follows `feature/<short-kebab-description>`, `release/<version>`, or `hotfix/<short-kebab-description>`
-- [ ] Branch family follows strict Git Flow
-- [ ] PR targets the correct Git Flow branch
+- [ ] Branch name follows `feature/<short-kebab-description>`
+- [ ] PR targets `main`
 - [ ] No auto-merge requested/performed
 - [ ] No branch protection bypass requested/performed
 
@@ -48,4 +48,4 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 - [ ] If changed, intended trigger/job/permissions/validation are documented
 
 ## Notes / Risks
-- 
+-

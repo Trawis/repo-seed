@@ -6,6 +6,8 @@ labels: enhancement
 assignees: ''
 ---
 
+<!-- Document role: Repo-seed-only issue template. Sync behavior: Never copied into targets. -->
+
 ## Summary
 
 <!-- One or two sentences describing the proposed addition or change. -->

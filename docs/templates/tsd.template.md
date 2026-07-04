@@ -1,10 +1,17 @@
 # Technical Specification Document
 
-**Project**: 
-**Feature / Area**: 
+<!-- repo-seed-template:start -->
+**Document role**: Managed project-document template
+**Template source**: `docs/templates/tsd.template.md`
+**Scaffold destination**: `docs/project/tsd.md`
+**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+<!-- repo-seed-template:end -->
+
+**Project**:
+**Feature / Area**:
 **Version**: 0.1.0
 **Status**: Draft
-**Owner**: 
+**Owner**:
 **Last Updated**: YYYY-MM-DD
 
 ---
@@ -70,8 +77,8 @@ Document migration, deployment, feature flags, backward compatibility, rollback,
 
 ## 14. Open Questions
 
-- 
+-
 
 ## 15. References
 
-- 
+-

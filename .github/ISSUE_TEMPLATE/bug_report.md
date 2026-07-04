@@ -6,15 +6,17 @@ labels: bug
 assignees: ''
 ---
 
+<!-- Document role: Repo-seed-only issue template. Sync behavior: Never copied into targets. -->
+
 ## Description
 
 <!-- A clear, concise description of the bug. -->
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behavior
 
