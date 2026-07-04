@@ -24,6 +24,15 @@ Use newest entries first. Do not dump raw git commits here.
 ### Security
 - 
 
+## 1.31.0 - 2026-07-02
+
+### Added
+- Added `docs/readme-template.md`, `docs/changelog-template.md`, and `docs/features-template.md`: generic starter content for target repos, copied by `--include-project-docs` in `scripts/sync-agent-guidelines.py`.
+
+### Changed
+- `PROJECT_DOC_TEMPLATES` in `scripts/sync-agent-guidelines.py` now maps each `docs/*-template.md` source to its target root filename (`README.md`, `CHANGELOG.md`, `FEATURES.md`) instead of copying this repo's own root docs. `repo-seed`'s root `README.md`, `CHANGELOG.md`, and `FEATURES.md` describe this pack itself and are no longer used as sync sources.
+- Bumped sync script to v1.7.0, pack reference to v1.31.0.
+
 ## 1.30.0 - 2026-06-25
 
 ### Added

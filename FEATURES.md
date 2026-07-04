@@ -4,6 +4,7 @@ Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents wh
 
 ## Implemented
 
+- Generic starter templates (`docs/readme-template.md`, `docs/changelog-template.md`, `docs/features-template.md`) copied into target repos by `--include-project-docs`, separate from this pack's own root `README.md`/`CHANGELOG.md`/`FEATURES.md`.
 - GitHub issue templates for bug reports and feature requests.
 - Unity/C# coding conventions (`docs/coding-conventions-unity.md`) included in `game` and `full` sync profiles.
 - Profile-based sync (`--profile minimal|library|app|game|full`) for syncing only relevant files per project type.

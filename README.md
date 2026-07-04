@@ -66,6 +66,9 @@ Add examples for common usage.
 - [`docs/ci-cd-guidelines.md`](docs/ci-cd-guidelines.md) — CI/CD and workflow automation guidance
 - [`docs/architecture-template.md`](docs/architecture-template.md) — architecture documentation template
 - [`docs/user-guide-template.md`](docs/user-guide-template.md) — user guide template for GUI and client-facing apps
+- [`docs/readme-template.md`](docs/readme-template.md) — generic starter `README.md` copied into target repos via `--include-project-docs`
+- [`docs/changelog-template.md`](docs/changelog-template.md) — generic starter `CHANGELOG.md` copied into target repos via `--include-project-docs`
+- [`docs/features-template.md`](docs/features-template.md) — generic starter `FEATURES.md` copied into target repos via `--include-project-docs`
 - [`scripts/sync-agent-guidelines.py`](scripts/sync-agent-guidelines.py) — sync this pack from `repo-seed` into other repositories
 - [`.agent-guidelines-version`](.agent-guidelines-version) — synced guideline pack version marker
 
@@ -82,6 +85,8 @@ python /path/to/repo-seed/scripts/sync-agent-guidelines.py --source /path/to/rep
 ```
 
 Available profiles: `minimal`, `library`, `app`, `game`, `full` (default).
+
+Pass `--include-project-docs` to also seed a target repo's `README.md`, `CHANGELOG.md`, and `FEATURES.md` from `docs/readme-template.md`, `docs/changelog-template.md`, and `docs/features-template.md` (only when those files are missing in the target). This repository's own root `README.md`, `CHANGELOG.md`, and `FEATURES.md` document `repo-seed` itself and are never synced.
 
 Routine syncs should use a strict Git Flow branch such as:
 

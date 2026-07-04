@@ -2,14 +2,13 @@
 
 Repository-level instructions for AI coding agents.
 
-**Version**: 1.30  
+**Version**: 1.31  
 **Status**: Active  
-**Last Updated**: 2026-06-25
+**Last Updated**: 2026-07-02
 
 **Recent changes**:
-- Added GitHub issue templates (bug report, feature request) under `.github/ISSUE_TEMPLATE/`.
-- Added `docs/coding-conventions-unity.md` for Unity/C# projects.
-- Added Unity conventions to the `game` and `full` sync profiles.
+- Added `docs/readme-template.md`, `docs/changelog-template.md`, and `docs/features-template.md` as the generic starter content copied by `--include-project-docs`.
+- `repo-seed`'s own root `README.md`, `CHANGELOG.md`, and `FEATURES.md` now describe this pack itself only and are never synced into target repositories.
 
 ---
 
@@ -17,6 +16,7 @@ Repository-level instructions for AI coding agents.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.31 | 2026-07-02 | Split root `README.md`/`CHANGELOG.md`/`FEATURES.md` from their sync starter content; added `docs/readme-template.md`, `docs/changelog-template.md`, `docs/features-template.md`. |
 | 1.30 | 2026-06-25 | Added GitHub issue templates and `docs/coding-conventions-unity.md`; Unity conventions included in `game` and `full` sync profiles. |
 | 1.29 | 2026-06-23 | Added profile-based sync (`--profile minimal|library|app|game|full`) to the sync script. |
 | 1.28 | 2026-06-23 | Restructured Git Workflow: Git Flow and GitHub Flow as explicit options with a decision table; this repository uses GitHub Flow. |
@@ -257,7 +257,7 @@ Rules:
 - Use `repo-seed` as the central source of truth for this generic pack unless a target repository has more specific local rules.
 - Syncing must not auto-commit, auto-push, create a PR, or auto-merge.
 - Syncing should be done on a normal task branch and reviewed through the repository PR workflow.
-- Do not overwrite project-specific `README.md`, `CHANGELOG.md`, or `FEATURES.md` during routine sync unless explicitly requested.
+- Do not overwrite project-specific `README.md`, `CHANGELOG.md`, or `FEATURES.md` during routine sync unless explicitly requested. `--include-project-docs` copies generic starter content from `docs/readme-template.md`, `docs/changelog-template.md`, and `docs/features-template.md` into the target's root `README.md`/`CHANGELOG.md`/`FEATURES.md`, and only when those files are missing. `repo-seed`'s own root `README.md`, `CHANGELOG.md`, and `FEATURES.md` describe this pack itself and are never synced.
 - Do not overwrite child `AGENTS.md` files in subdirectories. Root `AGENTS.md` is the synced baseline; child files remain project/module-specific.
 - Track the synced pack version in `.agent-guidelines-version`.
 
@@ -375,6 +375,8 @@ Update it when changing:
 - screenshots, examples, or usage flows
 - known limitations
 
+When bootstrapping a new repository from `repo-seed`, `docs/readme-template.md` is the generic starting point (see "Syncing This Pack from `repo-seed`").
+
 ### CHANGELOG.md
 
 `CHANGELOG.md` records meaningful user-facing or developer-facing changes.
@@ -386,6 +388,8 @@ Rules:
 - Group entries by `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, and `Security` when useful.
 - Include dates when a release/version is known.
 - For unreleased work, use an `Unreleased` section.
+
+When bootstrapping a new repository from `repo-seed`, `docs/changelog-template.md` is the generic starting point (see "Syncing This Pack from `repo-seed`").
 
 ### FEATURES.md
 
@@ -412,6 +416,8 @@ Suggested structure:
 ## Rejected / Out of Scope
 - 
 ```
+
+When bootstrapping a new repository from `repo-seed`, `docs/features-template.md` is the generic starting point (see "Syncing This Pack from `repo-seed`").
 
 ### Architecture Documentation
 
