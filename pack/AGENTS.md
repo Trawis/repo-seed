@@ -6,7 +6,7 @@ Repository-level instructions for coding agents.
 
 **Sync destination**: `AGENTS.md`
 
-**Version**: 2.0.0
+**Version**: 2.0.1
 
 ---
 

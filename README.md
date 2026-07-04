@@ -6,7 +6,7 @@ Reusable coding-agent guidance and project-document templates with profile-based
 
 **Sync behavior**: Never copied into target repositories
 
-**Pack version**: 2.0.0
+**Pack version**: 2.0.1
 
 ## Ownership Model
 
@@ -77,16 +77,9 @@ python /path/to/repo-seed/scripts/sync-agent-guidelines.py \
   --scaffold-project-files
 ```
 
-Use `--scaffold-github-templates` to create missing generic issue templates. Scaffolding never overwrites existing files. The former `--include-project-docs` option remains as a deprecated alias for one transition release.
+Use `--scaffold-github-templates` to create missing generic issue templates. Scaffolding never overwrites existing files.
 
-Routine sync:
-
-- updates managed files only when their recorded hash proves they were untouched;
-- writes incoming conflicts under `.agent-guidelines-conflicts/`;
-- removes obsolete managed files only when they remain unmodified;
-- protects root project documents and unknown files;
-- updates reference templates without rewriting live project documents;
-- reports template-review warnings without failing.
+Routine sync is hash-protected: local managed-file edits become conflicts, obsolete untouched files may be removed, and project-owned files are preserved. Template changes update the reference copy and may request live-document review without rewriting it. See the ownership document for the complete lifecycle.
 
 When branch creation is enabled, the sync script bases work on an existing `develop` or `dev` branch first and falls back to `main` or `master` only when no integration branch exists. `--base-branch` remains available as an explicit override.
 

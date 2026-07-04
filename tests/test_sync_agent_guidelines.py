@@ -33,7 +33,7 @@ class ManifestTests(unittest.TestCase):
         cls.manifest = sync.load_pack_manifest(REPOSITORY_ROOT)
 
     def test_manifest_is_versioned_and_all_sources_exist(self):
-        self.assertEqual(self.manifest.pack_version, "2.0.0")
+        self.assertEqual(self.manifest.pack_version, "2.0.1")
         self.assertEqual(self.manifest.schema_version, 1)
         self.assertEqual(
             (REPOSITORY_ROOT / ".agent-guidelines-version").read_text(encoding="utf-8").strip(),
@@ -225,6 +225,13 @@ class TemplateTests(unittest.TestCase):
         rendered = sync.render_template(asset, REPOSITORY_ROOT / asset.source)
         self.assertTrue(rendered.startswith("---\nname: Bug report"))
 
+    def test_gitignore_template_is_pack_specific(self):
+        asset = self.assets["gitignore-template"]
+        body = sync.template_body(REPOSITORY_ROOT / asset.source).strip()
+        self.assertEqual(body, ".agent-guidelines-conflicts/")
+        self.assertNotIn("__pycache__", body)
+        self.assertNotIn("dist/", body)
+
     def test_scaffold_never_overwrites_existing_file(self):
         asset = self.assets["features-template"]
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -235,6 +242,16 @@ class TemplateTests(unittest.TestCase):
             action = sync.scaffold_asset(REPOSITORY_ROOT, target_root, asset, dry_run=False)
             self.assertEqual(action.action, "skipped")
             self.assertEqual(target.read_text(encoding="utf-8"), "# Local\n")
+
+    def test_gitignore_scaffold_preserves_existing_project_rules(self):
+        asset = self.assets["gitignore-template"]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_root = Path(temp_dir)
+            target = target_root / ".gitignore"
+            target.write_text("bin/\nobj/\n", encoding="utf-8")
+            action = sync.scaffold_asset(REPOSITORY_ROOT, target_root, asset, dry_run=False)
+            self.assertEqual(action.action, "skipped")
+            self.assertEqual(target.read_text(encoding="utf-8"), "bin/\nobj/\n")
 
     def test_template_drift_is_reported_without_modifying_live_doc(self):
         asset = self.assets["features-template"]
@@ -262,6 +279,24 @@ class ManagedFileTests(unittest.TestCase):
         with patch.object(sync, "branch_exists", side_effect=lambda _, name: name == "main"):
             with patch.object(sync, "remote_branch_exists", return_value=False):
                 self.assertEqual(sync.preferred_base_branch(REPOSITORY_ROOT), "main")
+
+    def test_preferred_base_branch_uses_dev_when_develop_is_absent(self):
+        existing = {"dev", "main"}
+        with patch.object(sync, "branch_exists", side_effect=lambda _, name: name in existing):
+            with patch.object(sync, "remote_branch_exists", return_value=False):
+                self.assertEqual(sync.preferred_base_branch(REPOSITORY_ROOT), "dev")
+
+    def test_explicit_base_branch_overrides_automatic_selection(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, base_branch = sync.prepare_branch(
+                Path(temp_dir),
+                "feature/example",
+                "integration",
+                dry_run=False,
+                no_branch=True,
+                skip_fetch=True,
+            )
+            self.assertEqual(base_branch, "integration")
 
     def test_local_managed_edit_creates_conflict(self):
         manifest = sync.load_pack_manifest(REPOSITORY_ROOT)
@@ -341,6 +376,41 @@ class ManagedFileTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(list(target_root.iterdir()), [])
+
+    def test_deprecated_alias_is_hidden_from_help(self):
+        result = subprocess.run(
+            [sys.executable, str(SYNC_SCRIPT), "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("--include-project-docs", result.stdout)
+
+    def test_deprecated_alias_remains_compatible(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_root = Path(temp_dir)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--source",
+                    str(REPOSITORY_ROOT),
+                    "--target",
+                    str(target_root),
+                    "--profile",
+                    "minimal",
+                    "--no-branch",
+                    "--include-project-docs",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((target_root / "README.md").is_file())
+            self.assertTrue((target_root / "CHANGELOG.md").is_file())
+            self.assertTrue((target_root / ".gitignore").is_file())
 
     def test_cli_migrates_legacy_paths_and_protects_root_docs(self):
         with tempfile.TemporaryDirectory() as temp_dir:
