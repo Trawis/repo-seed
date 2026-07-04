@@ -135,6 +135,15 @@
       "legacy_targets": ["docs/changelog-template.md"]
     },
     {
+      "id": "gitignore-template",
+      "source": "docs/templates/gitignore.template",
+      "target": "docs/templates/gitignore.template",
+      "role": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": ".gitignore"
+    },
+    {
       "id": "features-template",
       "source": "docs/templates/features.template.md",
       "target": "docs/templates/features.template.md",

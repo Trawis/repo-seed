@@ -46,8 +46,13 @@ Root `AGENTS.md` contains essential rules directly. It requires agents to read o
 | `scripts/sync-agent-guidelines.py` | Managed pack | Update if untouched; conflict if locally edited |
 | `README.md` | Target project | Create only when missing and explicitly scaffolded |
 | `CHANGELOG.md` | Target project | Create only when missing and explicitly scaffolded |
+| `.gitignore` | Target project | Create only when missing and explicitly scaffolded |
 | `.agents/project.md` | Target project | Never created, updated, or removed |
 | Any unmapped file | Target project | Untouched |
+
+The repo-seed root `AGENTS.md` and `CLAUDE.md` describe this source repository. Target root files come from `pack/AGENTS.md` and `pack/CLAUDE.md` and are managed on every sync.
+
+`pack-manifest.json` is source/bundle inventory, not a project scaffold. Targets receive `.agent-guidelines-manifest.json`, which records managed hashes and enables safe updates, conflicts, migrations, and profile cleanup.
 
 ## Template Rules
 

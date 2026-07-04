@@ -18,7 +18,19 @@ Reusable coding-agent guidance and project-document templates with profile-based
 | `docs/project/` | Live repo-seed documentation | Never synced |
 | `pack-manifest.json` | Asset, profile, ownership, scaffold, and migration inventory | Drives sync and release bundles |
 
-In target repositories, `README.md`, `CHANGELOG.md`, `.agents/project.md`, and `docs/project/` are project-owned. Managed root `AGENTS.md` contains the essential rules directly and routes specialized work to `.agents/guidelines/` and `.agents/conventions/`.
+Repo-seed’s own root documents are never used as sync sources. Their distributed counterparts are explicit:
+
+| Source | Target | Behavior |
+|---|---|---|
+| `pack/AGENTS.md` | `AGENTS.md` | Always managed and synchronized |
+| `pack/CLAUDE.md` | `CLAUDE.md` | Always managed and synchronized |
+| `docs/templates/readme.template.md` | `README.md` | Scaffold only when missing |
+| `docs/templates/changelog.template.md` | `CHANGELOG.md` | Scaffold only when missing |
+| `docs/templates/gitignore.template` | `.gitignore` | Scaffold only when missing |
+
+In target repositories, `README.md`, `CHANGELOG.md`, `.gitignore`, `.agents/project.md`, and `docs/project/` are project-owned. Managed root `AGENTS.md` contains the essential rules directly and routes specialized work to `.agents/guidelines/` and `.agents/conventions/`.
+
+`pack-manifest.json` belongs to repo-seed and extracted release bundles; it describes source assets. It is not copied into the target as a project file. The sync script instead writes `.agent-guidelines-manifest.json` in the target to track the profile, version, and managed-file hashes required for safe future updates.
 
 See [`docs/project/document-ownership.md`](docs/project/document-ownership.md) for the complete lifecycle.
 
@@ -26,8 +38,8 @@ See [`docs/project/document-ownership.md`](docs/project/document-ownership.md) f
 
 | Profile | Managed guidance | Project templates |
 |---|---|---|
-| `minimal` | Core agent, Git, and documentation guidance | README and changelog |
-| `library` | Minimal + CI/CD and general coding conventions | README and changelog |
+| `minimal` | Core agent, Git, and documentation guidance | README, changelog, and gitignore |
+| `library` | Minimal + CI/CD and general coding conventions | README, changelog, and gitignore |
 | `app` | Library guidance | Core docs + features, architecture, user guide, FSD, TSD |
 | `game` | Library + Unity conventions | Core docs + features and GDD |
 | `full` | All managed guidance | Every project template |

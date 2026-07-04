@@ -46,24 +46,29 @@ class ManifestTests(unittest.TestCase):
     def test_repo_only_documents_are_not_sync_sources(self):
         sources = {asset.source for asset in self.manifest.assets}
         self.assertFalse({"README.md", "CHANGELOG.md", "AGENTS.md", "CLAUDE.md"} & sources)
+        targets = {asset.asset_id: asset.target for asset in self.manifest.assets}
+        self.assertEqual(targets["agent-instructions"], "AGENTS.md")
+        self.assertEqual(targets["claude-wrapper"], "CLAUDE.md")
 
     def test_profiles_have_only_their_document_templates(self):
         expected_project_templates = {
-            "minimal": {"readme-template", "changelog-template"},
-            "library": {"readme-template", "changelog-template"},
+            "minimal": {"readme-template", "changelog-template", "gitignore-template"},
+            "library": {"readme-template", "changelog-template", "gitignore-template"},
             "app": {
                 "readme-template",
                 "changelog-template",
+                "gitignore-template",
                 "features-template",
                 "architecture-template",
                 "user-guide-template",
                 "fsd-template",
                 "tsd-template",
             },
-            "game": {"readme-template", "changelog-template", "features-template", "gdd-template"},
+            "game": {"readme-template", "changelog-template", "gitignore-template", "features-template", "gdd-template"},
             "full": {
                 "readme-template",
                 "changelog-template",
+                "gitignore-template",
                 "features-template",
                 "architecture-template",
                 "user-guide-template",
@@ -465,6 +470,7 @@ class BundleSmokeTests(unittest.TestCase):
                 self.assertFalse((target_root / ".agents/base.md").exists())
                 self.assertTrue((target_root / "README.md").is_file())
                 self.assertTrue((target_root / "CHANGELOG.md").is_file())
+                self.assertTrue((target_root / ".gitignore").is_file())
                 self.assertTrue((target_root / ".github/ISSUE_TEMPLATE/bug_report.md").is_file())
                 actual_docs = {
                     path.name
