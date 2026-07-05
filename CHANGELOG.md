@@ -12,8 +12,8 @@ Use newest entries first. Do not dump raw git commits here.
 
 ### Added
 
-- Added public contribution, security, conduct, licensing, installation, and version 2.x migration guidance.
-- Added pull-request CI for Python 3.10 and 3.14 on Windows, Linux, and macOS.
+- Added public contribution, security, licensing, installation, and version 2.x migration guidance.
+- Added focused pull-request CI on the minimum supported Python version.
 - Added SHA-256 checksums to release artifacts.
 - Added explicit `--scaffold-editorconfig` support.
 
@@ -28,6 +28,7 @@ Use newest entries first. Do not dump raw git commits here.
 - Made `.gitignore` scaffolding preserve `.env.example`.
 - Removed repo-seed's redundant feature document and narrowed ownership and contribution guidance to single responsibilities.
 - Clarified boundaries between feature status, functional, technical, architecture, user, and game-design templates.
+- Reduced pull-request checks and policy boilerplate while retaining functional validation and release checks.
 
 ## 3.0.0 - 2026-07-04
 

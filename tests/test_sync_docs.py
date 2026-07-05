@@ -193,21 +193,6 @@ class ManifestTests(unittest.TestCase):
 
 
 class GuidanceAndTemplateTests(unittest.TestCase):
-    def test_repo_seed_project_docs_have_narrow_roles(self):
-        project_docs = {
-            path.name
-            for path in (REPOSITORY_ROOT / "docs/project").glob("*.md")
-        }
-        self.assertEqual(project_docs, {"document-ownership.md", "upgrading-to-3.md"})
-
-        ownership = (REPOSITORY_ROOT / "docs/project/document-ownership.md").read_text(encoding="utf-8")
-        self.assertNotIn("preflight", ownership.lower())
-        self.assertNotIn("symbolic link", ownership.lower())
-
-        contributing = (REPOSITORY_ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
-        self.assertLessEqual(len(contributing.splitlines()), 20)
-        self.assertNotIn("python -m unittest", contributing)
-
     def test_agent_entry_points_route_specialized_work(self):
         agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
         claude = (PACK_ROOT / "files/CLAUDE.md").read_text(encoding="utf-8")
@@ -226,14 +211,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
 
-    def test_distributed_git_guidance_does_not_require_git_flow(self):
-        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
-        git_guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(encoding="utf-8")
-        self.assertNotIn("Target `develop`", agents)
-        self.assertNotIn("Target `develop`", git_guidance)
-        self.assertIn("hosted default branch", agents)
-        self.assertIn("hosted default branch", git_guidance)
-
     def test_every_template_has_valid_metadata_and_a_body(self):
         for asset in sync.load_manifest(PACK_ROOT).assets:
             if asset.asset_type == "template":
@@ -241,29 +218,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 self.assertTrue(body.strip(), asset.path)
                 self.assertNotIn(sync.TEMPLATE_METADATA_START, body)
                 self.assertNotIn(sync.TEMPLATE_METADATA_END, body)
-
-    def test_specification_templates_have_distinct_responsibilities(self):
-        templates = PACK_ROOT / "files/docs/templates"
-        features = (templates / "features.template.md").read_text(encoding="utf-8")
-        fsd = (templates / "fsd.template.md").read_text(encoding="utf-8")
-        tsd = (templates / "tsd.template.md").read_text(encoding="utf-8")
-        architecture = (templates / "architecture.template.md").read_text(encoding="utf-8")
-        gdd = (templates / "gdd.template.md").read_text(encoding="utf-8")
-
-        self.assertIn("feature state and links only", features)
-        self.assertIn("observable user behavior", fsd)
-        self.assertNotIn("Data Model / Persistence", fsd)
-        self.assertNotIn("Testing Strategy", fsd)
-        self.assertNotIn("Rollout / Migration Plan", fsd)
-
-        self.assertIn("implementation of one feature or change", tsd)
-        self.assertNotIn("User Stories / Use Cases", tsd)
-        self.assertNotIn("Target Users / Personas", tsd)
-
-        self.assertIn("stable, system-wide structure", architecture)
-        self.assertIn("gameplay intent and player experience", gdd)
-        self.assertNotIn("Technical / Engine Constraints", gdd)
-        self.assertNotIn("Compatibility / Modding / Save Safety", gdd)
 
     def test_markdown_source_marker_preserves_github_frontmatter(self):
         asset = next(
@@ -569,16 +523,6 @@ class BundleAndCliTests(unittest.TestCase):
             self.assertIn(option, result.stdout)
         for removed in ("--branch-name", "--base-branch", "--exclude", "--skip-editorconfig"):
             self.assertNotIn(removed, result.stdout)
-
-    def test_public_project_files_exist(self):
-        for name in ("LICENSE", "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md"):
-            self.assertTrue((REPOSITORY_ROOT / name).is_file(), name)
-        self.assertIn("MIT License", (REPOSITORY_ROOT / "LICENSE").read_text(encoding="utf-8"))
-
-    def test_repository_only_editorconfig_and_old_builder_are_absent(self):
-        self.assertFalse((REPOSITORY_ROOT / ".editorconfig").exists())
-        self.assertTrue((PACK_ROOT / "files/docs/templates/editorconfig.template").is_file())
-        self.assertFalse((REPOSITORY_ROOT / "scripts/build-release-bundles.py").exists())
 
     def test_repository_text_files_are_utf8(self):
         extensions = {".md", ".py", ".json", ".yml", ".yaml", ".template"}

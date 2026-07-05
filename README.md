@@ -21,7 +21,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 - a writable target repository directory;
 - Windows, Linux, or macOS.
 
-The scripts use only the Python standard library. CI validates the minimum and current Python versions across all three operating-system families.
+The scripts use only the Python standard library. Pull-request CI validates Python 3.10 on Linux. Run local checks on the target operating system when filesystem behavior matters.
 
 ## Safety
 
@@ -116,6 +116,5 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the assets listed in 
 - [Document ownership](docs/project/document-ownership.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
-- [Code of conduct](CODE_OF_CONDUCT.md)
 
 Repo Seed is available under the [MIT License](LICENSE).
