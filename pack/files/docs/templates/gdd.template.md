@@ -7,71 +7,39 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-**Game / Mod / Prototype**:
-**Feature / Area**:
-**Version**: 0.1.0
+**Game / Feature**:
 **Status**: Draft
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
----
+Define gameplay intent and player experience. Keep engine, code, persistence, integration, and rollout design in a TSD.
 
-Define gameplay intent and player experience here. Put engine, code, persistence, integration, and rollout design in a TSD.
-
-## 1. High Concept
-
-Describe the game, mod, mechanic, or prototype in one short paragraph.
-
-## 2. Design Pillars
+## High Concept and Design Pillars
 
 -
 
-## 3. Target Player and Platform
+## Target Player and Platform
 
-Document target audience, player-facing platform, input method, and session length assumptions.
+Document audience, platform, input method, and expected session length.
 
-## 4. Core Gameplay Loop
+## Core Loop and Rules
 
-Describe the repeated player loop.
+Describe the repeated gameplay loop, actions, constraints, and win or loss conditions.
 
-## 5. Mechanics and Rules
-
-Document gameplay systems, player actions, constraints, win/loss conditions, and rule interactions.
-
-## 6. Progression / Economy / Balance
-
-Document progression, unlocks, rewards, resources, difficulty, pacing, and balancing goals.
-
-## 7. Content Design
-
-Document levels, quests, encounters, items, enemies, cards, abilities, maps, or modded content.
-
-## 8. UI / UX / Feedback
-
-Describe screens, HUD, menus, prompts, player feedback, accessibility, and control expectations.
-
-## 9. Narrative / World / Tone
-
-Document story constraints, world rules, characters, factions, tone, and lore if relevant.
-
-## 10. Art / Audio Direction
-
-Document visual style, animation needs, VFX, SFX, music, placeholders, and asset constraints.
-
-## 11. Playtest Success Criteria
-
-| ID | Criteria | Test Method |
-|----|----------|-------------|
-| GDD-001 |  | Manual / Automated |
-
-## 12. Playtest Plan
-
-Document playtest scenarios, target observations, feedback collection, and success measures.
-
-## 13. Open Questions
+## Progression, Economy, and Balance
 
 -
 
-## 14. References
+## Content, Presentation, and Accessibility
+
+Summarize levels, encounters, items, narrative, UI, art, audio, feedback, controls, and accessibility requirements that matter to the design.
+
+## Playtest Criteria
+
+| ID | Success criterion | Test method |
+|---|---|---|
+| GDD-001 | | |
+
+## Open Questions and References
 
 -

@@ -37,7 +37,7 @@ class ManifestTests(unittest.TestCase):
 
     def test_manifest_is_versioned_and_complete(self):
         self.assertEqual(self.manifest.schema_version, 1)
-        self.assertEqual(self.manifest.pack_version, "3.1.0")
+        self.assertEqual(self.manifest.pack_version, "3.2.0")
         self.assertEqual(self.manifest.default_profile, "full")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
         for asset in self.manifest.assets:
@@ -138,7 +138,7 @@ class ManifestTests(unittest.TestCase):
             (pack / "files").mkdir()
             invalid = {
                 "schema_version": 1,
-                "pack_version": "3.1.0",
+                "pack_version": "3.2.0",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -173,7 +173,7 @@ class ManifestTests(unittest.TestCase):
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
                 "schema_version": 1,
-                "pack_version": "3.1.0",
+                "pack_version": "3.2.0",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -417,7 +417,7 @@ class BundleAndCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
             archive = bundle_builder.build_archive(REPOSITORY_ROOT, output)
-            self.assertEqual(archive.name, "repo-seed-pack-3.1.0.zip")
+            self.assertEqual(archive.name, "repo-seed-pack-3.2.0.zip")
             self.assertEqual(list(output.glob("*.zip")), [archive])
             raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
             expected = {"pack/manifest.json"} | {
@@ -486,7 +486,7 @@ class BundleAndCliTests(unittest.TestCase):
             source.write_text("# Missing metadata\n", encoding="utf-8")
             manifest = {
                 "schema_version": 1,
-                "pack_version": "3.1.0",
+                "pack_version": "3.2.0",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [

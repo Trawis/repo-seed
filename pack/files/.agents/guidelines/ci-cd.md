@@ -1,69 +1,26 @@
-# CI/CD Guidelines
+# CI/CD Guidance
 
-**Document role**: Managed coding-agent reference
+**Document role**: Managed coding-agent guidance
 **Sync destination**: `.agents/guidelines/ci-cd.md`
-**Local editing**: Do not customize this synced copy
 
-Use this document when creating or changing CI/CD workflows, build pipelines, release automation, or deployment automation.
+Use this guidance for workflows, releases, deployments, or infrastructure automation.
 
-## Core Rule
+## Boundaries
 
-Do not modify CI/CD unless the task explicitly asks for CI/CD work.
+- Change CI/CD only when the task explicitly requires it.
+- Preserve the provider, triggers, permissions, gates, environments, and secret references.
+- Make the narrowest relevant workflow or job change.
+- Do not add publishing, deployment, infrastructure, or broad write permissions implicitly.
+- Never print secrets or guess secret names.
+- Do not weaken required checks or approvals.
 
-CI/CD changes can affect releases, deployments, secrets, permissions, infrastructure, and production behavior. Keep changes small, reviewable, and easy to rollback.
-
-## Safe Default Pipeline
-
-For a new or small project, start with validation only:
-
-1. checkout
-2. restore/install dependencies
-3. build
-4. run tests
-5. run lint/format checks if configured
-
-Do not add deployment, package publishing, release creation, or secret-dependent jobs until the project actually needs them.
-
-## Change Rules
-
-- Preserve the existing CI/CD provider and workflow structure.
-- Prefer modifying the narrowest relevant workflow/job/step.
-- Do not rename workflows, jobs, environments, or secrets unless the task requires it.
-- Do not weaken branch filters, required checks, approvals, permissions, or test gates.
-- Do not add broad permissions such as write-all unless the task explicitly requires it and the reason is documented.
-- Do not add deployment or publishing jobs without documented target, trigger, credentials, rollback, and validation plan.
-- Do not print or expose secret values.
-- Do not guess secret names. Use only names already documented in the repository/task.
-
-## Branch and PR Expectations
-
-Follow the repository's documented branching model. Normal CI/CD work uses a focused feature branch such as:
-
-```text
-feature/update-ci-validation
-```
-
-Use release or hotfix branches only when the repository explicitly defines them. All CI/CD changes should go through PR review. Never auto-merge CI/CD changes.
+For a new small project, start with checkout, dependency restore, build, tests, and configured lint or format checks. Add publishing or deployment only when its target, trigger, credentials, rollback, and validation are documented.
 
 ## Validation
 
-Before finishing a CI/CD task:
-
-- Check YAML/syntax validity when possible.
+- Check workflow syntax when possible.
 - Run equivalent local commands when practical.
-- Verify changed paths, triggers, environment names, and permissions.
-- Confirm the workflow still targets the expected branches.
-- State which parts can only be verified by the hosted CI system.
+- Recheck triggers, paths, permissions, environments, and branch targets.
+- State which behavior still requires hosted verification.
 
-## Documentation
-
-Update repository documentation when CI/CD changes affect:
-
-- build/test commands
-- release process
-- deployment process
-- required secrets or environment variables
-- supported branches or triggers
-- required manual approval steps
-
-Do not invent deployment instructions, secret names, hosted environment names, or release guarantees.
+Update project documentation when a change affects build commands, releases, deployment, secrets, environments, or approval steps.

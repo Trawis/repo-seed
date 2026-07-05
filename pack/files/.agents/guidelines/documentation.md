@@ -1,45 +1,36 @@
 # Documentation Guidance
 
 **Document role**: Managed coding-agent guidance
-
 **Sync destination**: `.agents/guidelines/documentation.md`
 
-## Document Authority
+## Authority
 
-- `README.md` and `CHANGELOG.md` are project-owned root entry points.
-- `docs/project/` contains authoritative live project documentation.
-- `docs/templates/` contains managed reference templates, not project requirements.
-- Never edit files under `docs/templates/` in a target repository.
-- Never copy placeholders or unverified claims into live documentation.
+- `README.md` and `CHANGELOG.md` are project-owned entry points.
+- `docs/project/` contains authoritative live documentation.
+- `docs/templates/` contains managed reference templates, not requirements.
+- Never edit target templates or copy placeholders and unverified claims into live documents.
 
-## When to Update Live Documentation
+## Update the Relevant Document
 
-Update the relevant project-owned document when a task changes:
+- setup, commands, configuration, or public usage: `README.md`
+- meaningful changes: `CHANGELOG.md`
+- capability status and links: `docs/project/features.md`
+- stable components, boundaries, integrations, or data flow: `docs/project/architecture.md`
+- visible workflows and troubleshooting: `docs/project/user-guide.md`
+- functional, technical, or gameplay requirements: the applicable FSD, TSD, or GDD
 
-- setup, build, test, run, configuration, CLI usage, or public behavior: `README.md`;
-- meaningful user-facing or developer-facing behavior: `CHANGELOG.md`;
-- implemented, planned, or rejected capabilities: `docs/project/features.md`;
-- components, boundaries, dependencies, integrations, or data flow: `docs/project/architecture.md`;
-- visible workflows, navigation, settings, or troubleshooting: `docs/project/user-guide.md`;
-- documented functional, technical, or game requirements: the applicable FSD, TSD, or GDD under `docs/project/`.
+Update only documents affected by verified behavior. Do not create documentation as busywork.
 
-Keep documentation changes scoped to verified behavior. Do not create documents as busywork.
+## Template Review
 
-## Template Changes
+Scaffolded Markdown contains a source-path marker. It does not track a hash or authorize automatic updates.
 
-Scaffolded documents contain a hidden template ID and content hash. When sync reports a newer template:
-
-1. Compare the managed template with the live document.
-2. Apply only relevant structural improvements.
-3. Preserve verified project content and intentional differences.
-4. Update the provenance hash only after completing the review.
-
-A template warning does not by itself authorize rewriting a project-owned document.
+When a managed template changes, compare it manually with the live document, using Git history when useful. Apply only relevant structural improvements and preserve verified project content. Sync never rewrites live project documentation.
 
 ## Style
 
-- Prefer concise, factual sections and working examples.
-- Link from the README to detailed documents instead of duplicating them.
-- Keep changelog entries curated; do not dump commit history.
-- Mark unknown information as unknown or omit it.
-- Preserve the repository's existing punctuation and formatting style.
+- Be concise, factual, and example-driven.
+- Link to detailed documents instead of duplicating them.
+- Curate changelogs; do not paste commit history.
+- Omit unknown information rather than inventing it.
+- Preserve the repository's established formatting and punctuation.

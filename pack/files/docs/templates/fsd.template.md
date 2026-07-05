@@ -1,4 +1,4 @@
-# Functional Specification Document
+# Functional Specification
 
 <!-- repo-seed-template:start -->
 **Document role**: Managed project-document template
@@ -7,69 +7,41 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-**Project**:
-**Feature / Area**:
-**Version**: 0.1.0
+**Project / Feature**:
 **Status**: Draft
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
----
+Define observable behavior and acceptance criteria. Keep implementation, architecture, data, APIs, testing, and rollout in the TSD.
 
-Define observable user behavior and acceptance here. Put implementation, architecture, data, API, testing, and rollout decisions in the TSD.
-
-## 1. Summary
-
-Describe the user-facing purpose of this feature or product.
-
-## 2. Goals
+## Summary and Goals
 
 -
 
-## 3. Non-Goals / Out of Scope
+## Out of Scope
 
 -
 
-## 4. Target Users / Personas
+## Users and Use Cases
 
--
+| ID | User story or use case | Priority |
+|---|---|---|
+| FSD-001 | | Must |
 
-## 5. User Stories / Use Cases
+## Functional Requirements
 
-| ID | User Story / Use Case | Priority |
-|----|------------------------|----------|
-| FSD-001 | As a user, I want ... so that ... | Must |
+| ID | Requirement | Acceptance criteria |
+|---|---|---|
+| FR-001 | | |
 
-## 6. Functional Requirements
+## User Flows
 
-| ID | Requirement | Priority | Acceptance Criteria |
-|----|-------------|----------|---------------------|
-| FR-001 |  | Must |  |
+Describe relevant screens, commands, interactions, inputs, and outputs.
 
-## 7. User Flows
+## Validation and Permissions
 
-Describe key flows, screens, commands, or interactions.
+Document user-visible errors, edge cases, roles, access, and ownership rules.
 
-## 8. Inputs and Outputs
-
-Document user inputs, system outputs, files, exports, reports, messages, or generated artifacts.
-
-## 9. Validation and Error Handling
-
-Describe required validation, expected errors, user-facing messages, and edge cases.
-
-## 10. Permissions / Roles
-
-Document user roles, access rules, ownership rules, or authorization requirements.
-
-## 11. Acceptance Checklist
-
-- [ ]
-
-## 12. Open Questions
-
--
-
-## 13. References
+## Open Questions and References
 
 -
