@@ -8,6 +8,12 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## Unreleased
+
+### Changed
+
+- Expanded the version 3 migration guide for repositories currently using the 1.x or 2.x synchronizer.
+
 ## 3.2.2 - 2026-07-05
 
 ### Changed
