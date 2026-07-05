@@ -37,9 +37,12 @@ class ManifestTests(unittest.TestCase):
 
     def test_manifest_is_versioned_and_complete(self):
         self.assertEqual(self.manifest.schema_version, 1)
-        self.assertEqual(self.manifest.pack_version, "3.2.0")
+        self.assertEqual(self.manifest.pack_version, "3.2.1")
         self.assertEqual(self.manifest.default_profile, "full")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
+        self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE"))
+        for package_file in self.manifest.package_files:
+            self.assertTrue((PACK_ROOT / package_file).is_file(), package_file)
         for asset in self.manifest.assets:
             self.assertTrue((PACK_ROOT / "files" / Path(asset.path)).is_file(), asset.path)
 
@@ -59,6 +62,17 @@ class ManifestTests(unittest.TestCase):
         }
         listed = {asset.path for asset in self.manifest.assets}
         self.assertEqual(actual, listed)
+
+        actual_package_files = {
+            path.name
+            for path in PACK_ROOT.iterdir()
+            if path.is_file() and path.name != "manifest.json"
+        }
+        self.assertEqual(actual_package_files, set(self.manifest.package_files))
+        self.assertEqual(
+            (PACK_ROOT / "LICENSE").read_text(encoding="utf-8"),
+            (REPOSITORY_ROOT / "LICENSE").read_text(encoding="utf-8"),
+        )
 
     def test_manifest_uses_target_mirroring_paths_only(self):
         raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
@@ -138,7 +152,7 @@ class ManifestTests(unittest.TestCase):
             (pack / "files").mkdir()
             invalid = {
                 "schema_version": 1,
-                "pack_version": "3.2.0",
+                "pack_version": "3.2.1",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -158,6 +172,31 @@ class ManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "does not exist"):
                 sync.load_manifest(pack)
 
+    def test_package_files_must_be_safe_and_present(self):
+        with tempfile.TemporaryDirectory() as temp:
+            pack = Path(temp)
+            managed = pack / "files/AGENTS.md"
+            managed.parent.mkdir(parents=True)
+            managed.write_text("# Managed\n", encoding="utf-8")
+            manifest = {
+                "schema_version": 1,
+                "pack_version": "3.2.1",
+                "default_profile": "minimal",
+                "profiles": ["minimal"],
+                "package_files": ["../README.md"],
+                "assets": [
+                    {"path": "AGENTS.md", "type": "managed", "profiles": ["minimal"]}
+                ],
+            }
+            (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Unsafe path"):
+                sync.load_manifest(pack)
+
+            manifest["package_files"] = ["README.md"]
+            (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not exist"):
+                sync.load_manifest(pack)
+
     def test_manifest_rejects_scaffold_managed_path_collisions(self):
         with tempfile.TemporaryDirectory() as temp:
             pack = Path(temp)
@@ -173,7 +212,7 @@ class ManifestTests(unittest.TestCase):
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
                 "schema_version": 1,
-                "pack_version": "3.2.0",
+                "pack_version": "3.2.1",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -263,6 +302,8 @@ class SyncBehaviorTests(unittest.TestCase):
             )
             self.assertFalse((target / ".agent-guidelines-manifest.json").exists())
             self.assertFalse((target / ".agent-guidelines-conflicts").exists())
+            self.assertFalse((target / "README.md").exists())
+            self.assertFalse((target / "LICENSE").exists())
 
     def test_project_scaffolding_excludes_editorconfig(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -417,14 +458,18 @@ class BundleAndCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
             archive = bundle_builder.build_archive(REPOSITORY_ROOT, output)
-            self.assertEqual(archive.name, "repo-seed-pack-3.2.0.zip")
+            self.assertEqual(archive.name, "repo-seed-pack-3.2.1.zip")
             self.assertEqual(list(output.glob("*.zip")), [archive])
             raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
             expected = {"pack/manifest.json"} | {
+                f"pack/{package_file}" for package_file in raw["package_files"]
+            } | {
                 f"pack/files/{asset['path']}" for asset in raw["assets"]
             }
             with zipfile.ZipFile(archive) as bundle:
                 self.assertEqual(set(bundle.namelist()), expected)
+                self.assertIn("pack/README.md", bundle.namelist())
+                self.assertIn("pack/LICENSE", bundle.namelist())
                 self.assertNotIn("README.md", bundle.namelist())
                 self.assertNotIn("pack-manifest.json", bundle.namelist())
 
@@ -461,6 +506,11 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertTrue((target / "scripts/sync-docs.py").is_file())
                 self.assertTrue((target / ".editorconfig").is_file())
                 self.assertTrue((target / ".github/ISSUE_TEMPLATE/feature_request.md").is_file())
+                self.assertIn(
+                    "<!-- Scaffolded from: docs/templates/readme.template.md -->",
+                    (target / "README.md").read_text(encoding="utf-8"),
+                )
+                self.assertFalse((target / "LICENSE").exists())
 
     def test_release_builder_rejects_source_symlinks(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -486,7 +536,7 @@ class BundleAndCliTests(unittest.TestCase):
             source.write_text("# Missing metadata\n", encoding="utf-8")
             manifest = {
                 "schema_version": 1,
-                "pack_version": "3.2.0",
+                "pack_version": "3.2.1",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -501,6 +551,27 @@ class BundleAndCliTests(unittest.TestCase):
             }
             (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "metadata markers"):
+                bundle_builder.build_archive(root, root / "dist")
+
+    def test_release_builder_rejects_missing_package_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            pack = root / "pack"
+            managed = pack / "files/AGENTS.md"
+            managed.parent.mkdir(parents=True)
+            managed.write_text("# Managed\n", encoding="utf-8")
+            manifest = {
+                "schema_version": 1,
+                "pack_version": "3.2.1",
+                "default_profile": "minimal",
+                "profiles": ["minimal"],
+                "package_files": ["README.md"],
+                "assets": [
+                    {"path": "AGENTS.md", "type": "managed", "profiles": ["minimal"]}
+                ],
+            }
+            (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(FileNotFoundError, "Missing package file"):
                 bundle_builder.build_archive(root, root / "dist")
 
     def test_cli_help_has_only_the_small_interface(self):

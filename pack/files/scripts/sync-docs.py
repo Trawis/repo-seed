@@ -11,7 +11,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-SCRIPT_VERSION = "3.2.0"
+SCRIPT_VERSION = "3.2.1"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
@@ -36,6 +36,7 @@ class PackManifest:
     pack_version: str
     default_profile: str
     profiles: tuple[str, ...]
+    package_files: tuple[str, ...]
     assets: tuple[Asset, ...]
 
 
@@ -87,6 +88,15 @@ def require_string_list(data: dict[str, object], key: str, context: str) -> tupl
     return tuple(value)
 
 
+def optional_string_list(data: dict[str, object], key: str, context: str) -> tuple[str, ...]:
+    value = data.get(key, [])
+    if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
+        raise ValueError(f"{context}.{key} must be a string array")
+    if len(value) != len(set(value)):
+        raise ValueError(f"{context}.{key} contains duplicates")
+    return tuple(value)
+
+
 def template_body(source: Path) -> str:
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     starts = [index for index, line in enumerate(lines) if TEMPLATE_METADATA_START in line]
@@ -127,6 +137,19 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
     default_profile = require_string(raw, "default_profile", "manifest")
     if default_profile not in profiles:
         raise ValueError("manifest.default_profile must be listed in manifest.profiles")
+
+    package_files = optional_string_list(raw, "package_files", "manifest")
+    for index, package_file in enumerate(package_files):
+        context = f"manifest.package_files[{index}]"
+        package_path = relative_path(package_file, context)
+        if package_file == MANIFEST_FILE or package_path.parts[0] == FILES_DIRECTORY:
+            raise ValueError(f"{context} must not replace manifest.json or use files/")
+        source = safe_child(source_root, package_file, context)
+        if validate_sources:
+            if source.is_symlink():
+                raise ValueError(f"Package file cannot be a symbolic link: {package_file}")
+            if not source.is_file():
+                raise ValueError(f"Package file does not exist: {package_file}")
 
     raw_assets = raw.get("assets")
     if not isinstance(raw_assets, list) or not raw_assets:
@@ -200,6 +223,7 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         pack_version=pack_version,
         default_profile=default_profile,
         profiles=profiles,
+        package_files=package_files,
         assets=tuple(assets),
     )
 

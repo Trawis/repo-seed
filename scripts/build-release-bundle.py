@@ -37,6 +37,16 @@ def require_string_list(value: object, context: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+def optional_string_list(value: object, context: str) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
+        raise ValueError(f"{context} must be a string array")
+    if len(value) != len(set(value)):
+        raise ValueError(f"{context} contains duplicates")
+    return tuple(value)
+
+
 def load_manifest(pack_root: Path) -> dict[str, object]:
     manifest_path = pack_root / MANIFEST_FILE
     if manifest_path.is_symlink():
@@ -58,6 +68,15 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
     profiles = require_string_list(data.get("profiles"), "manifest.profiles")
     if data.get("default_profile") not in profiles:
         raise ValueError("Pack manifest default_profile must be listed in profiles")
+
+    package_files = optional_string_list(data.get("package_files"), "manifest.package_files")
+    for index, package_file in enumerate(package_files):
+        package_path = safe_relative_path(package_file)
+        if package_file == MANIFEST_FILE or package_path.parts[0] == FILES_DIRECTORY:
+            raise ValueError(
+                f"manifest.package_files[{index}] must not replace manifest.json or use files/"
+            )
+
     if not isinstance(data.get("assets"), list) or not data["assets"]:
         raise ValueError("Pack manifest must define a non-empty assets array")
 
@@ -120,6 +139,21 @@ def release_source(pack_root: Path, asset_path: str) -> Path:
     return resolved
 
 
+def package_source(pack_root: Path, package_path: str) -> Path:
+    root = pack_root.resolve()
+    source = pack_root / safe_relative_path(package_path)
+    if source.is_symlink():
+        raise ValueError(f"Package file cannot be a symbolic link: {package_path}")
+    resolved = source.resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as ex:
+        raise ValueError(f"Package file resolves outside pack: {package_path}") from ex
+    if not resolved.is_file():
+        raise FileNotFoundError(f"Missing package file: {package_path}")
+    return resolved
+
+
 def validate_template_source(source: Path, asset_path: str) -> None:
     lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
     starts = [index for index, line in enumerate(lines) if TEMPLATE_METADATA_START in line]
@@ -135,11 +169,16 @@ def build_archive(source_root: Path, output_dir: Path) -> Path:
     pack_root = source_root / PACK_DIRECTORY
     manifest = load_manifest(pack_root)
     version = manifest["pack_version"]
+    package_files = optional_string_list(manifest.get("package_files"), "manifest.package_files")
     assets = manifest["assets"]
     output_dir.mkdir(parents=True, exist_ok=True)
     archive = output_dir / f"repo-seed-pack-{version}.zip"
 
     release_sources: list[tuple[str, Path]] = []
+    package_sources = [
+        (package_path, package_source(pack_root, package_path))
+        for package_path in package_files
+    ]
     for asset in assets:
         asset_path = asset["path"]
         source = release_source(pack_root, asset_path)
@@ -149,6 +188,8 @@ def build_archive(source_root: Path, output_dir: Path) -> Path:
 
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
         bundle.write(pack_root / MANIFEST_FILE, f"{PACK_DIRECTORY}/{MANIFEST_FILE}")
+        for package_path, source in package_sources:
+            bundle.write(source, f"{PACK_DIRECTORY}/{package_path}")
         for asset_path, source in release_sources:
             bundle.write(source, f"{PACK_DIRECTORY}/{FILES_DIRECTORY}/{asset_path}")
 

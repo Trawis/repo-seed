@@ -12,7 +12,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 - focused documentation, Git, CI/CD, and language references;
 - read-only templates for five project profiles;
 - missing-only scaffolding for project documents, `.gitignore`, `.editorconfig`, and GitHub issue templates;
-- one universal release archive;
+- one universal release archive with package instructions and license;
 - a sync script copied into each target repository for future updates.
 
 ## Requirements
@@ -85,6 +85,8 @@ See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from
 ```text
 pack/
   manifest.json              # sole distributed-asset inventory
+  README.md                  # package-only quick start
+  LICENSE                    # package-only license
   files/                     # mirrors target repository paths
     AGENTS.md
     CLAUDE.md
@@ -109,7 +111,7 @@ python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundl
 git diff --check
 ```
 
-The build creates `dist/repo-seed-pack-<version>.zip` from the assets listed in `pack/manifest.json`.
+The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declared in `pack/manifest.json`.
 
 ## Project and Community
 

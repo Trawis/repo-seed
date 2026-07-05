@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "pack_version": "3.2.0",
+  "pack_version": "3.2.1",
   "default_profile": "full",
   "profiles": [
     "minimal",
@@ -8,6 +8,10 @@
     "app",
     "game",
     "full"
+  ],
+  "package_files": [
+    "README.md",
+    "LICENSE"
   ],
   "assets": [
     {
