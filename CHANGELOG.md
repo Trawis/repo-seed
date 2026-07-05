@@ -8,11 +8,12 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
-## Unreleased
+## 3.2.3 - 2026-07-05
 
 ### Changed
 
 - Expanded the version 3 migration guide for repositories currently using the 1.x or 2.x synchronizer.
+- Centralized the test pack-version fixture to reduce repetitive release bookkeeping.
 
 ## 3.2.2 - 2026-07-05
 
