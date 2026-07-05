@@ -11,6 +11,7 @@ This document defines ownership only. Usage belongs in `README.md`; migration be
 | Class | Location | Lifecycle |
 |---|---|---|
 | Repository-only | Repo-seed root and `docs/project/` | Maintained only for repo-seed |
+| Package-only | `pack/README.md` and `pack/LICENSE` | Included in releases; never synced |
 | Managed | Listed path under `pack/files/` | Overwritten by sync |
 | Managed template | `pack/files/docs/templates/` | Overwritten as a read-only reference |
 | Project-owned scaffold | Template destination | Created only when missing |

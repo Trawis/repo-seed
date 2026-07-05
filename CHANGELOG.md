@@ -8,6 +8,12 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.2.1 - 2026-07-05
+
+### Fixed
+
+- Added manifest-inventoried package instructions and the MIT License to the downloadable archive without syncing them into target repositories.
+
 ## 3.2.0 - 2026-07-05
 
 ### Changed

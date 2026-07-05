@@ -24,6 +24,7 @@ Ownership boundaries:
 
 - Root documents describe `repo-seed` itself and are never sync sources.
 - `pack/manifest.json` is the sole distributed-asset inventory.
+- `pack/README.md` and `pack/LICENSE` are package-only archive files and are never synced.
 - `pack/files/` mirrors target paths and contains managed files, reference templates, and the sync script.
 - `docs/project/` contains project-owned documentation about `repo-seed`.
 - `scripts/` contains repository tooling.
