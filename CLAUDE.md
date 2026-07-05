@@ -8,7 +8,7 @@
 
 **Sync behavior**: Never copied into target repositories
 
-**Distributed counterpart**: `pack/CLAUDE.md`
+**Distributed counterpart**: `pack/files/CLAUDE.md`
 
 Use the imported `AGENTS.md` as the primary project instruction file.
 

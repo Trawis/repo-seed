@@ -2,7 +2,7 @@
 **Document role**: Managed project-file template
 **Template source**: `docs/templates/.github/feature-request.template.md`
 **Scaffold destination**: `.github/ISSUE_TEMPLATE/feature_request.md`
-**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+**Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
 ---

@@ -7,7 +7,7 @@
 
 **Scaffold destination**: `README.md`
 
-**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+**Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
 Short description of what this project does and who it is for.

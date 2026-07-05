@@ -1,114 +1,101 @@
-# repo-seed
+# Repo Seed
 
-Reusable coding-agent guidance and project-document templates with profile-based, conflict-aware synchronization.
+Reusable coding-agent guidance and project-document templates with a small, predictable synchronization tool.
 
-**Document role**: Repo-seed project documentation
+**Document role**: Repository-only overview
 
 **Sync behavior**: Never copied into target repositories
 
-**Pack version**: 2.0.1
+## What It Provides
 
-## Ownership Model
+- concise coding-agent instructions and focused supporting conventions;
+- read-only documentation templates for five project profiles;
+- missing-only scaffolding for project documents, `.gitignore`, `.editorconfig`, and GitHub issue templates;
+- one universal release archive;
+- a sync script copied into each target repository for future updates.
 
-| Location | Purpose | Target behavior |
-|---|---|---|
-| Root documents | Describe and govern repo-seed | Never synced |
-| `pack/` | Managed agent, convention, editor, and PR sources | Updated by routine sync |
-| `docs/templates/` | Managed read-only references and scaffold sources | Updated by routine sync |
-| `docs/project/` | Live repo-seed documentation | Never synced |
-| `pack-manifest.json` | Asset, profile, ownership, scaffold, and migration inventory | Drives sync and release bundles |
+## Source Layout
 
-Repo-seed’s own root documents are never used as sync sources. Their distributed counterparts are explicit:
+```text
+pack/
+  manifest.json              # sole distributed-asset inventory
+  files/                     # mirrors target repository paths
+    AGENTS.md
+    CLAUDE.md
+    .agents/
+    docs/templates/
+    scripts/sync-docs.py
+docs/project/                # live documentation about repo-seed
+scripts/                     # repository release tooling
+tests/                       # pack and tooling tests
+```
 
-| Source | Target | Behavior |
-|---|---|---|
-| `pack/AGENTS.md` | `AGENTS.md` | Always managed and synchronized |
-| `pack/CLAUDE.md` | `CLAUDE.md` | Always managed and synchronized |
-| `docs/templates/readme.template.md` | `README.md` | Scaffold only when missing |
-| `docs/templates/changelog.template.md` | `CHANGELOG.md` | Scaffold only when missing |
-| `docs/templates/gitignore.template` | `.gitignore` | Scaffold only when missing |
+Root files describe `repo-seed` itself. They are never used as target sync sources.
 
-In target repositories, `README.md`, `CHANGELOG.md`, `.gitignore`, `.agents/project.md`, and `docs/project/` are project-owned. Managed root `AGENTS.md` contains the essential rules directly and routes specialized work to `.agents/guidelines/` and `.agents/conventions/`.
+## Sync Behavior
 
-`pack-manifest.json` belongs to repo-seed and extracted release bundles; it describes source assets. It is not copied into the target as a project file. The sync script instead writes `.agent-guidelines-manifest.json` in the target to track the profile, version, and managed-file hashes required for safe future updates.
+Sync has only two ownership rules:
 
-See [`docs/project/document-ownership.md`](docs/project/document-ownership.md) for the complete lifecycle.
+1. Managed guidance, the sync script, and reference templates are always overwritten from the selected pack.
+2. Project-owned files are created only when explicitly scaffolded and missing.
+
+There is no target state file, hash tracking, conflict directory, migration cleanup, or Git branch handling. Do not customize managed files in a target repository. Put project-specific agent rules in `.agents/project.md` or a child `AGENTS.md`.
+
+Updated templates remain under `docs/templates/` as read-only references. Agents compare a relevant live document with its source template and update the live document when practical. Git history supplies the template diff.
 
 ## Profiles
 
-| Profile | Managed guidance | Project templates |
-|---|---|---|
-| `minimal` | Core agent, Git, and documentation guidance | README, changelog, and gitignore |
-| `library` | Minimal + CI/CD and general coding conventions | README, changelog, and gitignore |
-| `app` | Library guidance | Core docs + features, architecture, user guide, FSD, TSD |
-| `game` | Library + Unity conventions | Core docs + features and GDD |
-| `full` | All managed guidance | Every project template |
+All profiles receive the complete agent-guidance set, sync script, and common reference templates.
 
-Generic GitHub bug and feature templates are available through a separate explicit scaffold option.
+| Profile | Additional project templates |
+|---|---|
+| `minimal` | None |
+| `library` | None |
+| `app` | Features, architecture, user guide, FSD, and TSD |
+| `game` | Features and GDD |
+| `full` | Every template |
 
-## Sync
+The default profile is `full`.
 
-Preview routine managed-file changes:
+## Use an Extracted Pack
+
+The script discovers the pack containing it:
 
 ```bash
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py \
-  --source /path/to/repo-seed \
-  --target /path/to/target-repo \
+python pack/files/scripts/sync-docs.py \
+  --target /path/to/project \
   --profile app \
-  --dry-run
+  --scaffold-project-files \
+  --scaffold-github-templates
 ```
 
-Apply managed updates:
+On later updates, the managed script already copied into the project can use a newer extracted pack:
 
 ```bash
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py \
-  --source /path/to/repo-seed \
-  --target /path/to/target-repo \
+python scripts/sync-docs.py \
+  --source /path/to/extracted/pack \
+  --target . \
   --profile app
 ```
 
-Create missing project-owned files:
+Use `--dry-run` to preview operations. `--scaffold-project-files` creates missing project documents, `.gitignore`, and `.editorconfig`. `--scaffold-github-templates` creates missing bug, feature, and issue configuration files.
 
-```bash
-python /path/to/repo-seed/scripts/sync-agent-guidelines.py \
-  --source /path/to/repo-seed \
-  --target /path/to/target-repo \
-  --profile app \
-  --scaffold-project-files
-```
-
-Use `--scaffold-github-templates` to create missing generic issue templates. Scaffolding never overwrites existing files.
-
-Routine sync is hash-protected: local managed-file edits become conflicts, obsolete untouched files may be removed, and project-owned files are preserved. Template changes update the reference copy and may request live-document review without rewriting it. See the ownership document for the complete lifecycle.
-
-When branch creation is enabled, the sync script bases work on an existing `develop` or `dev` branch first and falls back to `main` or `master` only when no integration branch exists. `--base-branch` remains available as an explicit override.
-
-## Release Bundles
-
-Build all self-contained profile archives:
+## Build the Release
 
 ```bash
 python scripts/build-release-bundles.py
 ```
 
-Each archive contains a profile-filtered manifest, its required sources, templates, and the sync script.
+The output is `dist/repo-seed-pack-3.0.0.zip`. It contains the top-level `pack/` directory and every asset listed in `pack/manifest.json`.
 
-## Validation
+## Validate
 
 ```bash
 python -m unittest discover -s tests -v
-python scripts/sync-agent-guidelines.py --help
+python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundles.py --help
-python -m py_compile scripts/sync-agent-guidelines.py scripts/build-release-bundles.py
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundles.py
 git diff --check
 ```
 
-## Project Documents
-
-- [`CHANGELOG.md`](CHANGELOG.md) — release history
-- [`docs/project/features.md`](docs/project/features.md) — implemented and planned capabilities
-- [`docs/project/document-ownership.md`](docs/project/document-ownership.md) — file ownership and sync lifecycle
-
-## License
-
-No license has been declared yet.
+See [document ownership](docs/project/document-ownership.md) and [features](docs/project/features.md) for repository-specific details.

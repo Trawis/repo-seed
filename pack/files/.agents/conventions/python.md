@@ -94,7 +94,7 @@ Rules:
 
 When feasible:
 
-- add unit tests for parsing, transformations, validation, filename generation, and conflict handling
+- add unit tests for parsing, transformations, validation, filename generation, and failure handling
 - run the script with `--help`
 - run dry-run mode
 - test missing inputs and invalid paths

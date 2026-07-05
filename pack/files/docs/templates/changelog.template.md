@@ -7,7 +7,7 @@
 
 **Scaffold destination**: `CHANGELOG.md`
 
-**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+**Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
 All meaningful user-facing and developer-facing changes should be documented in this file.

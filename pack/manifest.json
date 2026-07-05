@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "pack_version": "3.0.0",
+  "default_profile": "full",
+  "profiles": [
+    "minimal",
+    "library",
+    "app",
+    "game",
+    "full"
+  ],
+  "assets": [
+    {
+      "path": "AGENTS.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": "CLAUDE.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": "scripts/sync-docs.py",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/guidelines/documentation.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/guidelines/git.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/guidelines/ci-cd.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/conventions/csharp.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/conventions/scripts.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/conventions/python.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/conventions/shell.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/conventions/unity.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": "docs/templates/readme.template.md",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "README.md"
+    },
+    {
+      "path": "docs/templates/changelog.template.md",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "CHANGELOG.md"
+    },
+    {
+      "path": "docs/templates/gitignore.template",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": ".gitignore"
+    },
+    {
+      "path": "docs/templates/editorconfig.template",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": ".editorconfig"
+    },
+    {
+      "path": "docs/templates/features.template.md",
+      "type": "template",
+      "profiles": ["app", "game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/features.md"
+    },
+    {
+      "path": "docs/templates/architecture.template.md",
+      "type": "template",
+      "profiles": ["app", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/architecture.md"
+    },
+    {
+      "path": "docs/templates/user-guide.template.md",
+      "type": "template",
+      "profiles": ["app", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/user-guide.md"
+    },
+    {
+      "path": "docs/templates/fsd.template.md",
+      "type": "template",
+      "profiles": ["app", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/fsd.md"
+    },
+    {
+      "path": "docs/templates/tsd.template.md",
+      "type": "template",
+      "profiles": ["app", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/tsd.md"
+    },
+    {
+      "path": "docs/templates/gdd.template.md",
+      "type": "template",
+      "profiles": ["game", "full"],
+      "scaffold_group": "project",
+      "scaffold_target": "docs/project/gdd.md"
+    },
+    {
+      "path": "docs/templates/.github/bug-report.template.md",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "github",
+      "scaffold_target": ".github/ISSUE_TEMPLATE/bug_report.md"
+    },
+    {
+      "path": "docs/templates/.github/feature-request.template.md",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "github",
+      "scaffold_target": ".github/ISSUE_TEMPLATE/feature_request.md"
+    },
+    {
+      "path": "docs/templates/.github/config.template.yml",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "scaffold_group": "github",
+      "scaffold_target": ".github/ISSUE_TEMPLATE/config.yml"
+    }
+  ]
+}

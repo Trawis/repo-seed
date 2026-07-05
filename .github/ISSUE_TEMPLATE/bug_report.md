@@ -28,11 +28,11 @@ assignees: ''
 
 ## Environment
 
-- Pack version (`.agent-guidelines-version`):
-- Sync script version (check `SCRIPT_VERSION` in `scripts/sync-agent-guidelines.py`):
+- Pack version (`pack/manifest.json`):
+- Sync script version (check `SCRIPT_VERSION` in `pack/files/scripts/sync-docs.py`):
 - Python version (for sync script issues):
 - OS:
 
 ## Additional Context
 
-<!-- Attach relevant config, command output, or conflict files if applicable. -->
+<!-- Attach relevant manifest content, command output, or generated file content if applicable. -->

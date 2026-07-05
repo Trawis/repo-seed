@@ -6,7 +6,7 @@ Repository-level instructions for coding agents.
 
 **Sync destination**: `AGENTS.md`
 
-**Version**: 2.0.1
+**Version**: 3.0.0
 
 ---
 
@@ -37,6 +37,7 @@ Report meaningful conflicts instead of guessing.
 - `docs/templates/` contains managed references only.
 - Never edit `docs/templates/` in a target repository.
 - Template placeholders are not requirements.
+- When a relevant template changes, compare it with the live document; Git history provides the template diff.
 - When a task changes documented behavior, update the relevant project-owned documentation when practical.
 
 Read `.agents/guidelines/documentation.md` for documentation work or changes affecting public behavior, setup, architecture, features, guides, or specifications.
@@ -152,16 +153,19 @@ Routine guideline sync manages:
 - `AGENTS.md` and `CLAUDE.md`;
 - `.agents/guidelines/` and `.agents/conventions/`;
 - `docs/templates/`;
-- `.editorconfig`, the PR template, the sync script, and pack metadata.
+- `scripts/sync-docs.py`.
+
+Sync always overwrites these files. Do not customize managed files in target repositories.
 
 Project-owned files include:
 
 - `.agents/project.md`;
 - `README.md` and `CHANGELOG.md`;
+- `.editorconfig` and `.gitignore`;
 - everything under `docs/project/`;
 - any unmapped repository file.
 
-Do not customize managed files in target repositories. Put root-level project rules in `.agents/project.md` and module-specific rules in child `AGENTS.md` files.
+Project-owned files may be scaffolded when missing but are never overwritten by sync. Put root-level project rules in `.agents/project.md` and module-specific rules in child `AGENTS.md` files.
 
 ## Completion
 
