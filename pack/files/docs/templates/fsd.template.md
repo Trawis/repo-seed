@@ -4,7 +4,7 @@
 **Document role**: Managed project-document template
 **Template source**: `docs/templates/fsd.template.md`
 **Scaffold destination**: `docs/project/fsd.md`
-**Sync behavior after scaffolding**: Project-owned; never updated by routine sync
+**Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
 **Project**:

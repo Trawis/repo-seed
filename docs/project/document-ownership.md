@@ -4,78 +4,48 @@
 
 **Sync behavior**: Never copied into target repositories
 
-## Ownership Classes
+## Ownership Model
 
-| Class | Source | Target | Lifecycle |
-|---|---|---|---|
-| Repo-seed-only | Root and `docs/project/` | None | Maintained only for this repository |
-| Managed guidance/config | `pack/` or listed tool source | Manifest target | Hash-protected routine updates |
-| Managed template | `docs/templates/*.template.md` | `docs/templates/` | Read-only reference updated by sync |
-| Project-owned scaffold | Managed template body | Root exception or `docs/project/` | Created only when missing |
-| Unmapped file | None | Existing target path | Never touched |
+| Class | Pack location | Target behavior |
+|---|---|---|
+| Repository-only | Root and `docs/project/` | Describes repo-seed; never distributed |
+| Managed | `pack/files/` | Always overwritten during sync |
+| Managed template | `pack/files/docs/templates/` | Always overwritten as a read-only reference |
+| Project-owned scaffold | Rendered from a managed template | Created only when missing |
+| Unmapped | None | Never touched |
 
-`pack-manifest.json` is the authoritative inventory. Root repo-seed documents are never sync sources.
+`pack/manifest.json` is the sole inventory used by sync and release packaging. Paths under `pack/files/` mirror their managed target paths.
 
 ## Target Layout
 
 ```text
-README.md
-CHANGELOG.md
-AGENTS.md
-CLAUDE.md
+AGENTS.md                    # managed
+CLAUDE.md                    # managed
 .agents/
-  project.md              # optional and project-owned
-  guidelines/             # managed
-  conventions/            # managed
+  project.md                 # optional, project-owned
+  guidelines/                # managed
+  conventions/               # managed
+scripts/sync-docs.py         # managed
 docs/
-  project/                # live and authoritative
-  templates/              # managed and read-only
+  templates/                 # managed, read-only references
+  project/                   # project-owned, authoritative documentation
+README.md                    # project-owned root exception
+CHANGELOG.md                 # project-owned root exception
 ```
 
-Root `AGENTS.md` contains essential rules directly. It requires agents to read optional `.agents/project.md`, applicable child `AGENTS.md` files, and relevant live requirements.
+The root `AGENTS.md` requires agents to read optional `.agents/project.md`, applicable child `AGENTS.md` files, and relevant live documentation.
 
-## Root File Matrix
+## Synchronization Rules
 
-| Path | Owner | Routine sync |
-|---|---|---|
-| `AGENTS.md` | Managed pack | Update if untouched; conflict if locally edited |
-| `CLAUDE.md` | Managed pack | Update if untouched; conflict if locally edited |
-| `.agent-guidelines-version` | Managed pack | Update if untouched |
-| `.editorconfig` | Managed pack | Update if untouched; conflict if locally edited |
-| `.github/pull_request_template.md` | Managed pack | Update if untouched; conflict if locally edited |
-| `scripts/sync-agent-guidelines.py` | Managed pack | Update if untouched; conflict if locally edited |
-| `README.md` | Target project | Create only when missing and explicitly scaffolded |
-| `CHANGELOG.md` | Target project | Create only when missing and explicitly scaffolded |
-| `.gitignore` | Target project | Create only when missing and explicitly scaffolded |
-| `.agents/project.md` | Target project | Never created, updated, or removed |
-| Any unmapped file | Target project | Untouched |
+- Managed files and selected reference templates are copied unconditionally.
+- Project files, `.gitignore`, and `.editorconfig` are scaffolded only when requested and missing.
+- GitHub bug, feature, and configuration templates are scaffolded separately and only when missing.
+- Existing project-owned destinations, unknown files, and files outside the selected profile are untouched.
+- Sync never deletes files, creates conflicts or backups, tracks hashes, writes state, or performs Git operations.
+- A missing source, invalid manifest, unsafe path, or copy failure stops the operation.
 
-The repo-seed root `AGENTS.md` and `CLAUDE.md` describe this source repository. Target root files come from `pack/AGENTS.md` and `pack/CLAUDE.md` and are managed on every sync.
-
-`pack-manifest.json` is source/bundle inventory, not a project scaffold. Targets receive `.agent-guidelines-manifest.json`, which records managed hashes and enables safe updates, conflicts, migrations, and profile cleanup.
-
-## Template Rules
-
-- Template filenames end in `.template.md`.
-- Visible template metadata states the role and scaffold destination.
-- Sync copies each labeled template to the same relative path and filename under target `docs/templates/`; it is not renamed.
-- Future template changes continue syncing into that managed reference copy.
-- Agents must not edit target templates.
-- Scaffolding separately copies the template body to its proper project structure, removes template-only metadata, and adds a hidden asset ID and content hash.
-- Existing scaffold destinations are always preserved.
-- When a template hash changes, sync prints a review warning and exits successfully.
-- Agents update live documents only when relevant to their task; they acknowledge a completed review by updating the hidden provenance hash.
-
-## Migration and Profile Changes
-
-Sync creates new managed targets before cleanup.
-
-- Obsolete files are removed only when their current hash matches the previous managed hash.
-- Locally modified obsolete files are preserved and reported.
-- Legacy README, CHANGELOG, FEATURES, ROADMAP, and unknown files are never pruned.
-- Reducing a profile uses the same hash-safe cleanup.
-- Invalid manifests, unsafe paths, missing sources, template errors, and managed conflicts fail the operation.
+Scaffolded Markdown includes a source-path comment. When work affects documented behavior, agents compare the live document with its current template and update the live document when practical. They never edit target templates to describe one project.
 
 ## Source Maintenance
 
-Repo-seed maintainers may edit sources under `pack/` and `docs/templates/` when the task explicitly changes the distributed pack. Target repositories place local agent rules in `.agents/project.md` or a child `AGENTS.md`, never in managed files.
+Repo-seed maintainers update distributed assets only under `pack/files/` and register every asset in `pack/manifest.json`. Root documents remain repository-only even when a similarly named distributed file exists.

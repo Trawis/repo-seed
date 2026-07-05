@@ -8,6 +8,21 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.0.0 - 2026-07-04
+
+### Changed
+
+- Replaced stateful, conflict-aware synchronization with unconditional managed-file copying and missing-only scaffolding.
+- Consolidated every distributed asset under the self-contained `pack/` directory.
+- Renamed the distributed sync tool to `scripts/sync-docs.py`.
+- Replaced five profile archives with one universal `repo-seed-pack-3.0.0.zip`.
+- Made `.editorconfig` an optional missing-only scaffold.
+- Added a generic GitHub issue configuration template alongside bug and feature templates.
+
+### Removed
+
+- Managed-file hashes, target state, conflict copies, template drift tracking, migration cleanup, and Git branch operations.
+
 ## 2.0.1 - 2026-07-04
 
 ### Changed
