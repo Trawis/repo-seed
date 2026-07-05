@@ -7,107 +7,40 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-**Project**: [Project Name]
-**Version**: [Version]
-**Status**: [Draft | Review | Approved]
-**Last Updated**: [Date]
+**Project**:
+**Status**: Draft
+**Last Updated**: YYYY-MM-DD
 
----
-
-Describe the stable, system-wide structure. Put feature-specific implementation details in a TSD.
-
-## Overview
-
-Brief description of the system's purpose and high-level architecture style (monolith, microservices, layered, event-driven, etc.).
-
----
+Describe stable, system-wide structure. Keep feature-specific implementation in a TSD.
 
 ## System Context
 
-Describe the system boundary and its external actors, systems, and integrations.
+Define the system boundary, users, and external systems.
 
-| Actor / System | Type | Description |
+## Components
+
+| Component | Responsibility | Dependencies |
 |---|---|---|
-| [User / External System] | [Human / External API / DB] | [What it does with this system] |
+| | | |
 
----
+## Technology and Deployment
 
-## Component Structure
+Summarize the runtime, storage, hosting, environments, and deployment topology.
 
-List the major components, services, or layers.
+## Data Flow and Integrations
 
-| Component | Responsibility |
-|---|---|
-| [Component A] | [What it does] |
-| [Component B] | [What it does] |
+Describe important cross-component flows and external integrations.
 
-Optionally include a diagram (ASCII, Mermaid, or linked image):
+## Design Decisions
 
-```
-[Client] → [API Layer] → [Service Layer] → [Data Layer]
-```
-
----
-
-## Technology Stack
-
-| Layer | Technology | Notes |
+| Decision | Choice | Reason |
 |---|---|---|
-| Frontend | | |
-| Backend | | |
-| Database | | |
-| Auth | | |
-| CI/CD | | |
-| Hosting | | |
+| | | |
 
----
+## Security and Constraints
 
-## Data Flow
-
-Describe key data flows through the system. Focus on flows that span multiple components or have non-obvious behavior.
-
----
-
-## Key Design Decisions
-
-Document significant architectural choices and the reasoning behind them.
-
-| Decision | Options Considered | Chosen | Reason |
-|---|---|---|---|
-| | | | |
-
----
-
-## Deployment Architecture
-
-Describe how the system is deployed: environments, hosting, infrastructure dependencies, and network topology.
-
----
-
-## Integrations
-
-List external integrations, APIs, services, and third-party dependencies.
-
-| Integration | Purpose | Auth Method | Notes |
-|---|---|---|---|
-| | | | |
-
----
-
-## Security Considerations
-
-Note security responsibilities, trust boundaries, auth/authz patterns, and known risks.
-
----
-
-## Known Constraints and Limitations
-
-Document known technical constraints, capacity limits, or architectural trade-offs.
-
----
+Document trust boundaries, authentication and authorization patterns, capacity limits, known constraints, and architectural tradeoffs.
 
 ## Open Questions
-
-Track unresolved architectural questions or decisions pending approval.
 
 -

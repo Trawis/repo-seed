@@ -1,4 +1,4 @@
-# Technical Specification Document
+# Technical Specification
 
 <!-- repo-seed-template:start -->
 **Document role**: Managed project-document template
@@ -7,80 +7,47 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-**Project**:
-**Feature / Area**:
-**Version**: 0.1.0
+**Project / Change**:
 **Status**: Draft
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
----
+Describe the implementation of one change. Reference the FSD for behavior and the architecture document for stable system structure.
 
-Describe the implementation of one feature or change. Reference the FSD for behavior and the architecture document for stable system structure.
+## Summary and Requirements
 
-## 1. Technical Summary
+Link the FSD, issue, ticket, or acceptance criteria and summarize the approach.
 
-Describe the technical approach and the main implementation boundaries.
+## Design and Components
 
-## 2. Related Requirements
+| Component | Change |
+|---|---|
+| | |
 
-Link to FSD, issue, ticket, acceptance criteria, or product brief.
+Describe changes to architecture boundaries, interfaces, data flow, and dependencies.
 
-## 3. Design and Architecture Impact
+## Data and Interfaces
 
-Describe the proposed design and any change to established architectural boundaries or decisions.
+Document persistence, migrations, APIs, commands, events, contracts, or messages affected by the change.
 
-## 4. Components Changed
+## Reliability and Security
 
-| Component | Change | Notes |
-|-----------|--------|-------|
-|  |  |  |
+Document failures, retries, logging, validation, authentication, authorization, privacy, and secrets.
 
-## 5. Data Model / Persistence
+## Performance and Compatibility
 
-Describe entities, tables, files, storage, migrations, indexes, and retention rules.
+Document expected load, limits, concurrency, backward compatibility, and migration concerns.
 
-## 6. APIs / Interfaces
+## Validation
 
-Document endpoints, CLI commands, events, contracts, DTOs, messages, or public interfaces.
+- Unit:
+- Integration:
+- Smoke/manual:
 
-## 7. Integrations and Dependencies
+## Rollout and Rollback
 
-Document external services, libraries, SDKs, APIs, queues, jobs, or infrastructure dependencies.
+Describe deployment order, feature flags, migration, rollback, and release notes when applicable.
 
-## 8. Error Handling and Logging
-
-Describe implementation failures, exceptions, retries, logs, telemetry, and how they map to functional errors defined in the FSD.
-
-## 9. Security / Privacy
-
-Document authentication, authorization, secrets, data exposure, validation, and privacy concerns.
-
-## 10. Performance / Scalability
-
-Document expected load, complexity, limits, caching, async/concurrency behavior, and bottlenecks.
-
-## 11. Testing Strategy
-
-- Unit tests:
-- Integration tests:
-- Smoke/manual tests:
-- Test data/fixtures:
-
-## 12. Rollout / Migration Plan
-
-Document migration, deployment, feature flags, backward compatibility, rollback, and release notes.
-
-## 13. Risks and Tradeoffs
-
-| Risk / Tradeoff | Impact | Mitigation |
-|-----------------|--------|------------|
-|  |  |  |
-
-## 14. Open Questions
-
--
-
-## 15. References
+## Risks, Questions, and References
 
 -

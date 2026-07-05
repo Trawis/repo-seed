@@ -4,100 +4,25 @@
 **Sync destination**: `.agents/conventions/python.md`
 **Local editing**: Do not customize this synced copy
 
-Python-specific conventions for standalone scripts.
+Apply repository-specific rules first and use this with `.agents/conventions/scripts.md`.
 
-Use this file together with `.agents/conventions/scripts.md`.
+## Style and Structure
 
----
-
-## Indentation and Formatting
-
-- Preserve existing indentation style when editing existing Python files.
-- For new Python scripts, use 4 spaces.
-- Do not reformat unrelated code.
-- Keep imports at the top of the file.
-- Prefer standard-library modules before adding dependencies.
-
----
-
-## Structure
-
-Prefer small functions over one long top-level script.
-
-Recommended structure:
-
-```python
-from pathlib import Path
-
-VERSION = "1.0.0"
-
-
-def main() -> int:
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-```
-
-Rules:
-
-- Use `if __name__ == "__main__":` for executable scripts.
+- Preserve existing formatting; use four spaces for new files when no local rule exists.
+- Keep imports at the top and prefer the standard library before adding dependencies.
+- Use small functions, `argparse` for non-trivial CLIs, and `pathlib` for filesystem paths.
 - Keep side effects out of import time.
-- Return process exit codes from `main()`.
-- Use `argparse` for non-trivial CLI arguments.
-- Use `pathlib` for filesystem paths.
-- Use explicit file encodings for text I/O when practical.
-- Prefer clear exceptions and user-facing error messages.
-- Avoid broad `except Exception` unless the error is logged/reported and re-raised or converted to a clear exit code.
-- Avoid mutable default argument values.
+- Return an exit code from `main()` and call it with `raise SystemExit(main())`.
+- Use explicit text encodings and readable type hints where useful.
 
----
+## Reliability
 
-## Comments and Docstrings
+- Validate paths and inputs before writing.
+- Raise or report specific errors; avoid broad exception handling that hides failures.
+- Avoid mutable default arguments.
+- Do not silently overwrite files unless the documented interface explicitly permits it.
+- Keep comments and docstrings for public contracts, constraints, and non-obvious behavior.
 
-- Use comments for intent, edge cases, safety constraints, non-obvious parsing, filesystem behavior, or external command assumptions.
-- Do not comment obvious code.
-- Use docstrings for public functions or reusable helpers when behavior, parameters, return values, or side effects are not obvious.
-- Do not add docstrings to every small private helper by default.
-- Keep module headers and summaries short.
-- Prefer clearer names and smaller functions over explanatory comments around complex code.
+## Validation
 
----
-
-## Typing
-
-- Use type hints for non-trivial functions.
-- Keep type hints readable; do not add complex typing only for style.
-- Prefer `Path` over raw path strings once paths enter the script logic.
-
----
-
-## Dependencies
-
-- Prefer the Python standard library first.
-- Do not add third-party dependencies unless they materially simplify the task or are already used by the repository.
-- If dependencies are added, document installation and update the relevant requirements/pyproject file.
-
----
-
-## Safety
-
-- Validate input files/directories before modifying anything.
-- Prefer `--dry-run` for scripts that copy, move, rename, delete, sync, or rewrite files.
-- Do not embed secrets, tokens, credentials, or machine-specific absolute paths.
-- Do not overwrite files silently unless the script documents the behavior and accepts an explicit option such as `--force`.
-
----
-
-## Testing and Validation
-
-When feasible:
-
-- add unit tests for parsing, transformations, validation, filename generation, and failure handling
-- run the script with `--help`
-- run dry-run mode
-- test missing inputs and invalid paths
-- test representative safe inputs
-
-For repositories using `pytest`, prefer focused tests for pure functions and edge cases.
+When applicable, test pure transformations, invalid input, filesystem boundaries, dry-run behavior, generated output, and exit codes. Use the repository's existing test framework.

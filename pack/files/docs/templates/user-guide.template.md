@@ -7,95 +7,44 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-**Project**: [Project Name]
-**Version**: [Version]
-**Audience**: [End users / Role]
-**Last Updated**: [Date]
-
----
+**Project**:
+**Audience**:
+**Last Updated**: YYYY-MM-DD
 
 ## Introduction
 
-Brief description of what the application does and who it is for.
-
----
+Explain what the application does and who should use it.
 
 ## Prerequisites
 
-What users need before they start:
-
-- [Operating system / browser / device requirements]
-- [Account or permission requirements]
-- [Installation steps if applicable]
-
----
+-
 
 ## Getting Started
 
-Step-by-step instructions for first-time users.
-
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
----
-
-## Navigation Overview
-
-Describe the main sections, screens, or views of the UI.
-
-| Screen / Section | Purpose |
-|---|---|
-| [Screen A] | [What users do here] |
-| [Screen B] | [What users do here] |
-
----
+1.
 
 ## Key Workflows
 
-Document the most important tasks users perform.
+### [Workflow]
 
-### [Workflow Name]
+**Goal**:
 
-**Goal**: [What the user is trying to accomplish]
+1.
 
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+**Result**:
 
-**Result**: [What happens when the workflow completes]
+## Settings
 
----
-
-## Settings and Configuration
-
-Describe user-accessible settings and their defaults.
-
-| Setting | Default | Description |
-|---|---|---|
-| | | |
-
----
+Document user-visible settings and defaults.
 
 ## Troubleshooting
 
-Common problems and how to resolve them.
-
-| Problem | Likely Cause | Solution |
+| Problem | Cause | Resolution |
 |---|---|---|
 | | | |
 
----
-
-## FAQ
-
-**Q: [Question]**
-A: [Answer]
-
----
-
 ## Glossary
 
-| Term | Definition |
+| Term | Meaning |
 |---|---|
 | | |

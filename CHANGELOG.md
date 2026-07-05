@@ -8,6 +8,14 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.2.0 - 2026-07-05
+
+### Changed
+
+- Corrected template-review guidance to match stateless synchronization without hashes or drift warnings.
+- Compacted managed agent guidance and language conventions while preserving their safety and project-style rules.
+- Reduced architecture, user-guide, functional, technical, and game-design templates to focused document responsibilities.
+
 ## 3.1.0 - 2026-07-05
 
 ### Added
