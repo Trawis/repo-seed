@@ -47,7 +47,7 @@ Prefer stable script filenames for scripts committed to a repository. Git tracks
 
 Rules for repository-maintained scripts:
 
-- Use a stable descriptive filename such as `sync-agent-guidelines.py`, `backup-photos.py`, or `cleanup-downloads.sh`.
+- Use a stable descriptive filename such as `sync-docs.py`, `backup-photos.py`, or `cleanup-downloads.sh`.
 - Do not rename the script only because its implementation changed.
 - Keep the script extension unchanged: `.sh`, `.bash`, `.py`, etc.
 - If the script has an internal version constant, update that constant when behavior changes materially.
@@ -76,10 +76,10 @@ Distributed/output filename pattern:
 Examples:
 
 ```text
-sync-agent-guidelines.py
+sync-docs.py
 backup-photos.py
 cleanup-downloads.sh
-agent-guidelines-pack_2.0.0.zip
+repo-seed-pack-3.0.0.zip
 backup-photos_1.1.0.csv
 backup-photos_1.1.0_report.txt
 cleanup-downloads_2.0.0_log.txt

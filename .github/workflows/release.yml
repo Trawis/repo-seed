@@ -23,7 +23,7 @@ jobs:
       - name: Read version
         id: ver
         run: |
-          VERSION=$(python3 -c "import json; print(json.load(open('pack-manifest.json'))['pack_version'])")
+          VERSION=$(python3 -c "import json; print(json.load(open('pack/manifest.json'))['pack_version'])")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if release already exists
@@ -37,7 +37,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build profile ZIPs
+      - name: Build universal ZIP
         if: steps.check.outputs.exists == 'false'
         run: python3 scripts/build-release-bundles.py
 

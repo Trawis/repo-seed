@@ -1,46 +1,31 @@
 # Features
 
-**Document role**: `repo-seed` repository documentation
+**Document role**: Repo-seed project documentation
 
 **Sync behavior**: Never copied into target repositories
 
 ## Implemented
 
-- Explicit separation between repo-only files, managed pack files, reusable templates, and target-owned project documents.
-- Concise root agent instructions with task-specific guidance and convention routing.
-- Managed coding-agent references under `.agents/` in target repositories.
-- Clearly labeled, routinely synced reference templates under `docs/templates/`, with stable scaffold destinations under `docs/project/`.
-- Profile-based sync through `minimal`, `library`, `app`, `game`, and `full`.
-- Declarative `pack-manifest.json` shared by sync and release tooling.
-- Hash-based managed-file conflict detection.
-- Hash-safe migration and profile cleanup.
-- One-time project-document scaffolding that preserves existing target documents.
-- Template provenance and non-failing drift warnings.
-- Optional generic GitHub issue-template scaffolding.
-- C#, Unity, Python, shell, script, and CI/CD guidance.
-- Pull-request and coding-agent entry-file support.
+- Self-contained `pack/` distribution with target-mirroring paths.
+- One manifest shared by synchronization and release packaging.
+- One universal archive containing every profile.
+- Five documentation profiles: `minimal`, `library`, `app`, `game`, and `full`.
+- Managed coding-agent entry files, focused guidelines, and language conventions.
+- Unconditional refresh of managed files and read-only template references.
+- Missing-only scaffolding for project documents, `.gitignore`, and `.editorconfig`.
+- Separate missing-only scaffolding for GitHub bug, feature, and configuration templates.
+- Source-path markers in scaffolded Markdown for manual template comparison.
+- Dry-run support and strict manifest, source, and path validation.
+
+## Deliberately Not Supported
+
+- Hash or provenance state.
+- Conflict copies, backups, or local-edit protection for managed files.
+- Automatic merging of template changes into live project documentation.
+- Migration cleanup or deletion when profiles change.
+- Git branch creation, commits, pushes, pull requests, or merges.
 - Profile-specific release archives.
 
-## Planned
+## Possible Future Work
 
-- No additional features are planned during 2.0 stabilization.
-
-## Maybe Later
-
-- Non-mutating synchronization check mode.
-- JSON Schema validation for `pack-manifest.json`.
-- Release archive checksums.
-- A project-specific agent-instructions template.
-- Additional profiles and convention families.
-- Splitting conventions when real target repositories show context problems.
-- A dedicated template-review acknowledgement command if manual provenance updates prove error-prone.
-- Separating Git branch preparation from file synchronization.
-- Reconsidering whether `.editorconfig` should be managed or scaffolded.
-- Provider-specific CI/CD examples after concrete project needs are known.
-
-## Rejected / Out of Scope
-
-- Routine synchronization of project-owned documentation.
-- Automatic merging of template changes into live project documentation.
-- Automatic commits, pushes, pull requests, or merges.
-- A separate roadmap that duplicates feature state.
+Add capabilities only after concrete target-repository usage demonstrates a recurring need. Prefer extending templates or guidance over adding synchronization state.
