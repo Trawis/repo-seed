@@ -24,4 +24,6 @@ Do not duplicate existing work or create a missing long-lived branch implicitly.
 - Never force-push a long-lived branch, bypass protection, auto-merge, or approve your own PR.
 - Do not include assistant, model, or tool names in repository history or release text.
 
+Squash short-lived feature branches when desired. When a repository uses long-lived integration and production branches such as `develop` and `main`, preserve merge commits across that boundary for releases, hotfixes, and merge-backs so both branches retain shared ancestry.
+
 If hosted tooling is unavailable, report the intended source branch, target, title, and validation without claiming a PR exists.

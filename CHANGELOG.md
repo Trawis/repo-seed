@@ -10,6 +10,10 @@ Use newest entries first. Do not dump raw git commits here.
 
 ## 3.2.1 - 2026-07-05
 
+### Changed
+
+- Clarified that Git Flow repositories should preserve merge commits across long-lived integration and production branch boundaries.
+
 ### Fixed
 
 - Added manifest-inventoried package instructions and the MIT License to the downloadable archive without syncing them into target repositories.
