@@ -78,7 +78,7 @@ python scripts/sync-docs.py \
   --dry-run
 ```
 
-See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from the old stateful 2.x synchronizer.
+See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from the old stateful 1.x or 2.x synchronizer.
 
 ## Source Layout
 
