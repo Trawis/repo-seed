@@ -8,13 +8,7 @@
 
 Follow the repository's project-specific instructions first.
 
-For normal work:
-
-1. Target `develop` when it exists.
-2. Otherwise target `dev` when it exists.
-3. Otherwise target `main` or `master`.
-
-Do not create a missing integration branch as a side effect of ordinary work. Use release or hotfix branches only when the repository explicitly documents them.
+Use the hosted default branch when the repository does not document a different integration branch. Do not infer Git Flow, trunk-based development, release branches, or hotfix branches from branch names alone. Do not create a missing long-lived branch as a side effect of ordinary work.
 
 ## Preflight
 
@@ -29,8 +23,8 @@ Do not duplicate work that is already open or merged.
 
 ## Branches and Pull Requests
 
-- Use lowercase kebab-case branch names.
-- Use `feature/<short-description>` for normal work.
+- Follow the repository's branch naming convention.
+- When none exists, use a short lowercase kebab-case name with a meaningful category such as `feature/`, `fix/`, or `docs/`.
 - Do not include usernames, dates, vague suffixes, or assistant/model names.
 - Keep commits focused and use imperative messages.
 - Create or propose a pull request when hosted review is available.

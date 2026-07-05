@@ -17,13 +17,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
       - name: Validate pack
-        run: python3 -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -v
 
       - name: Read version
         id: ver
         run: |
-          VERSION=$(python3 -c "import json; print(json.load(open('pack/manifest.json'))['pack_version'])")
+          VERSION=$(python -c "import json; print(json.load(open('pack/manifest.json'))['pack_version'])")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if release already exists
@@ -39,7 +43,10 @@ jobs:
 
       - name: Build universal ZIP
         if: steps.check.outputs.exists == 'false'
-        run: python3 scripts/build-release-bundles.py
+        run: |
+          python scripts/build-release-bundle.py
+          cd dist
+          sha256sum *.zip > "repo-seed-pack-${{ steps.ver.outputs.version }}.zip.sha256"
 
       - name: Create GitHub release
         if: steps.check.outputs.exists == 'false'
@@ -47,6 +54,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v${{ steps.ver.outputs.version }}" \
-            --title "Documentation Bundle ${{ steps.ver.outputs.version }}" \
+            --title "Repo Seed Pack ${{ steps.ver.outputs.version }}" \
             --generate-notes \
-            dist/*.zip
+            dist/*

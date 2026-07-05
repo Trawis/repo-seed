@@ -6,7 +6,7 @@ Repository-level instructions for coding agents.
 
 **Sync destination**: `AGENTS.md`
 
-**Version**: 3.0.0
+**Version**: 3.1.0
 
 ---
 
@@ -92,7 +92,7 @@ Ask before broad refactors, architecture changes, framework replacement, schema 
 - Keep comments focused on constraints, intent, tradeoffs, or non-obvious behavior.
 - Add tests for behavior changes, bug fixes, validation, and important edge cases when practical.
 
-Load applicable managed conventions:
+Load applicable managed conventions when they are present in the selected pack profile:
 
 - C#/.NET: `.agents/conventions/csharp.md`
 - Unity/C#: `.agents/conventions/unity.md` and the C# conventions
@@ -102,11 +102,11 @@ Load applicable managed conventions:
 
 ## Git and Pull Requests
 
-Follow the branching model documented in `.agents/project.md`, a child `AGENTS.md`, or repository documentation.
+Follow the branching model documented in `.agents/project.md`, a child `AGENTS.md`, repository documentation, or hosted repository settings.
 
-For normal work, target an existing `develop` or `dev` integration branch first. Target `main` or `master` only when no integration branch exists. Do not create a missing integration branch as a side effect of ordinary work.
+When no project-specific model exists, branch from the hosted default branch and use a short, descriptive branch name. Do not create a new long-lived integration branch as a side effect of ordinary work.
 
-Normal work uses `feature/<short-kebab-description>`. Branch names, commits, PR text, changelog entries, and release notes must describe the work and must not contain assistant, model, or tool names.
+Branch names, commits, PR text, changelog entries, and release notes must describe the work and must not contain assistant, model, or tool names.
 
 Before creating branches or PRs, check remote state, existing branches, open PRs, and recently merged work when tooling is available. Do not duplicate existing work.
 

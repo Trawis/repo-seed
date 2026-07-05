@@ -8,6 +8,28 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.1.0 - 2026-07-05
+
+### Added
+
+- Added public contribution, security, licensing, installation, and version 2.x migration guidance.
+- Added focused pull-request CI on the minimum supported Python version.
+- Added SHA-256 checksums to release artifacts.
+- Added explicit `--scaffold-editorconfig` support.
+
+### Changed
+
+- Added destination preflight so managed paths that are directories or symbolic links fail before any files are copied.
+- Hardened synchronization and release packaging against unsafe source links and manifest path collisions.
+- Made `library` distinct from `minimal` by including the general coding conventions.
+- Made distributed Git guidance neutral toward repository branching models.
+- Renamed the release builder to `scripts/build-release-bundle.py`.
+- Kept the issue chooser focused on bug and feature reports with blank issues disabled.
+- Made `.gitignore` scaffolding preserve `.env.example`.
+- Removed repo-seed's redundant feature document and narrowed ownership and contribution guidance to single responsibilities.
+- Clarified boundaries between feature status, functional, technical, architecture, user, and game-design templates.
+- Reduced pull-request checks and policy boilerplate while retaining functional validation and release checks.
+
 ## 3.0.0 - 2026-07-04
 
 ### Changed

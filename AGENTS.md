@@ -31,12 +31,12 @@ Ownership boundaries:
 
 Do not use a root repository document as a sync source.
 
-## Git Workflow
+## GitHub Flow
 
-- Use `feature/<short-kebab-description>` for normal work.
-- Target `develop` or `dev` when either integration branch exists.
-- Target `main` or `master` only when no integration branch exists.
-- Do not create a missing integration branch as a side effect of ordinary work.
+- `main` is the only long-lived branch.
+- Start normal work from an updated `main` using `feature/<short-kebab-description>`.
+- Open pull requests against `main`.
+- Do not commit directly to `main` or create `develop`, `dev`, release, or hotfix branches.
 
 ## Relevant Conventions
 
@@ -56,8 +56,8 @@ For sync-script or packaging changes, run:
 ```bash
 python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
-python scripts/build-release-bundles.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundles.py
+python scripts/build-release-bundle.py --help
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py
 git diff --check
 ```
 

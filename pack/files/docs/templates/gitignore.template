@@ -7,7 +7,6 @@
 
 .env
 .env.*
-__pycache__/
-*.py[cod]
-build/
-dist/
+!.env.example
+.DS_Store
+Thumbs.db

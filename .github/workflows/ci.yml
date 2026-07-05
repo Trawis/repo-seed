@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Check command-line interfaces
+        run: |
+          python pack/files/scripts/sync-docs.py --help
+          python scripts/build-release-bundle.py --help
+
+      - name: Compile Python files
+        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py tests/test_sync_docs.py
+
+      - name: Build universal archive
+        run: python scripts/build-release-bundle.py

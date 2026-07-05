@@ -16,6 +16,8 @@
 
 ---
 
+Describe the implementation of one feature or change. Reference the FSD for behavior and the architecture document for stable system structure.
+
 ## 1. Technical Summary
 
 Describe the technical approach and the main implementation boundaries.
@@ -24,9 +26,9 @@ Describe the technical approach and the main implementation boundaries.
 
 Link to FSD, issue, ticket, acceptance criteria, or product brief.
 
-## 3. Architecture / Design
+## 3. Design and Architecture Impact
 
-Describe the selected architecture, modules, layers, and major design decisions.
+Describe the proposed design and any change to established architectural boundaries or decisions.
 
 ## 4. Components Changed
 
@@ -48,7 +50,7 @@ Document external services, libraries, SDKs, APIs, queues, jobs, or infrastructu
 
 ## 8. Error Handling and Logging
 
-Describe expected failures, exceptions, retries, logs, telemetry, and user-safe error messages.
+Describe implementation failures, exceptions, retries, logs, telemetry, and how they map to functional errors defined in the FSD.
 
 ## 9. Security / Privacy
 

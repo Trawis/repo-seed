@@ -14,6 +14,8 @@
 
 ---
 
+Describe the stable, system-wide structure. Put feature-specific implementation details in a TSD.
+
 ## Overview
 
 Brief description of the system's purpose and high-level architecture style (monolith, microservices, layered, event-driven, etc.).
