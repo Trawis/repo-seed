@@ -8,11 +8,77 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 
 ## What It Provides
 
-- concise coding-agent instructions and focused supporting conventions;
-- read-only documentation templates for five project profiles;
+- portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
+- focused documentation, Git, CI/CD, and language references;
+- read-only templates for five project profiles;
 - missing-only scaffolding for project documents, `.gitignore`, `.editorconfig`, and GitHub issue templates;
 - one universal release archive;
 - a sync script copied into each target repository for future updates.
+
+## Requirements
+
+- Python 3.10 or newer;
+- a writable target repository directory;
+- Windows, Linux, or macOS.
+
+The scripts use only the Python standard library. CI validates the minimum and current Python versions across all three operating-system families.
+
+## Safety
+
+Managed files are overwritten; project-owned files are scaffolded only when missing. Run `--dry-run` first and commit or back up the target repository before updating because filesystem writes are not transactional.
+
+See [Document ownership](docs/project/document-ownership.md) for the authoritative path classification.
+
+## Profiles
+
+All profiles receive the core agent instructions, documentation and Git guidance, sync script, and common reference templates. Specialized guidance is included only where the profile benefits from it.
+
+| Profile | Guidance and project templates |
+|---|---|
+| `minimal` | Core guidance plus README, changelog, and `.gitignore` |
+| `library` | Minimal plus general coding conventions |
+| `app` | Library guidance plus features, architecture, user guide, FSD, and TSD |
+| `game` | Library guidance plus Unity conventions, features, and GDD |
+| `full` | Every managed reference and template |
+
+The default profile is `full`. Profiles select what is copied; changing to a smaller profile does not delete files installed by a larger profile.
+
+## Download and First Sync
+
+Download the latest universal ZIP from [GitHub Releases](https://github.com/Trawis/repo-seed/releases), extract it, and preview the sync:
+
+```bash
+python pack/files/scripts/sync-docs.py \
+  --target /path/to/project \
+  --profile app \
+  --scaffold-project-files \
+  --scaffold-github-templates \
+  --dry-run
+```
+
+Review the output, then rerun without `--dry-run`.
+
+Optional scaffolding is separated by ownership:
+
+- `--scaffold-project-files` creates missing project documents and `.gitignore`;
+- `--scaffold-github-templates` creates missing bug, feature, and chooser files;
+- `--scaffold-editorconfig` creates `.editorconfig` only when missing.
+
+Existing scaffold destinations are always preserved.
+
+## Update an Existing Project
+
+The managed script copied into the target can use a newer extracted pack:
+
+```bash
+python scripts/sync-docs.py \
+  --source /path/to/extracted/pack \
+  --target . \
+  --profile app \
+  --dry-run
+```
+
+See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from the old stateful 2.x synchronizer.
 
 ## Source Layout
 
@@ -30,72 +96,26 @@ scripts/                     # repository release tooling
 tests/                       # pack and tooling tests
 ```
 
-Root files describe `repo-seed` itself. They are never used as target sync sources.
+Root files describe `repo-seed` itself and are never target sync sources.
 
-## Sync Behavior
-
-Sync has only two ownership rules:
-
-1. Managed guidance, the sync script, and reference templates are always overwritten from the selected pack.
-2. Project-owned files are created only when explicitly scaffolded and missing.
-
-There is no target state file, hash tracking, conflict directory, migration cleanup, or Git branch handling. Do not customize managed files in a target repository. Put project-specific agent rules in `.agents/project.md` or a child `AGENTS.md`.
-
-Updated templates remain under `docs/templates/` as read-only references. Agents compare a relevant live document with its source template and update the live document when practical. Git history supplies the template diff.
-
-## Profiles
-
-All profiles receive the complete agent-guidance set, sync script, and common reference templates.
-
-| Profile | Additional project templates |
-|---|---|
-| `minimal` | None |
-| `library` | None |
-| `app` | Features, architecture, user guide, FSD, and TSD |
-| `game` | Features and GDD |
-| `full` | Every template |
-
-The default profile is `full`.
-
-## Use an Extracted Pack
-
-The script discovers the pack containing it:
+## Build and Validate
 
 ```bash
-python pack/files/scripts/sync-docs.py \
-  --target /path/to/project \
-  --profile app \
-  --scaffold-project-files \
-  --scaffold-github-templates
-```
-
-On later updates, the managed script already copied into the project can use a newer extracted pack:
-
-```bash
-python scripts/sync-docs.py \
-  --source /path/to/extracted/pack \
-  --target . \
-  --profile app
-```
-
-Use `--dry-run` to preview operations. `--scaffold-project-files` creates missing project documents, `.gitignore`, and `.editorconfig`. `--scaffold-github-templates` creates missing bug, feature, and issue configuration files.
-
-## Build the Release
-
-```bash
-python scripts/build-release-bundles.py
-```
-
-The output is `dist/repo-seed-pack-3.0.0.zip`. It contains the top-level `pack/` directory and every asset listed in `pack/manifest.json`.
-
-## Validate
-
-```bash
+python scripts/build-release-bundle.py
 python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
-python scripts/build-release-bundles.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundles.py
+python scripts/build-release-bundle.py --help
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py
 git diff --check
 ```
 
-See [document ownership](docs/project/document-ownership.md) and [features](docs/project/features.md) for repository-specific details.
+The build creates `dist/repo-seed-pack-<version>.zip` from the assets listed in `pack/manifest.json`.
+
+## Project and Community
+
+- [Document ownership](docs/project/document-ownership.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+
+Repo Seed is available under the [MIT License](LICENSE).

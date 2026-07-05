@@ -79,7 +79,7 @@ Examples:
 sync-docs.py
 backup-photos.py
 cleanup-downloads.sh
-repo-seed-pack-3.0.0.zip
+repo-seed-pack-3.1.0.zip
 backup-photos_1.1.0.csv
 backup-photos_1.1.0_report.txt
 cleanup-downloads_2.0.0_log.txt

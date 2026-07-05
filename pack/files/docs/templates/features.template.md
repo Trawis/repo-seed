@@ -7,7 +7,7 @@
 **Scaffold behavior**: The live file is project-owned and never overwritten by sync
 <!-- repo-seed-template:end -->
 
-Track feature state here. Keep detailed requirements in FSD/TSD/GDD documents when those exist.
+Track feature state and links only. Keep functional requirements in an FSD, technical design in a TSD, and game design in a GDD.
 
 ## Implemented
 -

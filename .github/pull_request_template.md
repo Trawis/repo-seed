@@ -21,7 +21,6 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 ## Documentation
 - [ ] README.md updated if needed
 - [ ] CHANGELOG.md updated if needed
-- [ ] `docs/project/features.md` updated if needed
 - [ ] docs/ updated if needed
 - [ ] No invented features, claims, screenshots, benchmarks, or compatibility guarantees
 
@@ -39,7 +38,7 @@ Keep the summary concise and factual. Do not add generic filler or mention AI as
 - [ ] Git/PR preflight checked remote state, open PRs, and recently merged PRs where available
 - [ ] Work was done on a task branch
 - [ ] Branch name follows `feature/<short-kebab-description>`
-- [ ] PR targets `develop`/`dev` when present; otherwise `main`/`master`
+- [ ] PR targets `main`
 - [ ] No auto-merge requested/performed
 - [ ] No branch protection bypass requested/performed
 

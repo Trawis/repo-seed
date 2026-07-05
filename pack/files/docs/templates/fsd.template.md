@@ -16,6 +16,8 @@
 
 ---
 
+Define observable user behavior and acceptance here. Put implementation, architecture, data, API, testing, and rollout decisions in the TSD.
+
 ## 1. Summary
 
 Describe the user-facing purpose of this feature or product.
@@ -60,18 +62,14 @@ Describe required validation, expected errors, user-facing messages, and edge ca
 
 Document user roles, access rules, ownership rules, or authorization requirements.
 
-## 11. Compatibility / Constraints
-
-Document platform, browser, OS, version, data, localization, accessibility, or backward-compatibility constraints.
-
-## 12. Acceptance Checklist
+## 11. Acceptance Checklist
 
 - [ ]
 
-## 13. Open Questions
+## 12. Open Questions
 
 -
 
-## 14. References
+## 13. References
 
 -

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "pack_version": "3.0.0",
+  "pack_version": "3.1.0",
   "default_profile": "full",
   "profiles": [
     "minimal",
@@ -43,27 +43,27 @@
     {
       "path": ".agents/conventions/csharp.md",
       "type": "managed",
-      "profiles": ["minimal", "library", "app", "game", "full"]
+      "profiles": ["library", "app", "game", "full"]
     },
     {
       "path": ".agents/conventions/scripts.md",
       "type": "managed",
-      "profiles": ["minimal", "library", "app", "game", "full"]
+      "profiles": ["library", "app", "game", "full"]
     },
     {
       "path": ".agents/conventions/python.md",
       "type": "managed",
-      "profiles": ["minimal", "library", "app", "game", "full"]
+      "profiles": ["library", "app", "game", "full"]
     },
     {
       "path": ".agents/conventions/shell.md",
       "type": "managed",
-      "profiles": ["minimal", "library", "app", "game", "full"]
+      "profiles": ["library", "app", "game", "full"]
     },
     {
       "path": ".agents/conventions/unity.md",
       "type": "managed",
-      "profiles": ["minimal", "library", "app", "game", "full"]
+      "profiles": ["game", "full"]
     },
     {
       "path": "docs/templates/readme.template.md",
@@ -90,7 +90,7 @@
       "path": "docs/templates/editorconfig.template",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
-      "scaffold_group": "project",
+      "scaffold_group": "editorconfig",
       "scaffold_target": ".editorconfig"
     },
     {

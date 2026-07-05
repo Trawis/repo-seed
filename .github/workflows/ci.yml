@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        python:
+          - "3.10"
+          - "3.14"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Check command-line interfaces
+        run: |
+          python pack/files/scripts/sync-docs.py --help
+          python scripts/build-release-bundle.py --help
+
+      - name: Compile Python files
+        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py tests/test_sync_docs.py
+
+      - name: Build universal archive
+        run: python scripts/build-release-bundle.py

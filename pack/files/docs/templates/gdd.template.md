@@ -16,6 +16,8 @@
 
 ---
 
+Define gameplay intent and player experience here. Put engine, code, persistence, integration, and rollout design in a TSD.
+
 ## 1. High Concept
 
 Describe the game, mod, mechanic, or prototype in one short paragraph.
@@ -26,7 +28,7 @@ Describe the game, mod, mechanic, or prototype in one short paragraph.
 
 ## 3. Target Player and Platform
 
-Document target audience, platform, engine, input method, and session length assumptions.
+Document target audience, player-facing platform, input method, and session length assumptions.
 
 ## 4. Core Gameplay Loop
 
@@ -56,28 +58,20 @@ Document story constraints, world rules, characters, factions, tone, and lore if
 
 Document visual style, animation needs, VFX, SFX, music, placeholders, and asset constraints.
 
-## 11. Technical / Engine Constraints
-
-Document engine version, plugins, packages, mod loader, asset pipeline, save format, and platform constraints.
-
-## 12. Compatibility / Modding / Save Safety
-
-Document compatibility, load order, save backup/rollback, IDs, serialized data, and migration risks.
-
-## 13. Acceptance Criteria
+## 11. Playtest Success Criteria
 
 | ID | Criteria | Test Method |
 |----|----------|-------------|
 | GDD-001 |  | Manual / Automated |
 
-## 14. Playtest / Validation Plan
+## 12. Playtest Plan
 
-Document manual playtest steps, expected behavior, telemetry, known edge cases, and success criteria.
+Document playtest scenarios, target observations, feedback collection, and success measures.
 
-## 15. Open Questions
+## 13. Open Questions
 
 -
 
-## 16. References
+## 14. References
 
 -

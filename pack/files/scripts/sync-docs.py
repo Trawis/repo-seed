@@ -11,13 +11,13 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-SCRIPT_VERSION = "3.0.0"
+SCRIPT_VERSION = "3.1.0"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 VALID_TYPES = {"managed", "template"}
-VALID_SCAFFOLD_GROUPS = {"project", "github"}
+VALID_SCAFFOLD_GROUPS = {"project", "github", "editorconfig"}
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
@@ -60,6 +60,17 @@ def relative_path(value: str, context: str) -> Path:
     return Path(*pure_path.parts)
 
 
+def safe_child(root: Path, value: str, context: str) -> Path:
+    root_resolved = root.resolve()
+    child = root / relative_path(value, context)
+    resolved = child.resolve()
+    try:
+        resolved.relative_to(root_resolved)
+    except ValueError as ex:
+        raise ValueError(f"{context} resolves outside its root: {value}") from ex
+    return child
+
+
 def require_string(data: dict[str, object], key: str, context: str) -> str:
     value = data.get(key)
     if not isinstance(value, str) or not value:
@@ -91,6 +102,11 @@ def template_body(source: Path) -> str:
 
 def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManifest:
     manifest_path = source_root / MANIFEST_FILE
+    files_root = source_root / FILES_DIRECTORY
+    if manifest_path.is_symlink():
+        raise ValueError("Pack manifest cannot be a symbolic link")
+    if validate_sources and files_root.is_symlink():
+        raise ValueError("Pack files directory cannot be a symbolic link")
     try:
         raw = json.loads(manifest_path.read_text(encoding="utf-8"))
     except FileNotFoundError as ex:
@@ -141,7 +157,9 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
 
         if asset_type == "template":
             if scaffold_group not in VALID_SCAFFOLD_GROUPS:
-                raise ValueError(f"{context}.scaffold_group must be project or github")
+                raise ValueError(
+                    f"{context}.scaffold_group must be one of: {', '.join(sorted(VALID_SCAFFOLD_GROUPS))}"
+                )
             if not isinstance(scaffold_target, str) or not scaffold_target:
                 raise ValueError(f"{context}.scaffold_target must be a non-empty string")
             relative_path(scaffold_target, f"{context}.scaffold_target")
@@ -153,8 +171,10 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         elif scaffold_group is not None or scaffold_target is not None:
             raise ValueError(f"{context} managed assets cannot define scaffold fields")
 
-        source = source_root / FILES_DIRECTORY / relative_path(path, f"{context}.path")
+        source = safe_child(files_root, path, f"{context}.path")
         if validate_sources:
+            if source.is_symlink():
+                raise ValueError(f"Asset source cannot be a symbolic link: {path}")
             if not source.is_file():
                 raise ValueError(f"Asset source does not exist: {path}")
             if asset_type == "template":
@@ -170,6 +190,10 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
                 scaffold_target=scaffold_target if isinstance(scaffold_target, str) else None,
             )
         )
+
+    collisions = paths.intersection(scaffold_targets)
+    if collisions:
+        raise ValueError(f"Scaffold targets collide with managed paths: {', '.join(sorted(collisions))}")
 
     return PackManifest(
         schema_version=1,
@@ -195,18 +219,36 @@ def discover_source_root() -> Path | None:
     return None
 
 
-def resolved_child(root: Path, value: str, context: str) -> Path:
-    child = (root / relative_path(value, context)).resolve()
-    try:
-        child.relative_to(root.resolve())
-    except ValueError as ex:
-        raise ValueError(f"{context} resolves outside its root: {value}") from ex
-    return child
+def validate_parent_directory(target: Path, target_root: Path, context: str) -> None:
+    parent = target.parent
+    root = target_root.resolve()
+    while not parent.exists() and parent != root:
+        parent = parent.parent
+    if not parent.is_dir():
+        raise ValueError(f"{context} parent is not a directory: {parent}")
+
+
+def validate_managed_destination(target_root: Path, asset: Asset) -> None:
+    target = safe_child(target_root, asset.path, "asset target")
+    if target.is_symlink():
+        raise ValueError(f"Managed target cannot be a symbolic link: {asset.path}")
+    if target.exists() and not target.is_file():
+        raise ValueError(f"Managed target is not a file: {asset.path}")
+    validate_parent_directory(target, target_root, f"Managed target '{asset.path}'")
+
+
+def validate_scaffold_destination(target_root: Path, asset: Asset) -> None:
+    if asset.scaffold_target is None:
+        raise ValueError(f"Template has no scaffold target: {asset.path}")
+    target = safe_child(target_root, asset.scaffold_target, "scaffold target")
+    if target.exists() or target.is_symlink():
+        return
+    validate_parent_directory(target, target_root, f"Scaffold target '{asset.scaffold_target}'")
 
 
 def copy_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: bool) -> SyncAction:
-    source = resolved_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
-    target = resolved_child(target_root, asset.path, "asset target")
+    source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+    target = safe_child(target_root, asset.path, "asset target")
     if dry_run:
         return SyncAction("copy", asset.path, "would overwrite managed copy")
 
@@ -235,11 +277,11 @@ def scaffold_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: 
     if asset.scaffold_target is None:
         raise ValueError(f"Template has no scaffold target: {asset.path}")
 
-    target = resolved_child(target_root, asset.scaffold_target, "scaffold target")
-    if target.exists():
+    target = safe_child(target_root, asset.scaffold_target, "scaffold target")
+    if target.exists() or target.is_symlink():
         return SyncAction("skip", asset.scaffold_target, "project-owned destination already exists")
 
-    source = resolved_child(source_root / FILES_DIRECTORY, asset.path, "template path")
+    source = safe_child(source_root / FILES_DIRECTORY, asset.path, "template path")
     body = template_body(source)
     if Path(asset.scaffold_target).suffix.lower() == ".md":
         body = add_source_marker(body, asset.path)
@@ -258,21 +300,38 @@ def synchronize(
     profile: str,
     scaffold_project_files: bool = False,
     scaffold_github_templates: bool = False,
+    scaffold_editorconfig: bool = False,
     dry_run: bool = False,
 ) -> list[SyncAction]:
+    source_root = source_root.expanduser().resolve()
+    target_root = target_root.expanduser().resolve()
+    if not target_root.is_dir():
+        raise ValueError(f"Target repository does not exist or is not a directory: {target_root}")
+
     manifest = load_manifest(source_root)
     selected = assets_for_profile(manifest, profile)
-    actions = [copy_asset(source_root, target_root, asset, dry_run) for asset in selected]
 
     requested_groups: set[str] = set()
     if scaffold_project_files:
         requested_groups.add("project")
     if scaffold_github_templates:
         requested_groups.add("github")
+    if scaffold_editorconfig:
+        requested_groups.add("editorconfig")
+
+    scaffold_assets = tuple(
+        asset
+        for asset in selected
+        if asset.asset_type == "template" and asset.scaffold_group in requested_groups
+    )
 
     for asset in selected:
-        if asset.asset_type == "template" and asset.scaffold_group in requested_groups:
-            actions.append(scaffold_asset(source_root, target_root, asset, dry_run))
+        validate_managed_destination(target_root, asset)
+    for asset in scaffold_assets:
+        validate_scaffold_destination(target_root, asset)
+
+    actions = [copy_asset(source_root, target_root, asset, dry_run) for asset in selected]
+    actions.extend(scaffold_asset(source_root, target_root, asset, dry_run) for asset in scaffold_assets)
     return actions
 
 
@@ -289,14 +348,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--scaffold-project-files",
         action="store_true",
-        help="Create missing project-owned documents, .gitignore, and .editorconfig.",
+        help="Create missing project-owned documents and .gitignore.",
     )
     parser.add_argument(
         "--scaffold-github-templates",
         action="store_true",
-        help="Create missing bug, feature, and issue configuration files under .github/ISSUE_TEMPLATE/.",
+        help="Create missing bug, feature, and chooser files.",
     )
-    parser.add_argument("--dry-run", action="store_true", help="Show operations without writing files.")
+    parser.add_argument(
+        "--scaffold-editorconfig",
+        action="store_true",
+        help="Create .editorconfig only when it is missing.",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Validate and show operations without writing files.")
     parser.add_argument("--version", action="version", version=f"%(prog)s {SCRIPT_VERSION}")
     return parser
 
@@ -323,6 +387,7 @@ def main(argv: list[str] | None = None) -> int:
             profile=profile,
             scaffold_project_files=args.scaffold_project_files,
             scaffold_github_templates=args.scaffold_github_templates,
+            scaffold_editorconfig=args.scaffold_editorconfig,
             dry_run=args.dry_run,
         )
     except (OSError, ValueError) as ex:
