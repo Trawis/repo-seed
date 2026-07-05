@@ -8,6 +8,12 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.2.2 - 2026-07-05
+
+### Changed
+
+- Clarified that Git Flow repositories should preserve merge commits across long-lived integration and production branch boundaries.
+
 ## 3.2.1 - 2026-07-05
 
 ### Fixed
