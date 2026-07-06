@@ -345,6 +345,40 @@ class ManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "collide"):
                 sync.load_manifest(pack)
 
+    def test_manifest_rejects_project_owned_workflow_paths(self):
+        raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+
+        def assert_rejected(manifest):
+            with tempfile.TemporaryDirectory() as temp:
+                pack = Path(temp)
+                (pack / "manifest.json").write_text(
+                    json.dumps(manifest),
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ValueError, "project-owned tree"):
+                    sync.load_manifest(pack, validate_sources=False)
+                with self.assertRaisesRegex(ValueError, "project-owned tree"):
+                    bundle_builder.load_manifest(pack)
+
+        managed = json.loads(json.dumps(raw))
+        managed["assets"][0]["path"] = ".github/workflows/ci.yml"
+        assert_rejected(managed)
+
+        scaffolded = json.loads(json.dumps(raw))
+        template = next(
+            asset
+            for asset in scaffolded["assets"]
+            if asset.get("scaffold_group") == "github"
+        )
+        template["scaffold_target"] = ".github/workflows/ci.yml"
+        assert_rejected(scaffolded)
+
+        retired = json.loads(json.dumps(raw))
+        retired["migration"]["retired_path_sets"][0]["paths"][0] = (
+            ".github/workflows/legacy.yml"
+        )
+        assert_rejected(retired)
+
 
 class GuidanceAndTemplateTests(unittest.TestCase):
     def test_agent_entry_points_route_specialized_work(self):
@@ -1011,6 +1045,42 @@ class SyncBehaviorTests(unittest.TestCase):
                                 f"{source_profile} -> {target_profile}: {asset.path}",
                             )
                         self.assertEqual(unknown.read_text(encoding="utf-8"), "keep\n")
+
+    def test_profile_changes_preserve_existing_github_workflows(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            workflows = target / ".github/workflows"
+            workflows.mkdir(parents=True)
+            ci = workflows / "ci.yml"
+            release = workflows / "release.yml"
+            ci.write_text("name: Project CI\n", encoding="utf-8")
+            release.write_text("name: Project release\n", encoding="utf-8")
+            expected = {
+                ci: ci.read_bytes(),
+                release: release.read_bytes(),
+            }
+
+            sync.synchronize(
+                PACK_ROOT,
+                target,
+                "full",
+                scaffold_github_templates=True,
+            )
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+
+            for path, content in expected.items():
+                self.assertEqual(path.read_bytes(), content)
+            self.assertFalse(
+                any(
+                    action.path.startswith(".github/workflows/")
+                    for action in actions
+                )
+            )
 
     def test_app_to_game_prunes_references_but_preserves_live_docs(self):
         with tempfile.TemporaryDirectory() as temp:

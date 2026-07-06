@@ -28,6 +28,9 @@ without `--dry-run`. Unchanged legacy-managed files with recorded hashes may be
 removed, managed guidance is updated when different, and modified or unverified
 project files are preserved.
 
+The `.github/workflows/` tree is always project-owned and cannot be managed,
+scaffolded, retired, or deleted by this pack.
+
 Commit the generated `.repo-seed-state.json`. It records managed ownership so a
 smaller profile can remove unchanged stale assets while retaining modified files
 as tombstones for review.

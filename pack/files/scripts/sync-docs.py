@@ -19,6 +19,7 @@ TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 VALID_TYPES = {"managed", "template"}
 VALID_SCAFFOLD_GROUPS = {"project", "github", "editorconfig"}
+PROJECT_OWNED_TREES = (".github/workflows",)
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SCAFFOLD_SOURCE_PATTERN = re.compile(
@@ -135,6 +136,18 @@ def safe_child(root: Path, value: str, context: str) -> Path:
     return child
 
 
+def is_project_owned_tree_path(value: str) -> bool:
+    return any(
+        value == tree or value.startswith(f"{tree}/")
+        for tree in PROJECT_OWNED_TREES
+    )
+
+
+def reject_project_owned_tree_path(value: str, context: str) -> None:
+    if is_project_owned_tree_path(value):
+        raise ValueError(f"{context} cannot use project-owned tree: {value}")
+
+
 def require_string(data: dict[str, object], key: str, context: str) -> str:
     value = data.get(key)
     if not isinstance(value, str) or not value:
@@ -198,6 +211,7 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
         path = require_string(raw_asset, "path", context)
         content_hashes = require_string_list(raw_asset, "content_hashes", context)
         relative_path(path, f"{context}.path")
+        reject_project_owned_tree_path(path, f"{context}.path")
         if path in retired_asset_paths:
             raise ValueError(f"Duplicate retired asset: {path}")
         if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in content_hashes):
@@ -219,6 +233,7 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
         paths = require_string_list(raw_set, "paths", context)
         for path_index, path in enumerate(paths):
             relative_path(path, f"{context}.paths[{path_index}]")
+            reject_project_owned_tree_path(path, f"{context}.paths[{path_index}]")
             if path in retired_paths:
                 raise ValueError(f"Duplicate retired path: {path}")
             retired_paths.add(path)
@@ -272,6 +287,7 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
             version_key(version, f"{context}.from_versions[{version_index}]")
         relative_path(legacy_target, f"{context}.legacy_target")
         relative_path(template, f"{context}.template")
+        reject_project_owned_tree_path(legacy_target, f"{context}.legacy_target")
         if legacy_target in legacy_targets:
             raise ValueError(f"Duplicate scaffold legacy target: {legacy_target}")
         if template not in asset_by_path or asset_by_path[template].asset_type != "template":
@@ -379,6 +395,7 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         scaffold_target = raw_asset.get("scaffold_target")
 
         relative_path(path, f"{context}.path")
+        reject_project_owned_tree_path(path, f"{context}.path")
         if path in paths:
             raise ValueError(f"Duplicate asset path: {path}")
         if asset_type not in VALID_TYPES:
@@ -401,6 +418,10 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
                 if not isinstance(scaffold_target, str) or not scaffold_target:
                     raise ValueError(f"{context}.scaffold_target must be a non-empty string")
                 relative_path(scaffold_target, f"{context}.scaffold_target")
+                reject_project_owned_tree_path(
+                    scaffold_target,
+                    f"{context}.scaffold_target",
+                )
                 if scaffold_target in scaffold_targets:
                     raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
                 scaffold_targets.add(scaffold_target)

@@ -13,6 +13,7 @@ Use newest entries first. Do not dump raw git commits here.
 ### Fixed
 
 - Rejected unknown pack-owned paths in `.repo-seed-state.json` before any copy or deletion, and allowlisted retired managed assets with known hashes.
+- Protected the entire project-owned `.github/workflows/` tree from manifest management, scaffolding, retirement, and deletion.
 - Corrected the version 3 to version 4 update command to run the new pack's schema-compatible script.
 - Clarified profile reuse, applicable AI-bootstrap documents, library TSD references, and legacy migration guidance.
 - Removed a template-context broken changelog link and corrected profile-count wording.

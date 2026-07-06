@@ -98,6 +98,8 @@ verified unchanged from repo-seed and can be upgraded safely.
 On initial sync, version updates, and legacy migration, existing `.gitignore`,
 `.editorconfig`, and pull-request templates are explicitly reported as protected
 project-owned files.
+The `.github/workflows/` tree is always project-owned and cannot be managed,
+scaffolded, retired, or deleted by the pack.
 
 ## Update an Existing Project
 
