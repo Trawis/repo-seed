@@ -42,6 +42,10 @@ Describe relevant screens, commands, interactions, inputs, and outputs.
 
 Document user-visible errors, edge cases, roles, access, and ownership rules.
 
+## Non-Functional Requirements
+
+Document user-observable targets: performance, capacity, reliability, accessibility, and compatibility. Keep how they are achieved in the TSD.
+
 ## Open Questions and References
 
 -

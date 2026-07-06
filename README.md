@@ -44,7 +44,7 @@ All profiles receive the core agent instructions, documentation and Git guidance
 
 | Profile | Guidance and project templates |
 |---|---|
-| `minimal` | Core guidance plus README, changelog, and `.gitignore` |
+| `minimal` | Core guidance plus README and changelog |
 | `library` | Minimal plus general coding conventions |
 | `app` | Library guidance plus features, architecture, user guide, FSD, and TSD |
 | `game` | Library guidance plus Unity conventions, features, and GDD |
@@ -72,7 +72,7 @@ Review the output, then rerun without `--dry-run`.
 
 Optional scaffolding is separated by ownership:
 
-- `--scaffold-project-files` creates missing project documents and `.gitignore`, or upgrades verified unchanged Markdown;
+- `--scaffold-project-files` creates missing project documents, or upgrades verified unchanged Markdown;
 - `--scaffold-github-templates` creates missing bug, feature, and chooser files, or upgrades verified unchanged Markdown;
 - `--scaffold-editorconfig` creates `.editorconfig` only when missing.
 

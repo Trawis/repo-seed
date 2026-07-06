@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "pack_version": "3.3.0",
+  "pack_version": "3.4.0",
   "state_file": ".repo-seed-state.json",
   "default_profile": "full",
   "profiles": [
@@ -138,13 +138,6 @@
       "scaffold_target": "CHANGELOG.md"
     },
     {
-      "path": "docs/templates/gitignore.template",
-      "type": "template",
-      "profiles": ["minimal", "library", "app", "game", "full"],
-      "scaffold_group": "project",
-      "scaffold_target": ".gitignore"
-    },
-    {
       "path": "docs/templates/editorconfig.template",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
@@ -163,7 +156,7 @@
       "path": "docs/templates/architecture.template.md",
       "type": "template",
       "profiles": ["app", "full"],
-      "previous_hashes": ["698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1"],
+      "previous_hashes": ["698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1", "0a9f4007eccc5771e7196defd2ede474d405160d80134dfbedf6581f21f0b78f"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/architecture.md"
     },
@@ -179,7 +172,7 @@
       "path": "docs/templates/fsd.template.md",
       "type": "template",
       "profiles": ["app", "full"],
-      "previous_hashes": ["547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242"],
+      "previous_hashes": ["547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242", "e572715e358a5c3bf9e7d30dead963bcfdc3d35b5e127666da67719ee957db11"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/fsd.md"
     },
