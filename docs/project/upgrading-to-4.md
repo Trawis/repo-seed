@@ -10,8 +10,8 @@ profile default.
 ## Before Upgrading
 
 1. Commit or back up the target repository.
-2. Run the new script with an explicit `minimal`, `library`, `app`, or `game`
-   profile and `--dry-run`.
+2. Run the new script with `--dry-run`. Pass an explicit `minimal`, `library`,
+   `app`, or `game` profile when the target has no reusable recorded profile.
 3. Review managed-template removals and additions.
 4. Rerun without `--dry-run`.
 
@@ -47,7 +47,8 @@ remain project-owned.
 
 ## Profile Behavior
 
-The first version 4 sync requires an explicit profile:
+When no reusable non-`full` profile is recorded, the first version 4 sync
+requires an explicit profile:
 
 ```bash
 python pack/files/scripts/sync-docs.py \
@@ -56,8 +57,10 @@ python pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-Later syncs may omit `--profile`; the script reuses the valid profile recorded
-in `.repo-seed-state.json`. Pass a profile explicitly to change it.
+Later syncs may omit `--profile`; the script reuses a valid `minimal`, `library`,
+`app`, or `game` profile recorded in `.repo-seed-state.json`. Pass a profile
+explicitly to change it.
 
 `full` synchronizes the complete template catalog for review. It is not a
-project type and cannot be used with `--scaffold-project-files`.
+project type, cannot be used with `--scaffold-project-files`, and must always be
+selected explicitly.

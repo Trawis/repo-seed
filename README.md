@@ -10,7 +10,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
 - focused documentation, Git, CI/CD, and language references;
-- read-only templates for five project profiles;
+- read-only templates for four project profiles plus a complete reference catalog;
 - missing-only scaffolding plus verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
 - a sync script copied into each target repository for future updates.
@@ -50,8 +50,9 @@ All profiles receive the core agent instructions, documentation and Git guidance
 | `game` | Library guidance plus Unity conventions and a GDD template |
 | `full` | Complete reference catalog; not a project type |
 
-The first sync requires an explicit project profile. Later syncs reuse the
-profile recorded in `.repo-seed-state.json` when `--profile` is omitted.
+The first sync requires an explicit project profile when no reusable profile is
+recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or `game`
+profile when `--profile` is omitted.
 Profiles select the managed assets retained in the target. Changing to a smaller
 profile prunes unchanged managed assets that are no longer selected; modified
 files are preserved. Eligible legacy cleanup applies independently of the
@@ -59,7 +60,7 @@ selected profile.
 
 `full` synchronizes every reference template for review. It cannot be combined
 with `--scaffold-project-files` because FSD and GDD are mutually exclusive
-project models.
+project models, and it must always be selected explicitly.
 
 Living documents have distinct responsibilities:
 
@@ -97,23 +98,39 @@ verified unchanged from repo-seed and can be upgraded safely.
 On initial sync, version updates, and legacy migration, existing `.gitignore`,
 `.editorconfig`, and pull-request templates are explicitly reported as protected
 project-owned files.
+The `.github/workflows/` tree is always project-owned and cannot be managed,
+scaffolded, retired, or deleted by the pack.
 
 ## Update an Existing Project
 
-The managed script copied into the target can use a newer extracted pack:
+Prefer the script from the newly extracted pack so the newest validation runs
+before any target file is inspected or changed:
 
 ```bash
-python scripts/sync-docs.py \
-  --source /path/to/extracted/pack \
+python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --target . \
   --dry-run
 ```
 
-Pass `--profile` to change the recorded profile intentionally.
+The copied `scripts/sync-docs.py` remains available for compatible packs, but it
+cannot cross manifest-schema changes and may not contain fixes introduced by a
+newer pack. Pass `--profile` to change the recorded profile intentionally.
 
-See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from
-the old 1.x or 2.x synchronizer, and [Upgrading to Version 4](docs/project/upgrading-to-4.md)
-for the new documentation model.
+## Upgrade from Version 3
+
+Version 3 scripts cannot read the version 4 manifest. Run the script from the
+newly extracted pack so it can update the target copy:
+
+```bash
+python /path/to/extracted/pack/files/scripts/sync-docs.py \
+  --target . \
+  --profile app \
+  --dry-run
+```
+
+See [Migrating from Version 1 or 2](docs/project/upgrading-to-3.md) for legacy
+installations and [Upgrading to Version 4](docs/project/upgrading-to-4.md) for
+the documentation-model changes.
 
 ## Source Layout
 

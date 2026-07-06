@@ -15,6 +15,7 @@ FILES_DIRECTORY = "files"
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 VALID_SCAFFOLD_GROUPS = {"project", "github", "editorconfig"}
+PROJECT_OWNED_TREES = (".github/workflows",)
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 
@@ -28,6 +29,14 @@ def safe_relative_path(value: str) -> Path:
     if path.as_posix() != value:
         raise ValueError(f"Asset path must be a canonical POSIX path: {value}")
     return Path(*path.parts)
+
+
+def reject_project_owned_tree_path(value: str, context: str) -> None:
+    if any(
+        value == tree or value.startswith(f"{tree}/")
+        for tree in PROJECT_OWNED_TREES
+    ):
+        raise ValueError(f"{context} cannot use project-owned tree: {value}")
 
 
 def require_string_list(value: object, context: str) -> tuple[str, ...]:
@@ -54,11 +63,16 @@ def require_string(value: object, context: str) -> str:
     return value
 
 
-def validate_migration(value: object, asset_types: dict[str, str]) -> None:
+def validate_migration(
+    value: object,
+    asset_types: dict[str, str],
+    scaffold_targets: set[str] | None = None,
+) -> None:
     if value is None:
         return
     if not isinstance(value, dict):
         raise ValueError("manifest.migration must be an object")
+    scaffold_targets = scaffold_targets or set()
 
     state_paths = {
         require_string(value.get(key), f"manifest.migration.{key}")
@@ -75,6 +89,27 @@ def validate_migration(value: object, asset_types: dict[str, str]) -> None:
     for path in protected:
         safe_relative_path(path)
 
+    raw_retired_assets = value.get("retired_assets")
+    if not isinstance(raw_retired_assets, list):
+        raise ValueError("manifest.migration.retired_assets must be an array")
+    retired_assets: set[str] = set()
+    for index, raw_asset in enumerate(raw_retired_assets):
+        context = f"manifest.migration.retired_assets[{index}]"
+        if not isinstance(raw_asset, dict):
+            raise ValueError(f"{context} must be an object")
+        path = require_string(raw_asset.get("path"), f"{context}.path")
+        hashes = require_string_list(
+            raw_asset.get("content_hashes"),
+            f"{context}.content_hashes",
+        )
+        safe_relative_path(path)
+        reject_project_owned_tree_path(path, f"{context}.path")
+        if path in retired_assets:
+            raise ValueError(f"Duplicate retired asset: {path}")
+        if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in hashes):
+            raise ValueError(f"{context}.content_hashes must contain SHA-256 values")
+        retired_assets.add(path)
+
     raw_sets = value.get("retired_path_sets")
     if not isinstance(raw_sets, list) or not raw_sets:
         raise ValueError("manifest.migration.retired_path_sets must be a non-empty array")
@@ -89,16 +124,30 @@ def validate_migration(value: object, asset_types: dict[str, str]) -> None:
         paths = require_string_list(raw_set.get("paths"), f"{context}.paths")
         for path in paths:
             safe_relative_path(path)
+            reject_project_owned_tree_path(path, f"{context}.paths")
             if path in retired:
                 raise ValueError(f"Duplicate retired path: {path}")
             retired.add(path)
-    if retired.intersection(protected) or retired.intersection(asset_types):
-        raise ValueError("Retired paths collide with protected or current managed paths")
+    if set(asset_types).intersection(protected):
+        raise ValueError("Current managed paths cannot also be protected")
+    if (
+        retired.intersection(protected)
+        or retired.intersection(asset_types)
+        or retired_assets.intersection(protected)
+        or retired_assets.intersection(asset_types)
+        or retired_assets.intersection(retired)
+        or retired_assets.intersection(scaffold_targets)
+        or retired.intersection(scaffold_targets)
+    ):
+        raise ValueError(
+            "Retired paths collide with protected, current, or scaffold paths"
+        )
     if (
         value["legacy_manifest"] in retired
         or value["legacy_conflicts"] in retired
         or state_paths.intersection(protected)
         or state_paths.intersection(asset_types)
+        or state_paths.intersection(retired_assets)
     ):
         raise ValueError("Legacy state paths collide with retired, protected, or current paths")
 
@@ -118,11 +167,16 @@ def validate_migration(value: object, asset_types: dict[str, str]) -> None:
         hashes = require_string_list(raw_upgrade.get("content_hashes"), f"{context}.content_hashes")
         safe_relative_path(legacy_target)
         safe_relative_path(template)
+        reject_project_owned_tree_path(legacy_target, f"{context}.legacy_target")
         if legacy_target in legacy_targets:
             raise ValueError(f"Duplicate scaffold legacy target: {legacy_target}")
         if asset_types.get(template) != "template":
             raise ValueError(f"{context}.template must reference a template asset")
-        if legacy_target in protected or legacy_target in asset_types:
+        if (
+            legacy_target in protected
+            or legacy_target in asset_types
+            or legacy_target in retired_assets
+        ):
             raise ValueError(f"{context}.legacy_target cannot be managed or protected")
         if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in hashes):
             raise ValueError(f"{context}.content_hashes must contain SHA-256 values")
@@ -173,6 +227,7 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
         if not isinstance(asset_path, str):
             raise ValueError(f"{context}.path must be a string")
         safe_relative_path(asset_path)
+        reject_project_owned_tree_path(asset_path, f"{context}.path")
         if asset_path in seen_paths:
             raise ValueError(f"Duplicate asset path: {asset_path}")
         if asset_type not in {"managed", "template"}:
@@ -202,6 +257,10 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
                 ):
                     raise ValueError(f"{context} must define a valid scaffold group and target")
                 safe_relative_path(scaffold_target)
+                reject_project_owned_tree_path(
+                    scaffold_target,
+                    f"{context}.scaffold_target",
+                )
                 if scaffold_target in seen_scaffolds:
                     raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
                 seen_scaffolds.add(scaffold_target)
@@ -217,15 +276,24 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
     validate_migration(
         data.get("migration"),
         {asset["path"]: asset["type"] for asset in data["assets"]},
+        seen_scaffolds,
     )
     migration = data.get("migration")
-    if isinstance(migration, dict) and state_file in {
-        migration["legacy_manifest"],
-        migration["legacy_version"],
-        migration["legacy_conflicts"],
-        *migration["protected_paths"],
-    }:
-        raise ValueError("manifest.state_file cannot collide with migration paths")
+    if isinstance(migration, dict):
+        migration_paths = {
+            migration["legacy_manifest"],
+            migration["legacy_version"],
+            migration["legacy_conflicts"],
+            *migration["protected_paths"],
+            *(asset["path"] for asset in migration["retired_assets"]),
+            *(
+                path
+                for retired_set in migration["retired_path_sets"]
+                for path in retired_set["paths"]
+            ),
+        }
+        if state_file in migration_paths:
+            raise ValueError("manifest.state_file cannot collide with migration paths")
     return data
 
 
