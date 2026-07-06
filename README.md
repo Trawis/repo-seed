@@ -45,15 +45,31 @@ All profiles receive the core agent instructions, documentation and Git guidance
 | Profile | Guidance and project templates |
 |---|---|
 | `minimal` | Core guidance plus README and changelog |
-| `library` | Minimal plus general coding conventions |
-| `app` | Library guidance plus features, architecture, user guide, FSD, and TSD |
-| `game` | Library guidance plus Unity conventions, features, and GDD |
-| `full` | Every managed reference and template |
+| `library` | Minimal plus coding conventions, architecture, and an on-demand TSD reference |
+| `app` | Library guidance plus FSD and user-guide templates |
+| `game` | Library guidance plus Unity conventions and a GDD template |
+| `full` | Complete reference catalog; not a project type |
 
-The default profile is `full`. Profiles select the managed assets retained in
-the target. Changing to a smaller profile prunes unchanged managed assets that
-are no longer selected; modified files are preserved. Eligible legacy cleanup
-applies independently of the selected profile.
+The first sync requires an explicit project profile. Later syncs reuse the
+profile recorded in `.repo-seed-state.json` when `--profile` is omitted.
+Profiles select the managed assets retained in the target. Changing to a smaller
+profile prunes unchanged managed assets that are no longer selected; modified
+files are preserved. Eligible legacy cleanup applies independently of the
+selected profile.
+
+`full` synchronizes every reference template for review. It cannot be combined
+with `--scaffold-project-files` because FSD and GDD are mutually exclusive
+project models.
+
+Living documents have distinct responsibilities:
+
+- FSD or GDD describes accepted product or gameplay behavior;
+- architecture describes the verified current technical system;
+- a TSD under `docs/project/designs/` describes one substantial change;
+- the user guide describes current user workflows.
+
+Top-level project documents remain stable as projects grow and become concise
+indexes when detailed documents are added beneath them.
 
 ## Download and First Sync
 
@@ -90,11 +106,14 @@ The managed script copied into the target can use a newer extracted pack:
 python scripts/sync-docs.py \
   --source /path/to/extracted/pack \
   --target . \
-  --profile app \
   --dry-run
 ```
 
-See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from the old stateful 1.x or 2.x synchronizer.
+Pass `--profile` to change the recorded profile intentionally.
+
+See [Upgrading to Version 3](docs/project/upgrading-to-3.md) when migrating from
+the old 1.x or 2.x synchronizer, and [Upgrading to Version 4](docs/project/upgrading-to-4.md)
+for the new documentation model.
 
 ## Source Layout
 
@@ -132,6 +151,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 ## Project and Community
 
 - [Document ownership](docs/project/document-ownership.md)
+- [Upgrading to Version 4](docs/project/upgrading-to-4.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 

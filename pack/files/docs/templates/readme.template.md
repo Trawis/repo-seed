@@ -9,6 +9,10 @@
 
 Short description of what this project does and who it is for.
 
+## Why
+
+Explain the problem this project solves and why someone would choose it.
+
 ## Status
 
 Current status: `planning`, `prototype`, `active`, `maintenance`, or `archived`.
@@ -58,6 +62,15 @@ Link the live project documents under `docs/project/` that exist in this reposit
 ## Known Limitations
 
 List verified limitations. Do not invent unsupported claims.
+
+## Help and Contributing
+
+Explain where users can ask for help and link contribution guidance when the
+project accepts contributions.
+
+## Maintainers
+
+List the responsible team or a public contact path.
 
 ## License
 

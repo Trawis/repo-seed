@@ -3,20 +3,21 @@
 <!-- repo-seed-template:start -->
 **Document role**: Managed project-document template
 **Template source**: `docs/templates/features.template.md`
-**Scaffold destination**: `docs/project/features.md`
-**Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
+**Suggested live destination**: `docs/project/features.md`
+**Usage**: Optional public capability index; copy only when it adds value
 <!-- repo-seed-template:end -->
 
-Track feature state and links only. Keep functional requirements in an FSD, technical design in a TSD, and game design in a GDD.
+Use this optional document only when a public capability index is useful.
+Otherwise keep accepted scope in the FSD or GDD, planned work in issues, and
+released changes in the changelog.
 
-## Implemented
--
+Track status and links only. Do not duplicate requirements, implementation
+design, delivery schedules, or release history.
 
-## Planned
--
+| Capability | Status | Detail |
+|---|---|---|
+| | Implemented / Specified / Proposed / Out of scope | |
 
-## Maybe Later
--
+## Notes
 
-## Rejected / Out of Scope
 -

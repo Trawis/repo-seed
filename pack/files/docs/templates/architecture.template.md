@@ -1,4 +1,4 @@
-# Architecture
+# Architecture and Technical Overview
 
 <!-- repo-seed-template:start -->
 **Document role**: Managed project-document template
@@ -11,36 +11,63 @@
 **Status**: Draft
 **Last Updated**: YYYY-MM-DD
 
-Describe stable, system-wide structure. Keep feature-specific implementation in a TSD.
+Describe the verified current technical system. Keep proposed changes in
+`docs/project/designs/` and link them here after they are accepted or implemented.
+
+When this document grows, keep it as the stable overview and move detailed
+subjects under `docs/project/architecture/`. Do not create detail files until
+they add value.
+
+## Purpose, Scope, and Quality Goals
+
+Summarize the system's technical purpose, boundaries, constraints, and the
+three to five quality goals that most influence its design.
 
 ## System Context
 
 Define the system boundary, users, and external systems.
 
-## Components
+## Components and Responsibilities
 
 | Component | Responsibility | Dependencies |
 |---|---|---|
 | | | |
 
-## Technology and Deployment
+## Important Runtime Flows
 
-Summarize the runtime, storage, hosting, environments, and deployment topology.
+Describe the important interactions, including startup, normal operation,
+background processing, failure handling, and shutdown where relevant.
 
-## Data Flow and Integrations
+## Data, Interfaces, and Integrations
 
-Describe important cross-component flows and external integrations.
+Describe persistence, APIs, commands, events, contracts, external integrations,
+and important compatibility boundaries.
 
-## Design Decisions
+## Configuration and Deployment
 
-| Date | Decision | Choice | Reason |
-|---|---|---|---|
-| | | | |
+Summarize runtimes, configuration sources, environments, storage, hosting,
+deployment topology, and operational dependencies.
 
-## Security and Constraints
+## Cross-Cutting Concerns
 
-Document trust boundaries, authentication and authorization patterns, capacity limits, known constraints, and architectural tradeoffs.
+Document security, privacy, reliability, observability, performance,
+accessibility, capacity, and compatibility approaches that affect the system.
 
-## Open Questions
+## Development and Validation
+
+Summarize build boundaries, test levels, local validation, deployment checks,
+and any important environment limitations.
+
+## Decisions and Design Records
+
+Link significant technical designs under `docs/project/designs/`. Record only
+the resulting current state here; do not copy proposal history into this file.
+
+## Risks, Technical Debt, and Open Questions
 
 -
+
+## Detailed Documentation
+
+Link any extracted technical documents. This section may remain empty while the
+overview is sufficient.

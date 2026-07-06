@@ -7,14 +7,20 @@
 **Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
-**Game / Feature**:
+**Game**:
 **Status**: Draft
+**Basis**: Intended / As-built / Mixed
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
-Define gameplay intent and player experience. Keep engine, code, persistence, integration, and rollout design in a TSD.
+Define gameplay intent and player experience. Keep current engine and system
+structure in the architecture document and proposed technical changes in design
+records under `docs/project/designs/`.
 
-## High Concept and Design Pillars
+When this document grows, keep it as the game-design overview and move detailed
+systems under `docs/project/game-design/`.
+
+## Pitch, Genre, and Design Pillars
 
 -
 
@@ -22,13 +28,24 @@ Define gameplay intent and player experience. Keep engine, code, persistence, in
 
 Document audience, platform, input method, and expected session length.
 
-## Core Loop and Rules
+## Player Goals, Core Loop, and Rules
 
 Describe the repeated gameplay loop, actions, constraints, and win or loss conditions.
+
+## Challenge, Difficulty, and Feedback
+
+Describe how challenge develops, what information players receive, and how the
+game communicates success, failure, progress, and consequences.
 
 ## Progression, Economy, and Balance
 
 -
+
+## Scope
+
+| Area | In current scope | Later / Out of scope |
+|---|---|---|
+| | | |
 
 ## Content, Presentation, and Accessibility
 
