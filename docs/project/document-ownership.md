@@ -35,10 +35,11 @@ This document defines ownership only. Usage belongs in `README.md`; migration be
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
-`.editorconfig`, `.gitignore`, and non-Markdown GitHub configuration are
-missing-only scaffolds. Markdown scaffolds are upgraded only when their
-repo-seed provenance or an approved legacy content hash proves they are
-unchanged; otherwise they are preserved and reported.
+`.editorconfig` and non-Markdown GitHub configuration are missing-only
+scaffolds. `.gitignore` is fully project-owned and is not scaffolded; manage it
+with the tooling of the project's stack. Markdown scaffolds are upgraded only
+when their repo-seed provenance or an approved legacy content hash proves they
+are unchanged; otherwise they are preserved and reported.
 
 The managed state file should be committed. It allows later syncs to distinguish
 pack-owned files from unknown project files and to retry safe removal of stale

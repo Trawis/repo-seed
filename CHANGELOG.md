@@ -8,6 +8,23 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.4.0 - 2026-07-06
+
+### Added
+
+- Added a Non-Functional Requirements section to the FSD template for user-observable targets.
+- Added guidance in the README template to link live `docs/project/` documents.
+- Added a semantic-versioning and release-hygiene note to the changelog template.
+- Added a Date column to the architecture template's design-decision log.
+
+### Changed
+
+- Unified template metadata blocks to the compact single-line style.
+
+### Removed
+
+- Removed the `.gitignore` scaffold and its template; `.gitignore` is fully project-owned and should come from the project's stack tooling. Targets synced with pack 3.3.0 or later remove the retired `docs/templates/gitignore.template` reference automatically; targets upgrading from 3.0.0-3.2.3 keep it as a harmless unmapped file that can be deleted manually.
+
 ## 3.3.0 - 2026-07-06
 
 ### Added

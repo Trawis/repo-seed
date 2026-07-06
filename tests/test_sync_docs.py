@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "3.3.0"
+EXPECTED_PACK_VERSION = "3.4.0"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 
 
@@ -144,7 +144,6 @@ class ManifestTests(unittest.TestCase):
     def test_profiles_select_only_relevant_project_templates(self):
         common = {
             "changelog.template.md",
-            "gitignore.template",
             "readme.template.md",
         }
         expected = {
@@ -691,7 +690,6 @@ class SyncBehaviorTests(unittest.TestCase):
             expected = {
                 "README.md",
                 "CHANGELOG.md",
-                ".gitignore",
                 "docs/project/features.md",
                 "docs/project/architecture.md",
                 "docs/project/user-guide.md",
@@ -701,6 +699,7 @@ class SyncBehaviorTests(unittest.TestCase):
             for relative in expected:
                 self.assertTrue((target / relative).is_file(), relative)
             self.assertFalse((target / ".editorconfig").exists())
+            self.assertFalse((target / ".gitignore").exists())
             readme = (target / "README.md").read_text(encoding="utf-8")
             self.assertIn("<!-- Scaffolded from: docs/templates/readme.template.md -->", readme)
             self.assertNotIn(sync.TEMPLATE_METADATA_START, readme)

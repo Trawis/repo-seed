@@ -33,9 +33,9 @@ Describe important cross-component flows and external integrations.
 
 ## Design Decisions
 
-| Decision | Choice | Reason |
-|---|---|---|
-| | | |
+| Date | Decision | Choice | Reason |
+|---|---|---|---|
+| | | | |
 
 ## Security and Constraints
 
