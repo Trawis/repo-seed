@@ -78,6 +78,9 @@ Optional scaffolding is separated by ownership:
 
 Existing project-owned files are preserved unless an eligible Markdown scaffold is
 verified unchanged from repo-seed and can be upgraded safely.
+On initial sync, version updates, and legacy migration, existing `.gitignore`,
+`.editorconfig`, and pull-request templates are explicitly reported as protected
+project-owned files.
 
 ## Update an Existing Project
 

@@ -49,7 +49,10 @@ docs/ci-cd-guidelines.md
 
 Locally modified files, paths missing from the legacy manifest, symbolic links, and non-file paths are preserved and reported. The old manifest remains until every retired path is resolved.
 
-Legacy conflict output is never deleted automatically. Unknown files, live project documentation, `.editorconfig`, and existing pull-request or issue templates are preserved.
+Legacy conflict output is never deleted automatically. Unknown files and live
+project documentation are preserved. Existing `.gitignore`, `.editorconfig`,
+and pull-request templates are explicitly reported as protected project-owned
+files; existing issue templates are also preserved.
 
 Known untouched 1.31 project scaffolds and files with valid repo-seed provenance markers can be upgraded when their scaffold group is requested. Modified project documents remain unchanged.
 

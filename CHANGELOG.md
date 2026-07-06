@@ -8,6 +8,12 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.4.1 - 2026-07-06
+
+### Changed
+
+- Explicitly protected existing `.gitignore` files and reported them as project-owned during initial sync, version updates, and legacy migration.
+
 ## 3.4.0 - 2026-07-06
 
 ### Added
