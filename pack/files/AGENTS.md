@@ -4,7 +4,7 @@ Repository-level instructions for coding agents.
 
 **Document role**: Managed coding-agent instructions
 **Sync destination**: `AGENTS.md`
-**Version**: 3.2.3
+**Version**: 3.3.0
 
 ## Start Here
 
@@ -98,15 +98,25 @@ Do not run irrelevant language or project checks. Report checks that could not r
 
 ## Sync Ownership
 
-Routine sync overwrites:
+Routine sync updates these files when their pack content differs:
 
 - `AGENTS.md`, `CLAUDE.md`, and selected `.agents/` guidance;
 - `docs/templates/`;
 - `scripts/sync-docs.py`.
 
+Routine sync retires only unchanged legacy-managed files whose hashes match the old manifest. Modified or unrecorded files, reclassified project-owned files, and legacy conflict output are preserved and reported.
+
+Routine sync also maintains committed `.repo-seed-state.json` ownership
+metadata. A smaller profile removes unchanged managed files that are no longer
+selected. Modified stale files are preserved and remain tombstoned for review.
+Do not edit this state file manually.
+
 Do not customize these managed files in target repositories.
 
-Project-owned files include `.agents/project.md`, child `AGENTS.md` files, root `README.md` and `CHANGELOG.md`, `.editorconfig`, `.gitignore`, `docs/project/`, and every unmapped path. Scaffolding creates missing project-owned files but never overwrites them.
+Project-owned files include `.agents/project.md`, child `AGENTS.md` files, root
+`README.md` and `CHANGELOG.md`, `.editorconfig`, `.gitignore`, `docs/project/`,
+and every unmapped path. Scaffolding creates missing project-owned files and
+may upgrade Markdown only while repo-seed provenance proves it unchanged.
 
 ## Completion
 

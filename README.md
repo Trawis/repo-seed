@@ -11,7 +11,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
 - focused documentation, Git, CI/CD, and language references;
 - read-only templates for five project profiles;
-- missing-only scaffolding for project documents, `.gitignore`, `.editorconfig`, and GitHub issue templates;
+- missing-only scaffolding plus verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
 - a sync script copied into each target repository for future updates.
 
@@ -25,7 +25,16 @@ The scripts use only the Python standard library. Pull-request CI validates Pyth
 
 ## Safety
 
-Managed files are overwritten; project-owned files are scaffolded only when missing. Run `--dry-run` first and commit or back up the target repository before updating because filesystem writes are not transactional.
+Unchanged legacy-managed files with matching recorded hashes are retired, and
+current managed files are updated only when their content differs. Project-owned
+files are scaffolded or upgraded only when safely verifiable. Modified or
+unrecorded legacy files are preserved and reported. Run `--dry-run` first and
+commit or back up the target repository because filesystem writes are not
+transactional.
+
+Each target keeps `.repo-seed-state.json` as committed ownership metadata.
+Profile reductions remove only stale managed files matching their recorded
+hashes. Modified stale files remain in place and stay tombstoned for review.
 
 See [Document ownership](docs/project/document-ownership.md) for the authoritative path classification.
 
@@ -41,7 +50,10 @@ All profiles receive the core agent instructions, documentation and Git guidance
 | `game` | Library guidance plus Unity conventions, features, and GDD |
 | `full` | Every managed reference and template |
 
-The default profile is `full`. Profiles select what is copied; changing to a smaller profile does not delete files installed by a larger profile.
+The default profile is `full`. Profiles select the managed assets retained in
+the target. Changing to a smaller profile prunes unchanged managed assets that
+are no longer selected; modified files are preserved. Eligible legacy cleanup
+applies independently of the selected profile.
 
 ## Download and First Sync
 
@@ -60,11 +72,12 @@ Review the output, then rerun without `--dry-run`.
 
 Optional scaffolding is separated by ownership:
 
-- `--scaffold-project-files` creates missing project documents and `.gitignore`;
-- `--scaffold-github-templates` creates missing bug, feature, and chooser files;
+- `--scaffold-project-files` creates missing project documents and `.gitignore`, or upgrades verified unchanged Markdown;
+- `--scaffold-github-templates` creates missing bug, feature, and chooser files, or upgrades verified unchanged Markdown;
 - `--scaffold-editorconfig` creates `.editorconfig` only when missing.
 
-Existing scaffold destinations are always preserved.
+Existing project-owned files are preserved unless an eligible Markdown scaffold is
+verified unchanged from repo-seed and can be upgraded safely.
 
 ## Update an Existing Project
 

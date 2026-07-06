@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -14,7 +16,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "3.2.3"
+EXPECTED_PACK_VERSION = "3.3.0"
+LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 
 
 def load_module(name: str, path: Path):
@@ -39,6 +42,7 @@ class ManifestTests(unittest.TestCase):
     def test_manifest_is_versioned_and_complete(self):
         self.assertEqual(self.manifest.schema_version, 1)
         self.assertEqual(self.manifest.pack_version, EXPECTED_PACK_VERSION)
+        self.assertEqual(self.manifest.state_file, ".repo-seed-state.json")
         self.assertEqual(self.manifest.default_profile, "full")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
         self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE"))
@@ -80,6 +84,39 @@ class ManifestTests(unittest.TestCase):
         forbidden = {"id", "source", "target", "role", "legacy_targets"}
         for asset in raw["assets"]:
             self.assertFalse(forbidden.intersection(asset), asset)
+
+    def test_migration_metadata_is_versioned_and_protects_project_files(self):
+        migration = self.manifest.migration
+        self.assertIsNotNone(migration)
+        self.assertEqual(migration.legacy_manifest, ".agent-guidelines-manifest.json")
+        self.assertIn(".editorconfig", migration.protected_paths)
+        self.assertIn(".github/pull_request_template.md", migration.protected_paths)
+        self.assertEqual(migration.retired_path_sets[0].through_version, "2.0.1")
+        retired = {
+            path
+            for retired_set in migration.retired_path_sets
+            for path in retired_set.paths
+        }
+        self.assertNotIn(".editorconfig", retired)
+        self.assertNotIn(".github/pull_request_template.md", retired)
+        self.assertIn("scripts/sync-agent-guidelines.py", retired)
+
+    def test_invalid_migration_paths_and_hashes_are_rejected(self):
+        raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        unsafe = json.loads(json.dumps(raw["migration"]))
+        unsafe["retired_path_sets"][0]["paths"][0] = "../outside"
+        with self.assertRaises(ValueError):
+            sync.load_migration(unsafe, self.manifest.assets)
+
+        invalid_hash = json.loads(json.dumps(raw["migration"]))
+        invalid_hash["scaffold_upgrades"][0]["content_hashes"][0] = "not-a-hash"
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            sync.load_migration(invalid_hash, self.manifest.assets)
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            bundle_builder.validate_migration(
+                invalid_hash,
+                {asset.path: asset.asset_type for asset in self.manifest.assets},
+            )
 
     def test_managed_guidance_matches_profile_scope(self):
         all_profiles = {"minimal", "library", "app", "game", "full"}
@@ -154,6 +191,7 @@ class ManifestTests(unittest.TestCase):
             invalid = {
                 "schema_version": 1,
                 "pack_version": EXPECTED_PACK_VERSION,
+                "state_file": ".repo-seed-state.json",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -182,6 +220,7 @@ class ManifestTests(unittest.TestCase):
             manifest = {
                 "schema_version": 1,
                 "pack_version": EXPECTED_PACK_VERSION,
+                "state_file": ".repo-seed-state.json",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "package_files": ["../README.md"],
@@ -214,6 +253,7 @@ class ManifestTests(unittest.TestCase):
             manifest = {
                 "schema_version": 1,
                 "pack_version": EXPECTED_PACK_VERSION,
+                "state_file": ".repo-seed-state.json",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -272,6 +312,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertEqual(action.action, "scaffold")
             self.assertTrue(content.startswith("---\n"))
             self.assertIn(f"<!-- Scaffolded from: {asset.path} -->", content)
+            self.assertRegex(content, r"<!-- Scaffolded content SHA-256: [0-9a-f]{64} -->")
             self.assertLess(content.index("\n---", 4), content.index("<!-- Scaffolded from:"))
 
     def test_root_issue_chooser_has_two_valid_markdown_templates(self):
@@ -289,7 +330,278 @@ class GuidanceAndTemplateTests(unittest.TestCase):
 
 
 class SyncBehaviorTests(unittest.TestCase):
-    def test_managed_files_and_templates_are_always_overwritten(self):
+    def test_legacy_131_migration_upgrades_scaffolds_and_preserves_project_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            for name in ("README.md", "CHANGELOG.md", "FEATURES.md"):
+                shutil.copyfile(LEGACY_131_FIXTURES / name, target / name)
+            legacy_files = {
+                ".agent-guidelines-version": "1.31.0\n",
+                "scripts/sync-agent-guidelines.py": "legacy sync script\n",
+                ".editorconfig": "root = false\n",
+                ".github/pull_request_template.md": "project pull request template\n",
+            }
+            for relative, content in legacy_files.items():
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            conflicts = target / ".agent-guidelines-conflicts"
+            conflicts.mkdir()
+            (conflicts / "saved-conflict.md").write_text("review me\n", encoding="utf-8")
+            hashes = {
+                relative: sync.file_hash(target / relative)
+                for relative in legacy_files
+            }
+            (target / ".agent-guidelines-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "files": hashes,
+                        "pack_version": "1.31.0",
+                        "sync_script": "sync-agent-guidelines.py",
+                        "sync_script_version": "1.7.0",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "app",
+                scaffold_project_files=True,
+            )
+
+            self.assertFalse((target / ".agent-guidelines-version").exists())
+            self.assertFalse((target / ".agent-guidelines-manifest.json").exists())
+            self.assertFalse((target / "scripts/sync-agent-guidelines.py").exists())
+            self.assertFalse((target / "FEATURES.md").exists())
+            self.assertTrue((target / "docs/project/features.md").is_file())
+            self.assertIn(
+                "Scaffolded content SHA-256:",
+                (target / "README.md").read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "Scaffolded content SHA-256:",
+                (target / "CHANGELOG.md").read_text(encoding="utf-8"),
+            )
+            for relative in (".editorconfig", ".github/pull_request_template.md"):
+                content = legacy_files[relative]
+                self.assertEqual((target / relative).read_text(encoding="utf-8"), content)
+            self.assertTrue((conflicts / "saved-conflict.md").is_file())
+            self.assertEqual(
+                {action.action for action in actions if action.path in {"README.md", "CHANGELOG.md", "FEATURES.md"}},
+                {"upgrade"},
+            )
+
+    def test_legacy_migration_dry_run_reports_hash_safe_removals(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            version_file = target / ".agent-guidelines-version"
+            version_file.write_text("1.31.0\n", encoding="utf-8")
+            old_script = target / "scripts/sync-agent-guidelines.py"
+            old_script.parent.mkdir()
+            old_script.write_text("legacy\n", encoding="utf-8")
+            state = target / ".agent-guidelines-manifest.json"
+            state.write_text(
+                json.dumps(
+                    {
+                        "pack_version": "1.31.0",
+                        "files": {
+                            ".agent-guidelines-version": sync.file_hash(version_file),
+                            "scripts/sync-agent-guidelines.py": sync.file_hash(old_script),
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal", dry_run=True)
+
+            self.assertTrue(version_file.is_file())
+            self.assertTrue(old_script.is_file())
+            self.assertTrue(state.is_file())
+            removed = {action.path for action in actions if action.action == "remove"}
+            self.assertEqual(
+                removed,
+                {
+                    ".agent-guidelines-version",
+                    ".agent-guidelines-manifest.json",
+                    "scripts/sync-agent-guidelines.py",
+                },
+            )
+
+    def test_modified_or_untracked_legacy_files_are_preserved_and_reported(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            version_file = target / ".agent-guidelines-version"
+            version_file.write_text("1.31.0\n", encoding="utf-8")
+            modified = target / "docs/coding-conventions-csharp.md"
+            modified.parent.mkdir(parents=True)
+            modified.write_text("local changes\n", encoding="utf-8")
+            untracked = target / "docs/readme-template.md"
+            untracked.write_text("project-owned template\n", encoding="utf-8")
+            state = target / ".agent-guidelines-manifest.json"
+            state.write_text(
+                json.dumps(
+                    {
+                        "pack_version": "1.31.0",
+                        "files": {
+                            ".agent-guidelines-version": sync.file_hash(version_file),
+                            "docs/coding-conventions-csharp.md": "0" * 64,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertTrue(modified.is_file())
+            self.assertTrue(untracked.is_file())
+            self.assertTrue(state.is_file())
+            preserved = {action.path for action in actions if action.action == "preserve"}
+            self.assertIn("docs/coding-conventions-csharp.md", preserved)
+            self.assertIn("docs/readme-template.md", preserved)
+            self.assertIn(".agent-guidelines-manifest.json", preserved)
+
+    def test_newer_unknown_legacy_version_is_not_retired(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            version_file = target / ".agent-guidelines-version"
+            version_file.write_text("2.0.2\n", encoding="utf-8")
+            state = target / ".agent-guidelines-manifest.json"
+            state.write_text(
+                json.dumps(
+                    {
+                        "pack_version": "2.0.2",
+                        "files": {
+                            ".agent-guidelines-version": sync.file_hash(version_file),
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertTrue(version_file.is_file())
+            self.assertTrue(state.is_file())
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == ".agent-guidelines-manifest.json"
+                    and "newer than supported" in action.detail
+                    for action in actions
+                )
+            )
+
+    def test_verified_scaffold_is_upgraded_but_local_changes_are_preserved(self):
+        asset = next(
+            asset
+            for asset in sync.load_manifest(PACK_ROOT).assets
+            if asset.path.endswith("bug-report.template.md")
+        )
+        source = PACK_ROOT / "files" / asset.path
+        old_render = sync.add_source_path_marker(sync.template_body(source), asset.path)
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            issue = target / asset.scaffold_target
+            issue.parent.mkdir(parents=True)
+            issue.write_text(old_render, encoding="utf-8")
+
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+
+            self.assertTrue(any(action.action == "upgrade" for action in actions))
+            self.assertIn("Scaffolded content SHA-256:", issue.read_text(encoding="utf-8"))
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+            self.assertTrue(
+                any(action.action == "skip" and action.path == asset.scaffold_target for action in actions)
+            )
+            issue.write_text(issue.read_text(encoding="utf-8") + "\nlocal edit\n", encoding="utf-8")
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+            self.assertTrue(
+                any(action.action == "preserve" and action.path == asset.scaffold_target for action in actions)
+            )
+
+    def test_version_2_provenance_marker_allows_untouched_scaffold_upgrade(self):
+        asset = next(
+            asset
+            for asset in sync.load_manifest(PACK_ROOT).assets
+            if asset.path.endswith("bug-report.template.md")
+        )
+        source = PACK_ROOT / "files" / asset.path
+        legacy_body = sync.template_body(source).rstrip()
+        legacy_marker = (
+            '<!-- repo-seed-template id="github-bug-template" '
+            f'sha256="{sync.content_hash(legacy_body)}" -->'
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            issue = target / asset.scaffold_target
+            issue.parent.mkdir(parents=True)
+            issue.write_text(f"{legacy_body}\n\n{legacy_marker}\n", encoding="utf-8")
+
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+
+            self.assertTrue(
+                any(action.action == "upgrade" and action.path == asset.scaffold_target for action in actions)
+            )
+            content = issue.read_text(encoding="utf-8")
+            self.assertIn(f"<!-- Scaffolded from: {asset.path} -->", content)
+            self.assertIn("Scaffolded content SHA-256:", content)
+            self.assertNotIn("repo-seed-template id=", content)
+
+    def test_version_2_provenance_from_wrong_template_is_preserved(self):
+        asset = next(
+            asset
+            for asset in sync.load_manifest(PACK_ROOT).assets
+            if asset.path.endswith("bug-report.template.md")
+        )
+        legacy_body = sync.template_body(PACK_ROOT / "files" / asset.path).rstrip()
+        wrong_marker = (
+            '<!-- repo-seed-template id="github-feature-template" '
+            f'sha256="{sync.content_hash(legacy_body)}" -->'
+        )
+        original = f"{legacy_body}\n\n{wrong_marker}\n"
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            issue = target / asset.scaffold_target
+            issue.parent.mkdir(parents=True)
+            issue.write_text(original, encoding="utf-8")
+
+            actions = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "minimal",
+                scaffold_github_templates=True,
+            )
+
+            self.assertEqual(issue.read_text(encoding="utf-8"), original)
+            self.assertTrue(
+                any(action.action == "preserve" and action.path == asset.scaffold_target for action in actions)
+            )
+
+    def test_different_managed_files_and_templates_are_overwritten(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             (target / "docs/templates").mkdir(parents=True)
@@ -305,6 +617,53 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertFalse((target / ".agent-guidelines-conflicts").exists())
             self.assertFalse((target / "README.md").exists())
             self.assertFalse((target / "LICENSE").exists())
+
+    def test_matching_managed_files_are_unchanged_without_rewriting(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            agents = target / "AGENTS.md"
+            claude = target / "CLAUDE.md"
+            state_path = target / ".repo-seed-state.json"
+            marker_time = 1_600_000_000_000_000_000
+            os.utime(agents, ns=(marker_time, marker_time))
+            os.utime(state_path, ns=(marker_time, marker_time))
+            claude.write_text(claude.read_text(encoding="utf-8"), encoding="utf-8", newline="\r\n")
+            claude_bytes = claude.read_bytes()
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+            managed = [
+                action
+                for action in actions
+                if action.path in {
+                    asset.path
+                    for asset in sync.assets_for_profile(sync.load_manifest(PACK_ROOT), "minimal")
+                }
+            ]
+            self.assertTrue(managed)
+            self.assertEqual({action.action for action in managed}, {"unchanged"})
+            self.assertTrue(
+                any(
+                    action.action == "unchanged"
+                    and action.path == ".repo-seed-state.json"
+                    for action in actions
+                )
+            )
+            self.assertEqual(agents.stat().st_mtime_ns, marker_time)
+            self.assertEqual(state_path.stat().st_mtime_ns, marker_time)
+            self.assertEqual(claude.read_bytes(), claude_bytes)
+
+            dry_run_actions = sync.synchronize(PACK_ROOT, target, "minimal", dry_run=True)
+            self.assertEqual(
+                {
+                    action.action
+                    for action in dry_run_actions
+                    if action.path in {managed_action.path for managed_action in managed}
+                },
+                {"unchanged"},
+            )
+            self.assertEqual(agents.stat().st_mtime_ns, marker_time)
+            self.assertEqual(state_path.stat().st_mtime_ns, marker_time)
 
     def test_project_scaffolding_excludes_editorconfig(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -408,14 +767,160 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertTrue(actions)
             self.assertEqual(list(target.iterdir()), [])
 
-    def test_profile_reduction_never_deletes_files(self):
+    def test_profile_reduction_removes_unchanged_stale_managed_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "full")
+            unity = target / ".agents/conventions/unity.md"
+            gdd = target / "docs/templates/gdd.template.md"
+            self.assertTrue(unity.is_file())
+            self.assertTrue(gdd.is_file())
+            actions = sync.synchronize(PACK_ROOT, target, "app")
+
+            self.assertFalse(unity.exists())
+            self.assertFalse(gdd.exists())
+            removed = {action.path for action in actions if action.action == "remove"}
+            self.assertIn(".agents/conventions/unity.md", removed)
+            self.assertIn("docs/templates/gdd.template.md", removed)
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["profile"], "app")
+            self.assertEqual(state["tombstones"], {})
+            self.assertNotIn(".agents/conventions/unity.md", state["managed_files"])
+            self.assertNotIn("docs/templates/gdd.template.md", state["managed_files"])
+
+    def test_modified_stale_asset_remains_tombstoned_until_safe_to_remove(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             sync.synchronize(PACK_ROOT, target, "full")
             gdd = target / "docs/templates/gdd.template.md"
+            original = (PACK_ROOT / "files/docs/templates/gdd.template.md").read_bytes()
+            gdd.write_text("local changes\n", encoding="utf-8")
+
+            actions = sync.synchronize(PACK_ROOT, target, "app")
+
             self.assertTrue(gdd.is_file())
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == "docs/templates/gdd.template.md"
+                    for action in actions
+                )
+            )
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertIn("docs/templates/gdd.template.md", state["tombstones"])
+
+            gdd.write_bytes(original)
+            before_dry_run = state_path.read_bytes()
+            actions = sync.synchronize(PACK_ROOT, target, "app", dry_run=True)
+            self.assertTrue(gdd.is_file())
+            self.assertEqual(state_path.read_bytes(), before_dry_run)
+            self.assertTrue(
+                any(
+                    action.action == "remove"
+                    and action.path == "docs/templates/gdd.template.md"
+                    for action in actions
+                )
+            )
+
+            sync.synchronize(PACK_ROOT, target, "app")
+            self.assertFalse(gdd.exists())
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertNotIn("docs/templates/gdd.template.md", state["tombstones"])
+
+    def test_profile_expansion_reactivates_tombstoned_asset(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "full")
+            gdd = target / "docs/templates/gdd.template.md"
+            gdd.write_text("local changes\n", encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "app")
+
+            actions = sync.synchronize(PACK_ROOT, target, "full")
+
+            self.assertEqual(
+                gdd.read_bytes(),
+                (PACK_ROOT / "files/docs/templates/gdd.template.md").read_bytes(),
+            )
+            self.assertTrue(
+                any(
+                    action.action == "copy"
+                    and action.path == "docs/templates/gdd.template.md"
+                    for action in actions
+                )
+            )
+            self.assertFalse(
+                any(
+                    action.action in {"remove", "preserve"}
+                    and action.path == "docs/templates/gdd.template.md"
+                    for action in actions
+                )
+            )
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertIn("docs/templates/gdd.template.md", state["managed_files"])
+            self.assertNotIn("docs/templates/gdd.template.md", state["tombstones"])
+
+    def test_state_bootstrap_prunes_known_current_assets_but_not_unknown_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "full")
+            gdd = target / "docs/templates/gdd.template.md"
+            previous_gdd = gdd.read_text(encoding="utf-8").replace(
+                "The live file is project-owned; only a verified unchanged scaffold may be upgraded",
+                "The live file is project-owned and never overwritten by sync",
+            )
+            gdd.write_text(previous_gdd, encoding="utf-8", newline="\n")
+            gdd_asset = next(
+                asset
+                for asset in sync.load_manifest(PACK_ROOT).assets
+                if asset.path == "docs/templates/gdd.template.md"
+            )
+            self.assertIn(sync.managed_file_hash(gdd), gdd_asset.previous_hashes)
+            (target / ".repo-seed-state.json").unlink()
+            unknown = target / "project-owned.txt"
+            unknown.write_text("keep\n", encoding="utf-8")
+
+            sync.synchronize(PACK_ROOT, target, "app")
+
+            self.assertFalse((target / ".agents/conventions/unity.md").exists())
+            self.assertFalse((target / "docs/templates/gdd.template.md").exists())
+            self.assertEqual(unknown.read_text(encoding="utf-8"), "keep\n")
+
+    def test_state_releases_reclassified_project_owned_paths(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
             sync.synchronize(PACK_ROOT, target, "minimal")
-            self.assertTrue(gdd.is_file())
+            editorconfig = target / ".editorconfig"
+            editorconfig.write_text("root = false\n", encoding="utf-8")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["managed_files"][".editorconfig"] = sync.file_hash(editorconfig)
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertEqual(editorconfig.read_text(encoding="utf-8"), "root = false\n")
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == ".editorconfig"
+                    and "project-owned" in action.detail
+                    for action in actions
+                )
+            )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertNotIn(".editorconfig", state["managed_files"])
+            self.assertNotIn(".editorconfig", state["tombstones"])
+
+    def test_invalid_managed_state_fails_before_copying(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            (target / ".repo-seed-state.json").write_text("{invalid", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "not valid JSON"):
+                sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertFalse((target / "AGENTS.md").exists())
 
     def test_copied_script_updates_from_an_explicit_pack(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -538,6 +1043,7 @@ class BundleAndCliTests(unittest.TestCase):
             manifest = {
                 "schema_version": 1,
                 "pack_version": EXPECTED_PACK_VERSION,
+                "state_file": ".repo-seed-state.json",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
@@ -564,6 +1070,7 @@ class BundleAndCliTests(unittest.TestCase):
             manifest = {
                 "schema_version": 1,
                 "pack_version": EXPECTED_PACK_VERSION,
+                "state_file": ".repo-seed-state.json",
                 "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "package_files": ["README.md"],

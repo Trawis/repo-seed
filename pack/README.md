@@ -21,7 +21,14 @@ Choose `minimal`, `library`, `app`, `game`, or `full`. Add only the scaffolding 
 --scaffold-editorconfig
 ```
 
-Review the dry-run output, commit or back up the target repository, then rerun without `--dry-run`. Managed guidance and templates are overwritten; existing project-owned files are preserved.
+Review the dry-run output, commit or back up the target repository, then rerun
+without `--dry-run`. Unchanged legacy-managed files with recorded hashes may be
+removed, managed guidance is updated when different, and modified or unverified
+project files are preserved.
+
+Commit the generated `.repo-seed-state.json`. It records managed ownership so a
+smaller profile can remove unchanged stale assets while retaining modified files
+as tombstones for review.
 
 ## Update an Existing Project
 

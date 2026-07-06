@@ -8,6 +8,21 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 3.3.0 - 2026-07-06
+
+### Added
+
+- Added version-bounded migration metadata and hash-safe retirement for legacy 1.x/2.x managed paths.
+- Added provenance hashes for new Markdown scaffolds and verified upgrades for known scaffolded files.
+- Added `.repo-seed-state.json` ownership and tombstone tracking for managed assets.
+
+### Changed
+
+- Legacy files with local changes, missing hash records, or conflict output are preserved and reported for review.
+- `.editorconfig` and the pull-request template are explicitly protected as project-owned files.
+- Managed files that already match the pack are reported as unchanged and are not rewritten, including during dry runs.
+- Profile reductions remove unchanged stale managed assets while preserving and tracking locally modified files.
+
 ## 3.2.3 - 2026-07-05
 
 ### Changed
