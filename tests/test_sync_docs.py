@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "3.4.0"
+EXPECTED_PACK_VERSION = "3.4.1"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 
 
@@ -90,6 +90,7 @@ class ManifestTests(unittest.TestCase):
         self.assertIsNotNone(migration)
         self.assertEqual(migration.legacy_manifest, ".agent-guidelines-manifest.json")
         self.assertIn(".editorconfig", migration.protected_paths)
+        self.assertIn(".gitignore", migration.protected_paths)
         self.assertIn(".github/pull_request_template.md", migration.protected_paths)
         self.assertEqual(migration.retired_path_sets[0].through_version, "2.0.1")
         retired = {
@@ -98,6 +99,7 @@ class ManifestTests(unittest.TestCase):
             for path in retired_set.paths
         }
         self.assertNotIn(".editorconfig", retired)
+        self.assertNotIn(".gitignore", retired)
         self.assertNotIn(".github/pull_request_template.md", retired)
         self.assertIn("scripts/sync-agent-guidelines.py", retired)
 
@@ -338,6 +340,7 @@ class SyncBehaviorTests(unittest.TestCase):
                 ".agent-guidelines-version": "1.31.0\n",
                 "scripts/sync-agent-guidelines.py": "legacy sync script\n",
                 ".editorconfig": "root = false\n",
+                ".gitignore": "project-specific-output/\n",
                 ".github/pull_request_template.md": "project pull request template\n",
             }
             for relative, content in legacy_files.items():
@@ -383,9 +386,17 @@ class SyncBehaviorTests(unittest.TestCase):
                 "Scaffolded content SHA-256:",
                 (target / "CHANGELOG.md").read_text(encoding="utf-8"),
             )
-            for relative in (".editorconfig", ".github/pull_request_template.md"):
+            for relative in (".editorconfig", ".gitignore", ".github/pull_request_template.md"):
                 content = legacy_files[relative]
                 self.assertEqual((target / relative).read_text(encoding="utf-8"), content)
+                self.assertTrue(
+                    any(
+                        action.action == "preserve"
+                        and action.path == relative
+                        and "project-owned" in action.detail
+                        for action in actions
+                    )
+                )
             self.assertTrue((conflicts / "saved-conflict.md").is_file())
             self.assertEqual(
                 {action.action for action in actions if action.path in {"README.md", "CHANGELOG.md", "FEATURES.md"}},
@@ -718,13 +729,14 @@ class SyncBehaviorTests(unittest.TestCase):
             existing = {
                 "README.md": "project readme\n",
                 ".editorconfig": "root = false\n",
+                ".gitignore": "project-specific-output/\n",
                 ".github/ISSUE_TEMPLATE/bug_report.md": "project bug form\n",
             }
             for relative, content in existing.items():
                 path = target / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(content, encoding="utf-8")
-            sync.synchronize(
+            actions = sync.synchronize(
                 PACK_ROOT,
                 target,
                 "full",
@@ -734,6 +746,24 @@ class SyncBehaviorTests(unittest.TestCase):
             )
             for relative, content in existing.items():
                 self.assertEqual((target / relative).read_text(encoding="utf-8"), content)
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == ".gitignore"
+                    and "project-owned" in action.detail
+                    for action in actions
+                )
+            )
+
+            repeat = sync.synchronize(
+                PACK_ROOT,
+                target,
+                "full",
+                scaffold_project_files=True,
+                scaffold_github_templates=True,
+                scaffold_editorconfig=True,
+            )
+            self.assertFalse(any(action.path == ".gitignore" for action in repeat))
 
     def test_github_scaffolding_is_explicit_and_complete(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -805,6 +835,60 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertEqual(state["tombstones"], {})
             self.assertNotIn(".agents/conventions/unity.md", state["managed_files"])
             self.assertNotIn("docs/templates/gdd.template.md", state["managed_files"])
+
+    def test_every_profile_transition_leaves_exact_managed_selection(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        for source_profile in manifest.profiles:
+            for target_profile in manifest.profiles:
+                with self.subTest(source=source_profile, target=target_profile):
+                    with tempfile.TemporaryDirectory() as temp:
+                        target = Path(temp)
+                        unknown = target / "project-owned.txt"
+                        unknown.write_text("keep\n", encoding="utf-8")
+                        sync.synchronize(PACK_ROOT, target, source_profile)
+                        sync.synchronize(PACK_ROOT, target, target_profile)
+
+                        selected = {
+                            asset.path
+                            for asset in sync.assets_for_profile(manifest, target_profile)
+                        }
+                        for asset in manifest.assets:
+                            self.assertEqual(
+                                (target / asset.path).is_file(),
+                                asset.path in selected,
+                                f"{source_profile} -> {target_profile}: {asset.path}",
+                            )
+                        self.assertEqual(unknown.read_text(encoding="utf-8"), "keep\n")
+
+    def test_full_to_game_prunes_reference_templates_but_preserves_live_docs(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(
+                PACK_ROOT,
+                target,
+                "full",
+                scaffold_project_files=True,
+            )
+            live_documents = (
+                "docs/project/architecture.md",
+                "docs/project/user-guide.md",
+                "docs/project/fsd.md",
+                "docs/project/tsd.md",
+            )
+            for path in live_documents:
+                self.assertTrue((target / path).is_file())
+
+            sync.synchronize(PACK_ROOT, target, "game")
+
+            for path in (
+                "docs/templates/architecture.template.md",
+                "docs/templates/user-guide.template.md",
+                "docs/templates/fsd.template.md",
+                "docs/templates/tsd.template.md",
+            ):
+                self.assertFalse((target / path).exists())
+            for path in live_documents:
+                self.assertTrue((target / path).is_file())
 
     def test_modified_stale_asset_remains_tombstoned_until_safe_to_remove(self):
         with tempfile.TemporaryDirectory() as temp:

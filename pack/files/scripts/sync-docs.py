@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-SCRIPT_VERSION = "3.4.0"
+SCRIPT_VERSION = "3.4.1"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
@@ -97,6 +97,7 @@ class LegacyState:
 
 @dataclass(frozen=True)
 class ManagedState:
+    pack_version: str | None
     managed_files: dict[str, str]
     tombstones: dict[str, str]
     exists: bool
@@ -516,7 +517,7 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     if state_path.is_symlink():
         raise ValueError(f"Managed state cannot be a symbolic link: {manifest.state_file}")
     if not state_path.exists():
-        return ManagedState(managed_files={}, tombstones={}, exists=False)
+        return ManagedState(pack_version=None, managed_files={}, tombstones={}, exists=False)
     if not state_path.is_file():
         raise ValueError(f"Managed state is not a file: {manifest.state_file}")
 
@@ -552,7 +553,12 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     tombstones = hash_map("tombstones")
     if set(managed_files).intersection(tombstones):
         raise ValueError("Managed state paths cannot be both active and tombstoned")
-    return ManagedState(managed_files=managed_files, tombstones=tombstones, exists=True)
+    return ManagedState(
+        pack_version=raw["pack_version"],
+        managed_files=managed_files,
+        tombstones=tombstones,
+        exists=True,
+    )
 
 
 def legacy_target(target_root: Path, path: str) -> Path:
@@ -650,6 +656,22 @@ def prune_stale_assets(
             target.unlink()
             actions.append(SyncAction("remove", path, "removed unchanged stale managed file"))
     return actions, tombstones
+
+
+def report_project_owned_paths(
+    target_root: Path,
+    manifest: PackManifest,
+    state: ManagedState,
+    already_reported: set[str],
+) -> list[SyncAction]:
+    if manifest.migration is None or state.pack_version == manifest.pack_version:
+        return []
+    actions: list[SyncAction] = []
+    for path in manifest.migration.protected_paths:
+        target = target_root / relative_path(path, "project-owned path")
+        if path not in already_reported and (target.exists() or target.is_symlink()):
+            actions.append(SyncAction("preserve", path, "project-owned path preserved"))
+    return actions
 
 
 def write_managed_state(
@@ -977,6 +999,14 @@ def synchronize(
     validate_parent_directory(state_path, target_root, "Managed state")
 
     actions = retire_legacy_paths(target_root, manifest.migration, legacy_state, dry_run)
+    actions.extend(
+        report_project_owned_paths(
+            target_root,
+            manifest,
+            managed_state,
+            {action.path for action in actions},
+        )
+    )
     prune_actions, tombstones = prune_stale_assets(
         source_root,
         target_root,
