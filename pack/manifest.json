@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
-  "pack_version": "3.2.3",
+  "pack_version": "3.3.0",
+  "state_file": ".repo-seed-state.json",
   "default_profile": "full",
   "profiles": [
     "minimal",
@@ -13,6 +14,59 @@
     "README.md",
     "LICENSE"
   ],
+  "migration": {
+    "legacy_manifest": ".agent-guidelines-manifest.json",
+    "legacy_version": ".agent-guidelines-version",
+    "legacy_conflicts": ".agent-guidelines-conflicts",
+    "protected_paths": [
+      ".editorconfig",
+      ".github/pull_request_template.md"
+    ],
+    "retired_path_sets": [
+      {
+        "through_version": "2.0.1",
+        "paths": [
+          ".agent-guidelines-version",
+          ".agents/ci-cd-guidelines.md",
+          "docs/architecture-template.md",
+          "docs/changelog-template.md",
+          "docs/ci-cd-guidelines.md",
+          "docs/coding-conventions-csharp.md",
+          "docs/coding-conventions-python.md",
+          "docs/coding-conventions-scripts.md",
+          "docs/coding-conventions-shell.md",
+          "docs/coding-conventions-unity.md",
+          "docs/features-template.md",
+          "docs/fsd-template.md",
+          "docs/gdd-template.md",
+          "docs/readme-template.md",
+          "docs/tsd-template.md",
+          "docs/user-guide-template.md",
+          "scripts/sync-agent-guidelines.py"
+        ]
+      }
+    ],
+    "scaffold_upgrades": [
+      {
+        "from_versions": ["1.31.0"],
+        "legacy_target": "README.md",
+        "template": "docs/templates/readme.template.md",
+        "content_hashes": ["5ce5183514b090fc115125cbe50308f031f76b8667b03cacf44eaed4126800c9"]
+      },
+      {
+        "from_versions": ["1.31.0"],
+        "legacy_target": "CHANGELOG.md",
+        "template": "docs/templates/changelog.template.md",
+        "content_hashes": ["3c850e2bfae60d6d59e760d45a89be96859f1d7d59781efaf36e40c67431edf1"]
+      },
+      {
+        "from_versions": ["1.31.0"],
+        "legacy_target": "FEATURES.md",
+        "template": "docs/templates/features.template.md",
+        "content_hashes": ["e631771766a79d7b155f015d4d6b538bf25dc1bcff48a75234912b5e4c5abbf2"]
+      }
+    ]
+  },
   "assets": [
     {
       "path": "AGENTS.md",
@@ -101,6 +155,7 @@
       "path": "docs/templates/features.template.md",
       "type": "template",
       "profiles": ["app", "game", "full"],
+      "previous_hashes": ["fee7750c636bfcff2d0f32514158747e9b2606d1a6a74d67ff633f0cad21f450"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/features.md"
     },
@@ -108,6 +163,7 @@
       "path": "docs/templates/architecture.template.md",
       "type": "template",
       "profiles": ["app", "full"],
+      "previous_hashes": ["698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/architecture.md"
     },
@@ -115,6 +171,7 @@
       "path": "docs/templates/user-guide.template.md",
       "type": "template",
       "profiles": ["app", "full"],
+      "previous_hashes": ["bb41e0f5d44efcfdc3fc5309117b0bacd511aab5f04e13ec971d61587776f379"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/user-guide.md"
     },
@@ -122,6 +179,7 @@
       "path": "docs/templates/fsd.template.md",
       "type": "template",
       "profiles": ["app", "full"],
+      "previous_hashes": ["547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/fsd.md"
     },
@@ -129,6 +187,7 @@
       "path": "docs/templates/tsd.template.md",
       "type": "template",
       "profiles": ["app", "full"],
+      "previous_hashes": ["002a859b6446e05f9c1f0ed02651f996e428b7025e1248123ec580a7e1e62870"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/tsd.md"
     },
@@ -136,6 +195,7 @@
       "path": "docs/templates/gdd.template.md",
       "type": "template",
       "profiles": ["game", "full"],
+      "previous_hashes": ["9c78b57c959beb5c2e49b28b5f8e3c4da456a9b90fd9823d67581d6b969d51e7"],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/gdd.md"
     },

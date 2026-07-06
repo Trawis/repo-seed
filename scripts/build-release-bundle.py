@@ -13,6 +13,7 @@ PACK_DIRECTORY = "pack"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 VALID_SCAFFOLD_GROUPS = {"project", "github", "editorconfig"}
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
@@ -47,6 +48,87 @@ def optional_string_list(value: object, context: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+def require_string(value: object, context: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{context} must be a non-empty string")
+    return value
+
+
+def validate_migration(value: object, asset_types: dict[str, str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        raise ValueError("manifest.migration must be an object")
+
+    state_paths = {
+        require_string(value.get(key), f"manifest.migration.{key}")
+        for key in ("legacy_manifest", "legacy_version", "legacy_conflicts")
+    }
+    if len(state_paths) != 3:
+        raise ValueError("Legacy manifest, version, and conflict paths must be distinct")
+    for path in state_paths:
+        safe_relative_path(path)
+    protected = require_string_list(
+        value.get("protected_paths"),
+        "manifest.migration.protected_paths",
+    )
+    for path in protected:
+        safe_relative_path(path)
+
+    raw_sets = value.get("retired_path_sets")
+    if not isinstance(raw_sets, list) or not raw_sets:
+        raise ValueError("manifest.migration.retired_path_sets must be a non-empty array")
+    retired: set[str] = set()
+    for index, raw_set in enumerate(raw_sets):
+        context = f"manifest.migration.retired_path_sets[{index}]"
+        if not isinstance(raw_set, dict):
+            raise ValueError(f"{context} must be an object")
+        through_version = require_string(raw_set.get("through_version"), f"{context}.through_version")
+        if not SEMVER_PATTERN.fullmatch(through_version):
+            raise ValueError(f"{context}.through_version must use MAJOR.MINOR.PATCH")
+        paths = require_string_list(raw_set.get("paths"), f"{context}.paths")
+        for path in paths:
+            safe_relative_path(path)
+            if path in retired:
+                raise ValueError(f"Duplicate retired path: {path}")
+            retired.add(path)
+    if retired.intersection(protected) or retired.intersection(asset_types):
+        raise ValueError("Retired paths collide with protected or current managed paths")
+    if (
+        value["legacy_manifest"] in retired
+        or value["legacy_conflicts"] in retired
+        or state_paths.intersection(protected)
+        or state_paths.intersection(asset_types)
+    ):
+        raise ValueError("Legacy state paths collide with retired, protected, or current paths")
+
+    raw_upgrades = value.get("scaffold_upgrades")
+    if not isinstance(raw_upgrades, list):
+        raise ValueError("manifest.migration.scaffold_upgrades must be an array")
+    legacy_targets: set[str] = set()
+    for index, raw_upgrade in enumerate(raw_upgrades):
+        context = f"manifest.migration.scaffold_upgrades[{index}]"
+        if not isinstance(raw_upgrade, dict):
+            raise ValueError(f"{context} must be an object")
+        versions = require_string_list(raw_upgrade.get("from_versions"), f"{context}.from_versions")
+        if not all(SEMVER_PATTERN.fullmatch(version) for version in versions):
+            raise ValueError(f"{context}.from_versions must contain semantic versions")
+        legacy_target = require_string(raw_upgrade.get("legacy_target"), f"{context}.legacy_target")
+        template = require_string(raw_upgrade.get("template"), f"{context}.template")
+        hashes = require_string_list(raw_upgrade.get("content_hashes"), f"{context}.content_hashes")
+        safe_relative_path(legacy_target)
+        safe_relative_path(template)
+        if legacy_target in legacy_targets:
+            raise ValueError(f"Duplicate scaffold legacy target: {legacy_target}")
+        if asset_types.get(template) != "template":
+            raise ValueError(f"{context}.template must reference a template asset")
+        if legacy_target in protected or legacy_target in asset_types:
+            raise ValueError(f"{context}.legacy_target cannot be managed or protected")
+        if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in hashes):
+            raise ValueError(f"{context}.content_hashes must contain SHA-256 values")
+        legacy_targets.add(legacy_target)
+
+
 def load_manifest(pack_root: Path) -> dict[str, object]:
     manifest_path = pack_root / MANIFEST_FILE
     if manifest_path.is_symlink():
@@ -64,6 +146,8 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
         raise ValueError(f"Unsupported manifest schema_version: {data.get('schema_version')}")
     if not isinstance(data.get("pack_version"), str) or not SEMVER_PATTERN.fullmatch(data["pack_version"]):
         raise ValueError("Pack manifest must define a semantic pack_version")
+    state_file = require_string(data.get("state_file"), "manifest.state_file")
+    safe_relative_path(state_file)
 
     profiles = require_string_list(data.get("profiles"), "manifest.profiles")
     if data.get("default_profile") not in profiles:
@@ -99,6 +183,12 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
         asset_profiles = require_string_list(asset.get("profiles"), f"{context}.profiles")
         if not set(asset_profiles).issubset(profiles):
             raise ValueError(f"{context}.profiles contains an invalid profile")
+        previous_hashes = optional_string_list(
+            asset.get("previous_hashes"),
+            f"{context}.previous_hashes",
+        )
+        if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in previous_hashes):
+            raise ValueError(f"{context}.previous_hashes must contain SHA-256 values")
 
         scaffold_group = asset.get("scaffold_group")
         scaffold_target = asset.get("scaffold_target")
@@ -118,6 +208,20 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
     collisions = seen_paths.intersection(seen_scaffolds)
     if collisions:
         raise ValueError(f"Scaffold targets collide with managed paths: {', '.join(sorted(collisions))}")
+    if state_file in seen_paths or state_file in seen_scaffolds or state_file in package_files:
+        raise ValueError("manifest.state_file cannot collide with pack or target assets")
+    validate_migration(
+        data.get("migration"),
+        {asset["path"]: asset["type"] for asset in data["assets"]},
+    )
+    migration = data.get("migration")
+    if isinstance(migration, dict) and state_file in {
+        migration["legacy_manifest"],
+        migration["legacy_version"],
+        migration["legacy_conflicts"],
+        *migration["protected_paths"],
+    }:
+        raise ValueError("manifest.state_file cannot collide with migration paths")
     return data
 
 

@@ -23,9 +23,14 @@ Update only documents affected by verified behavior. Do not create documentation
 
 ## Template Review
 
-Scaffolded Markdown contains a source-path marker. It does not track a hash or authorize automatic updates.
+Newly scaffolded Markdown contains source-path and content-hash markers. Sync
+may upgrade it only while those markers prove the live document is unchanged.
+Known older scaffolds may also be upgraded when their recorded provenance or
+an approved legacy content hash verifies the original content.
 
-When a managed template changes, compare it manually with the live document, using Git history when useful. Apply only relevant structural improvements and preserve verified project content. Sync never rewrites live project documentation.
+When a live document cannot be verified, compare it manually with the managed
+template, using Git history when useful. Apply only relevant structural
+improvements and preserve verified project content.
 
 ## Style
 
