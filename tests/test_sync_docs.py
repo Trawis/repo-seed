@@ -16,8 +16,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "4.0.0"
+EXPECTED_PACK_VERSION = "4.0.1"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
+PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
+PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
 
 
 def load_module(name: str, path: Path):
@@ -91,6 +93,18 @@ class ManifestTests(unittest.TestCase):
         self.assertIn(".editorconfig", migration.protected_paths)
         self.assertIn(".gitignore", migration.protected_paths)
         self.assertIn(".github/pull_request_template.md", migration.protected_paths)
+        retired_assets = {
+            asset.path: set(asset.content_hashes)
+            for asset in migration.retired_assets
+        }
+        self.assertEqual(
+            retired_assets,
+            {
+                "docs/templates/gitignore.template": {
+                    "0190836cc1deb2681f7b0952fe5be4103be77453d2a360611c0a9c0305310057"
+                }
+            },
+        )
         self.assertEqual(migration.retired_path_sets[0].through_version, "2.0.1")
         retired = {
             path
@@ -116,6 +130,37 @@ class ManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "SHA-256"):
             bundle_builder.validate_migration(
                 invalid_hash,
+                {asset.path: asset.asset_type for asset in self.manifest.assets},
+            )
+
+        invalid_retired_hash = json.loads(json.dumps(raw["migration"]))
+        invalid_retired_hash["retired_assets"][0]["content_hashes"][0] = "not-a-hash"
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            sync.load_migration(invalid_retired_hash, self.manifest.assets)
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            bundle_builder.validate_migration(
+                invalid_retired_hash,
+                {asset.path: asset.asset_type for asset in self.manifest.assets},
+            )
+
+        scaffold_collision = json.loads(json.dumps(raw["migration"]))
+        scaffold_collision["retired_assets"][0]["path"] = "README.md"
+        with self.assertRaisesRegex(ValueError, "scaffold"):
+            sync.load_migration(scaffold_collision, self.manifest.assets)
+        with self.assertRaisesRegex(ValueError, "scaffold"):
+            bundle_builder.validate_migration(
+                scaffold_collision,
+                {asset.path: asset.asset_type for asset in self.manifest.assets},
+                {"README.md"},
+            )
+
+        protected_collision = json.loads(json.dumps(raw["migration"]))
+        protected_collision["protected_paths"].append("AGENTS.md")
+        with self.assertRaisesRegex(ValueError, "managed paths cannot also be protected"):
+            sync.load_migration(protected_collision, self.manifest.assets)
+        with self.assertRaisesRegex(ValueError, "managed paths cannot also be protected"):
+            bundle_builder.validate_migration(
+                protected_collision,
                 {asset.path: asset.asset_type for asset in self.manifest.assets},
             )
 
@@ -319,6 +364,29 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn(required, agents)
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
+
+    def test_documentation_guidance_routes_only_applicable_bootstrap_documents(self):
+        guidance = (
+            PACK_ROOT / "files/.agents/guidelines/documentation.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("FSD for\n   applications or GDD for games", guidance)
+        self.assertIn("user guidance for user-facing products", guidance)
+        tsd = (PACK_ROOT / "files/docs/templates/tsd.template.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("issue, acceptance criteria, FSD, or GDD", tsd)
+
+    def test_update_docs_prefer_the_new_pack_script(self):
+        for path in (REPOSITORY_ROOT / "README.md", PACK_ROOT / "README.md"):
+            content = path.read_text(encoding="utf-8")
+            self.assertIn(
+                "python /path/to/extracted/pack/files/scripts/sync-docs.py",
+                content,
+            )
+            self.assertNotIn(
+                "python scripts/sync-docs.py \\\n  --source /path/to/extracted/pack",
+                content,
+            )
 
     def test_every_template_has_valid_metadata_and_a_body(self):
         for asset in sync.load_manifest(PACK_ROOT).assets:
@@ -1101,6 +1169,130 @@ class SyncBehaviorTests(unittest.TestCase):
                 sync.synchronize(PACK_ROOT, target, "minimal")
 
             self.assertFalse((target / "AGENTS.md").exists())
+
+    def test_managed_state_rejects_unknown_pack_owned_paths_before_copying(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            important = target / "src/important.py"
+            important.parent.mkdir(parents=True)
+            important.write_text("important = True\n", encoding="utf-8")
+            state = {
+                "schema_version": 1,
+                "pack_version": "4.0.0",
+                "profile": "minimal",
+                "managed_files": {
+                    "src/important.py": sync.managed_file_hash(important),
+                },
+                "tombstones": {},
+            }
+            (target / ".repo-seed-state.json").write_text(
+                json.dumps(state),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "unknown pack-owned path"):
+                sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertEqual(important.read_text(encoding="utf-8"), "important = True\n")
+            self.assertFalse((target / "AGENTS.md").exists())
+
+    def test_known_retired_asset_is_removed_only_with_a_recognized_hash(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            retired = target / "docs/templates/gitignore.template"
+            retired.parent.mkdir(parents=True)
+            shutil.copy2(PACK_330_FIXTURES / "gitignore.template", retired)
+            expected_hash = sync.managed_file_hash(retired)
+            self.assertEqual(
+                expected_hash,
+                "0190836cc1deb2681f7b0952fe5be4103be77453d2a360611c0a9c0305310057",
+            )
+            state = {
+                "schema_version": 1,
+                "pack_version": "3.3.0",
+                "profile": "minimal",
+                "managed_files": {
+                    "docs/templates/gitignore.template": expected_hash,
+                },
+                "tombstones": {},
+            }
+            state_path = target / ".repo-seed-state.json"
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertFalse(retired.exists())
+            self.assertTrue(
+                any(
+                    action.action == "remove"
+                    and action.path == "docs/templates/gitignore.template"
+                    for action in actions
+                )
+            )
+
+            retired.parent.mkdir(parents=True, exist_ok=True)
+            retired.write_text("project content\n", encoding="utf-8")
+            state["managed_files"]["docs/templates/gitignore.template"] = (
+                sync.managed_file_hash(retired)
+            )
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "not recognized for retired asset"):
+                sync.synchronize(PACK_ROOT, target, "minimal")
+            self.assertEqual(retired.read_text(encoding="utf-8"), "project content\n")
+
+    def test_new_pack_script_upgrades_a_3_4_1_target(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            features_reference = target / "docs/templates/features.template.md"
+            features_reference.parent.mkdir(parents=True)
+            shutil.copy2(PACK_341_FIXTURES / "features.template.md", features_reference)
+            copied_script = target / "scripts/sync-docs.py"
+            copied_script.parent.mkdir(parents=True)
+            copied_script.write_text("# version 3.4.1 script placeholder\n", encoding="utf-8")
+            live_documents = {
+                "docs/project/features.md": "# Project capabilities\n",
+                "docs/project/tsd.md": "# Existing project technical document\n",
+            }
+            for relative, content in live_documents.items():
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            state = {
+                "schema_version": 1,
+                "pack_version": "3.4.1",
+                "profile": "app",
+                "managed_files": {
+                    "docs/templates/features.template.md": sync.managed_file_hash(
+                        features_reference
+                    ),
+                    "scripts/sync-docs.py": sync.managed_file_hash(copied_script),
+                },
+                "tombstones": {},
+            }
+            state_path = target / ".repo-seed-state.json"
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--target",
+                    str(target),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("profile        app", result.stdout)
+            self.assertFalse(features_reference.exists())
+            self.assertEqual(copied_script.read_bytes(), SYNC_SCRIPT.read_bytes())
+            for relative, content in live_documents.items():
+                self.assertEqual((target / relative).read_text(encoding="utf-8"), content)
+            updated_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_state["pack_version"], EXPECTED_PACK_VERSION)
+            self.assertEqual(updated_state["profile"], "app")
 
     def test_copied_script_updates_from_an_explicit_pack(self):
         with tempfile.TemporaryDirectory() as temp:

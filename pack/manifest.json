@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "pack_version": "4.0.0",
+  "pack_version": "4.0.1",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -21,6 +21,14 @@
       ".editorconfig",
       ".gitignore",
       ".github/pull_request_template.md"
+    ],
+    "retired_assets": [
+      {
+        "path": "docs/templates/gitignore.template",
+        "content_hashes": [
+          "0190836cc1deb2681f7b0952fe5be4103be77453d2a360611c0a9c0305310057"
+        ]
+      }
     ],
     "retired_path_sets": [
       {
@@ -122,7 +130,8 @@
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
       "previous_hashes": [
-        "45ff5832ab06562a8ffe22a1c52bc750e74a6273495cccae8af92841cef45459"
+        "45ff5832ab06562a8ffe22a1c52bc750e74a6273495cccae8af92841cef45459",
+        "d0be705d90d1c0cff0f27ed9e70f3848a3ad6498f38d918a2821fe4c2e98ba1c"
       ],
       "scaffold_group": "project",
       "scaffold_target": "README.md"
@@ -194,7 +203,8 @@
       "profiles": ["library", "app", "game", "full"],
       "previous_hashes": [
         "002a859b6446e05f9c1f0ed02651f996e428b7025e1248123ec580a7e1e62870",
-        "cc412af38bd6b61ac65ad474c094c5462cc2d74f53cdbb86c25e44eb48fa2d21"
+        "cc412af38bd6b61ac65ad474c094c5462cc2d74f53cdbb86c25e44eb48fa2d21",
+        "718bf526bfabaa33b34f6fc80fadca19ff5fae790a07d2a93239b2004607b7bf"
       ]
     },
     {

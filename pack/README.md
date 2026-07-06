@@ -34,17 +34,31 @@ as tombstones for review.
 
 ## Update an Existing Project
 
-Use the sync script already copied into the target with a newer extracted pack:
+Prefer the script from the newly extracted pack so the newest validation runs
+before any target file is inspected or changed:
 
 ```bash
-python scripts/sync-docs.py \
-  --source /path/to/extracted/pack \
+python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --target . \
   --dry-run
 ```
 
-The recorded profile is reused when `--profile` is omitted. Pass an explicit
-profile to change it.
+A recorded `minimal`, `library`, `app`, or `game` profile is reused when
+`--profile` is omitted. The `full` catalog must always be selected explicitly.
+The copied target script remains available for compatible packs, but it cannot
+cross manifest-schema changes and may not contain the newest preflight fixes.
+
+## Upgrade from Version 3
+
+Version 3 scripts cannot read the version 4 manifest. Run the new pack's script
+for the first version 4 sync:
+
+```bash
+python /path/to/extracted/pack/files/scripts/sync-docs.py \
+  --target . \
+  --profile app \
+  --dry-run
+```
 
 For complete documentation, visit [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 

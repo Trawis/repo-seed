@@ -4,7 +4,7 @@ Repository-level instructions for coding agents.
 
 **Document role**: Managed coding-agent instructions
 **Sync destination**: `AGENTS.md`
-**Version**: 4.0.0
+**Version**: 4.0.1
 
 ## Start Here
 

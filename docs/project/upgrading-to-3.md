@@ -1,13 +1,17 @@
-# Upgrading 1.x or 2.x to Version 3
+# Migrating from Version 1 or 2
 
 **Document role**: Repo-seed project documentation
 
 **Sync behavior**: Never copied into target repositories
 
-Version 3 replaces the conflict-heavy 1.x/2.x synchronizer with a self-contained
-pack and predictable managed-file synchronization.
+The current pack replaces the conflict-heavy 1.x/2.x synchronizer with a
+self-contained pack and predictable managed-file synchronization. Version 3
+introduced this model; version 4 retains the legacy migration path.
 
-Version note: sync script `1.7.0` shipped with pack `1.31.0`. Check `.agent-guidelines-version` or `PACK_VERSION` in the old script when identifying an installation. Repositories can upgrade directly to version 3 without installing intermediate releases.
+Version note: sync script `1.7.0` shipped with pack `1.31.0`. Check
+`.agent-guidelines-version` or `PACK_VERSION` in the old script when identifying
+an installation. Repositories can upgrade directly to the current pack without
+installing intermediate releases.
 
 ## Before Upgrading
 
@@ -60,7 +64,7 @@ Changing to a smaller profile removes current managed assets only when their
 content still matches the recorded pack hash. Modified stale assets are
 preserved and remain tombstoned in `.repo-seed-state.json`.
 
-## Run Version 3
+## Run the Current Pack
 
 From the directory containing the extracted `pack/` folder:
 
@@ -83,4 +87,5 @@ project-owned files you want to create or verify for a safe Markdown upgrade:
 Rerun without `--dry-run` after reviewing removals, preservation warnings,
 managed updates, state changes, and scaffold destinations.
 
-For later updates, follow [Update an Existing Project](../../README.md#update-an-existing-project).
+After the first current-pack sync, follow
+[Update an Existing Project](../../README.md#update-an-existing-project).

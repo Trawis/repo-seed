@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-SCRIPT_VERSION = "4.0.0"
+SCRIPT_VERSION = "4.0.1"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
@@ -52,6 +52,12 @@ class RetiredPathSet:
 
 
 @dataclass(frozen=True)
+class RetiredAsset:
+    path: str
+    content_hashes: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ScaffoldUpgrade:
     from_versions: tuple[str, ...]
     legacy_target: str
@@ -65,6 +71,7 @@ class MigrationConfig:
     legacy_version: str
     legacy_conflicts: str
     protected_paths: tuple[str, ...]
+    retired_assets: tuple[RetiredAsset, ...]
     retired_path_sets: tuple[RetiredPathSet, ...]
     scaffold_upgrades: tuple[ScaffoldUpgrade, ...]
 
@@ -179,6 +186,25 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
     for index, path in enumerate(protected_paths):
         relative_path(path, f"manifest.migration.protected_paths[{index}]")
 
+    raw_retired_assets = value.get("retired_assets")
+    if not isinstance(raw_retired_assets, list):
+        raise ValueError("manifest.migration.retired_assets must be an array")
+    retired_assets: list[RetiredAsset] = []
+    retired_asset_paths: set[str] = set()
+    for index, raw_asset in enumerate(raw_retired_assets):
+        context = f"manifest.migration.retired_assets[{index}]"
+        if not isinstance(raw_asset, dict):
+            raise ValueError(f"{context} must be an object")
+        path = require_string(raw_asset, "path", context)
+        content_hashes = require_string_list(raw_asset, "content_hashes", context)
+        relative_path(path, f"{context}.path")
+        if path in retired_asset_paths:
+            raise ValueError(f"Duplicate retired asset: {path}")
+        if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in content_hashes):
+            raise ValueError(f"{context}.content_hashes must contain SHA-256 values")
+        retired_asset_paths.add(path)
+        retired_assets.append(RetiredAsset(path=path, content_hashes=content_hashes))
+
     raw_sets = value.get("retired_path_sets")
     if not isinstance(raw_sets, list) or not raw_sets:
         raise ValueError("manifest.migration.retired_path_sets must be a non-empty array")
@@ -201,11 +227,31 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
     if retired_paths.intersection(protected_paths):
         raise ValueError("Protected paths cannot also be retired")
     current_paths = {asset.path for asset in assets}
-    if retired_paths.intersection(current_paths):
+    scaffold_targets = {
+        asset.scaffold_target
+        for asset in assets
+        if asset.scaffold_target is not None
+    }
+    if current_paths.intersection(protected_paths):
+        raise ValueError("Current managed paths cannot also be protected")
+    if retired_paths.intersection(current_paths) or retired_asset_paths.intersection(current_paths):
         raise ValueError("Retired paths cannot collide with current managed paths")
+    if (
+        retired_asset_paths.intersection(protected_paths)
+        or retired_asset_paths.intersection(retired_paths)
+        or retired_asset_paths.intersection(scaffold_targets)
+        or retired_paths.intersection(scaffold_targets)
+    ):
+        raise ValueError(
+            "Retired paths cannot collide with protected paths or scaffold targets"
+        )
     if legacy_manifest in retired_paths or legacy_conflicts in retired_paths:
         raise ValueError("Legacy manifest and conflict paths cannot also be retired")
-    if state_paths.intersection(current_paths) or state_paths.intersection(protected_paths):
+    if (
+        state_paths.intersection(current_paths)
+        or state_paths.intersection(protected_paths)
+        or state_paths.intersection(retired_asset_paths)
+    ):
         raise ValueError("Legacy state paths cannot collide with current or protected paths")
 
     raw_upgrades = value.get("scaffold_upgrades")
@@ -230,7 +276,11 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
             raise ValueError(f"Duplicate scaffold legacy target: {legacy_target}")
         if template not in asset_by_path or asset_by_path[template].asset_type != "template":
             raise ValueError(f"{context}.template must reference a template asset")
-        if legacy_target in current_paths or legacy_target in protected_paths:
+        if (
+            legacy_target in current_paths
+            or legacy_target in protected_paths
+            or legacy_target in retired_asset_paths
+        ):
             raise ValueError(f"{context}.legacy_target cannot be managed or protected")
         if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in content_hashes):
             raise ValueError(f"{context}.content_hashes must contain SHA-256 values")
@@ -249,6 +299,7 @@ def load_migration(value: object, assets: tuple[Asset, ...]) -> MigrationConfig 
         legacy_version=legacy_version,
         legacy_conflicts=legacy_conflicts,
         protected_paths=protected_paths,
+        retired_assets=tuple(retired_assets),
         retired_path_sets=tuple(retired_sets),
         scaffold_upgrades=tuple(upgrades),
     )
@@ -388,6 +439,12 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         migration.legacy_version,
         migration.legacy_conflicts,
         *migration.protected_paths,
+        *(asset.path for asset in migration.retired_assets),
+        *(
+            path
+            for retired_set in migration.retired_path_sets
+            for path in retired_set.paths
+        ),
     }:
         raise ValueError("manifest.state_file cannot collide with migration paths")
 
@@ -538,6 +595,20 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     if not isinstance(raw.get("profile"), str) or not raw["profile"]:
         raise ValueError("Managed state profile must be a non-empty string")
 
+    allowed_paths = {asset.path for asset in manifest.assets}
+    protected_paths: set[str] = set()
+    retired_hashes: dict[str, set[str]] = {}
+    if manifest.migration:
+        protected_paths.update(manifest.migration.protected_paths)
+        retired_hashes.update(
+            {
+                asset.path: set(asset.content_hashes)
+                for asset in manifest.migration.retired_assets
+            }
+        )
+    allowed_paths.update(protected_paths)
+    allowed_paths.update(retired_hashes)
+
     def hash_map(key: str) -> dict[str, str]:
         value = raw.get(key)
         if not isinstance(value, dict):
@@ -551,6 +622,10 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
                 raise ValueError("Managed state cannot own itself")
             if not SHA256_PATTERN.fullmatch(hash_value):
                 raise ValueError(f"Managed state hash is invalid for: {path}")
+            if path not in allowed_paths:
+                raise ValueError(f"Managed state contains an unknown pack-owned path: {path}")
+            if path in retired_hashes and hash_value not in retired_hashes[path]:
+                raise ValueError(f"Managed state hash is not recognized for retired asset: {path}")
             result[path] = hash_value
         return result
 
