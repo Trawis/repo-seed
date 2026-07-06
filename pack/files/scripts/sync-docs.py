@@ -711,16 +711,28 @@ def retire_legacy_paths(
         if not target.exists() and not target.is_symlink():
             continue
         expected_hash = state.hashes.get(path)
+        # The legacy version file is repo-seed-owned even when the old manifest
+        # omitted its own hash. Recognize it by its recorded version content so
+        # migration can complete instead of preserving it (and the manifest)
+        # forever.
+        version_file_match = (
+            expected_hash is None
+            and path == migration.legacy_version
+            and state.pack_version is not None
+            and target.is_file()
+            and not target.is_symlink()
+            and target.read_text(encoding="utf-8").strip() == state.pack_version
+        )
         if target.is_symlink() or not target_resolves_within_root(target_root, target):
             actions.append(SyncAction("preserve", path, "retired path is a symbolic link"))
             blocked = True
         elif not target.is_file():
             actions.append(SyncAction("preserve", path, "retired path is not a regular file"))
             blocked = True
-        elif expected_hash is None:
+        elif expected_hash is None and not version_file_match:
             actions.append(SyncAction("preserve", path, "retired path is not recorded in the legacy manifest"))
             blocked = True
-        elif file_hash(target) != expected_hash:
+        elif expected_hash is not None and file_hash(target) != expected_hash:
             actions.append(SyncAction("preserve", path, "retired path has local changes"))
             blocked = True
         elif dry_run:

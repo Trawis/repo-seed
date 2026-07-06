@@ -430,6 +430,25 @@ class SyncBehaviorTests(unittest.TestCase):
                 },
             )
 
+    def test_legacy_version_file_missing_from_manifest_is_still_retired(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            version_file = target / ".agent-guidelines-version"
+            version_file.write_text("1.31.0\n", encoding="utf-8")
+            state = target / ".agent-guidelines-manifest.json"
+            state.write_text(
+                json.dumps({"pack_version": "1.31.0", "files": {}}),
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertFalse(version_file.exists())
+            self.assertFalse(state.exists())
+            removed = {action.path for action in actions if action.action == "remove"}
+            self.assertIn(".agent-guidelines-version", removed)
+            self.assertIn(".agent-guidelines-manifest.json", removed)
+
     def test_modified_or_untracked_legacy_files_are_preserved_and_reported(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
