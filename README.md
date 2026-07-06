@@ -21,7 +21,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 - a writable target repository directory;
 - Windows, Linux, or macOS.
 
-The scripts use only the Python standard library. Pull-request CI validates Python 3.10 on Linux. Run local checks on the target operating system when filesystem behavior matters.
+The scripts use only the Python standard library. Pull-request CI validates Python 3.10 and 3.13 on Linux. Run local checks on the target operating system when filesystem behavior matters.
 
 ## Safety
 
