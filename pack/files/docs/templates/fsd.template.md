@@ -7,12 +7,18 @@
 **Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
-**Project / Feature**:
+**Project**:
 **Status**: Draft
+**Basis**: Intended / As-built / Mixed
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
-Define observable behavior and acceptance criteria. Keep implementation, architecture, data, APIs, testing, and rollout in the TSD.
+Define accepted application behavior and acceptance criteria. Keep current
+technical structure in the architecture document and proposed implementation
+changes in design records under `docs/project/designs/`.
+
+When this document grows, keep it as the functional overview and move detailed
+domains under `docs/project/functional/`.
 
 ## Summary and Goals
 
@@ -22,7 +28,15 @@ Define observable behavior and acceptance criteria. Keep implementation, archite
 
 -
 
-## Users and Use Cases
+## Capability Map
+
+| Capability | Status | Detail |
+|---|---|---|
+| | Implemented / Specified / Proposed / Out of scope | |
+
+Keep delivery scheduling in issues or a project board.
+
+## Users, Roles, and Use Cases
 
 | ID | User story or use case | Priority |
 |---|---|---|
@@ -38,13 +52,19 @@ Define observable behavior and acceptance criteria. Keep implementation, archite
 
 Describe relevant screens, commands, interactions, inputs, and outputs.
 
-## Validation and Permissions
+## Rules, Validation, Errors, and Permissions
 
 Document user-visible errors, edge cases, roles, access, and ownership rules.
 
 ## Non-Functional Requirements
 
-Document user-observable targets: performance, capacity, reliability, accessibility, and compatibility. Keep how they are achieved in the TSD.
+Document user-observable targets: performance, capacity, reliability,
+accessibility, and compatibility. Keep current implementation in architecture
+and proposed changes in a technical design.
+
+## Assumptions, Constraints, and Dependencies
+
+-
 
 ## Open Questions and References
 

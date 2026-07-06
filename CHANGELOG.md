@@ -8,6 +8,27 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.0.0 - 2026-07-06
+
+### Added
+
+- Added explicit existing-project bootstrap guidance for coding agents, including evidence and uncertainty handling.
+- Added a scalable documentation rule: stable overview documents become indexes while detail is added only when needed.
+
+### Changed
+
+- Made architecture the current technical system overview for libraries, applications, and games.
+- Reworked TSD as a reference-only template for substantial changes under `docs/project/designs/`.
+- Expanded FSD, GDD, architecture, README, user-guide, and changelog templates while keeping their responsibilities separate.
+- Required an explicit profile on first sync and reused the recorded profile on later syncs.
+- Defined `full` as a reference-catalog profile and rejected project scaffolding with it.
+- Upgraded the manifest to schema version 2 so templates may be synchronized without scaffold destinations.
+
+### Removed
+
+- Removed features from normal application and game profiles; the template remains an optional `full` reference.
+- Removed automatic scaffolding of a generic `docs/project/tsd.md`.
+
 ## 3.4.1 - 2026-07-06
 
 ### Changed

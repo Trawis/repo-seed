@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-SCRIPT_VERSION = "3.4.1"
+SCRIPT_VERSION = "4.0.0"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
@@ -74,7 +74,6 @@ class PackManifest:
     schema_version: int
     pack_version: str
     state_file: str
-    default_profile: str
     profiles: tuple[str, ...]
     package_files: tuple[str, ...]
     migration: MigrationConfig | None
@@ -98,6 +97,7 @@ class LegacyState:
 @dataclass(frozen=True)
 class ManagedState:
     pack_version: str | None
+    profile: str | None
     managed_files: dict[str, str]
     tombstones: dict[str, str]
     exists: bool
@@ -283,7 +283,7 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
 
     if not isinstance(raw, dict):
         raise ValueError("Pack manifest root must be an object")
-    if raw.get("schema_version") != 1:
+    if raw.get("schema_version") != 2:
         raise ValueError(f"Unsupported manifest schema_version: {raw.get('schema_version')}")
 
     pack_version = require_string(raw, "pack_version", "manifest")
@@ -293,9 +293,6 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
     relative_path(state_file, "manifest.state_file")
 
     profiles = require_string_list(raw, "profiles", "manifest")
-    default_profile = require_string(raw, "default_profile", "manifest")
-    if default_profile not in profiles:
-        raise ValueError("manifest.default_profile must be listed in manifest.profiles")
 
     package_files = optional_string_list(raw, "package_files", "manifest")
     for index, package_file in enumerate(package_files):
@@ -341,18 +338,21 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
             raise ValueError(f"{context}.previous_hashes must contain SHA-256 values")
 
         if asset_type == "template":
-            if scaffold_group not in VALID_SCAFFOLD_GROUPS:
+            if (scaffold_group is None) != (scaffold_target is None):
+                raise ValueError(f"{context} must define both scaffold fields or neither")
+            if scaffold_group is not None and scaffold_group not in VALID_SCAFFOLD_GROUPS:
                 raise ValueError(
                     f"{context}.scaffold_group must be one of: {', '.join(sorted(VALID_SCAFFOLD_GROUPS))}"
                 )
-            if not isinstance(scaffold_target, str) or not scaffold_target:
-                raise ValueError(f"{context}.scaffold_target must be a non-empty string")
-            relative_path(scaffold_target, f"{context}.scaffold_target")
-            if scaffold_target in scaffold_targets:
-                raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
             if not path.startswith("docs/templates/"):
                 raise ValueError(f"{context}.path must be under docs/templates")
-            scaffold_targets.add(scaffold_target)
+            if scaffold_group is not None:
+                if not isinstance(scaffold_target, str) or not scaffold_target:
+                    raise ValueError(f"{context}.scaffold_target must be a non-empty string")
+                relative_path(scaffold_target, f"{context}.scaffold_target")
+                if scaffold_target in scaffold_targets:
+                    raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
+                scaffold_targets.add(scaffold_target)
         elif scaffold_group is not None or scaffold_target is not None:
             raise ValueError(f"{context} managed assets cannot define scaffold fields")
 
@@ -392,10 +392,9 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         raise ValueError("manifest.state_file cannot collide with migration paths")
 
     return PackManifest(
-        schema_version=1,
+        schema_version=2,
         pack_version=pack_version,
         state_file=state_file,
-        default_profile=default_profile,
         profiles=profiles,
         package_files=package_files,
         migration=migration,
@@ -517,7 +516,13 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     if state_path.is_symlink():
         raise ValueError(f"Managed state cannot be a symbolic link: {manifest.state_file}")
     if not state_path.exists():
-        return ManagedState(pack_version=None, managed_files={}, tombstones={}, exists=False)
+        return ManagedState(
+            pack_version=None,
+            profile=None,
+            managed_files={},
+            tombstones={},
+            exists=False,
+        )
     if not state_path.is_file():
         raise ValueError(f"Managed state is not a file: {manifest.state_file}")
 
@@ -555,6 +560,7 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
         raise ValueError("Managed state paths cannot be both active and tombstoned")
     return ManagedState(
         pack_version=raw["pack_version"],
+        profile=raw["profile"],
         managed_files=managed_files,
         tombstones=tombstones,
         exists=True,
@@ -974,6 +980,11 @@ def synchronize(
 
     manifest = load_manifest(source_root)
     selected = assets_for_profile(manifest, profile)
+    if profile == "full" and scaffold_project_files:
+        raise ValueError(
+            "The full profile is a reference catalog and cannot scaffold project files; "
+            "choose minimal, library, app, or game"
+        )
     legacy_state = read_legacy_state(target_root, manifest.migration)
     managed_state = read_managed_state(target_root, manifest)
 
@@ -1055,7 +1066,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Pack directory containing manifest.json and files/. Auto-detected when run from an extracted pack.",
     )
     parser.add_argument("--target", default=".", help="Target repository. Defaults to the current directory.")
-    parser.add_argument("--profile", help="Profile name. Defaults to the manifest default.")
+    parser.add_argument(
+        "--profile",
+        help="Profile name. Required on first sync; later syncs reuse the recorded profile when omitted.",
+    )
     parser.add_argument(
         "--scaffold-project-files",
         action="store_true",
@@ -1091,7 +1105,20 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"Target repository does not exist or is not a directory: {target_root}")
 
         manifest = load_manifest(source_root)
-        profile = args.profile or manifest.default_profile
+        if args.profile:
+            profile = args.profile
+        else:
+            state = read_managed_state(target_root, manifest)
+            if (
+                not state.exists
+                or state.profile not in manifest.profiles
+                or state.profile == "full"
+            ):
+                raise ValueError(
+                    "No reusable project profile is recorded; pass --profile with "
+                    "minimal, library, app, or game"
+                )
+            profile = state.profile
         actions = synchronize(
             source_root=source_root,
             target_root=target_root,

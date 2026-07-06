@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "3.4.1"
+EXPECTED_PACK_VERSION = "4.0.0"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 
 
@@ -40,10 +40,9 @@ class ManifestTests(unittest.TestCase):
         cls.manifest = sync.load_manifest(PACK_ROOT)
 
     def test_manifest_is_versioned_and_complete(self):
-        self.assertEqual(self.manifest.schema_version, 1)
+        self.assertEqual(self.manifest.schema_version, 2)
         self.assertEqual(self.manifest.pack_version, EXPECTED_PACK_VERSION)
         self.assertEqual(self.manifest.state_file, ".repo-seed-state.json")
-        self.assertEqual(self.manifest.default_profile, "full")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
         self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE"))
         for package_file in self.manifest.package_files:
@@ -150,16 +149,20 @@ class ManifestTests(unittest.TestCase):
         }
         expected = {
             "minimal": common,
-            "library": common,
+            "library": common | {"architecture.template.md", "tsd.template.md"},
             "app": common
             | {
                 "architecture.template.md",
-                "features.template.md",
                 "fsd.template.md",
                 "tsd.template.md",
                 "user-guide.template.md",
             },
-            "game": common | {"features.template.md", "gdd.template.md"},
+            "game": common
+            | {
+                "architecture.template.md",
+                "gdd.template.md",
+                "tsd.template.md",
+            },
             "full": common
             | {
                 "architecture.template.md",
@@ -175,9 +178,37 @@ class ManifestTests(unittest.TestCase):
             actual_names = {
                 Path(asset.path).name
                 for asset in selected
-                if asset.asset_type == "template" and asset.scaffold_group == "project"
+                if asset.asset_type == "template"
+                and asset.path.startswith("docs/templates/")
+                and "/.github/" not in asset.path
+                and Path(asset.path).name != "editorconfig.template"
             }
             self.assertEqual(actual_names, expected_names, profile)
+
+    def test_reference_only_templates_have_no_scaffold_destination(self):
+        assets = {asset.path: asset for asset in self.manifest.assets}
+        self.assertIsNone(assets["docs/templates/tsd.template.md"].scaffold_target)
+        self.assertIsNone(assets["docs/templates/features.template.md"].scaffold_target)
+        self.assertEqual(
+            assets["docs/templates/architecture.template.md"].scaffold_target,
+            "docs/project/architecture.md",
+        )
+
+    def test_template_scaffold_fields_must_be_both_present_or_absent(self):
+        raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        asset = next(
+            item
+            for item in raw["assets"]
+            if item["path"] == "docs/templates/tsd.template.md"
+        )
+        asset["scaffold_group"] = "project"
+        with tempfile.TemporaryDirectory() as temp:
+            pack = Path(temp)
+            shutil.copytree(PACK_ROOT / "files", pack / "files")
+            raw["package_files"] = []
+            (pack / "manifest.json").write_text(json.dumps(raw), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "both scaffold fields or neither"):
+                sync.load_manifest(pack)
 
     def test_unsafe_paths_are_rejected(self):
         for value in ("../outside", "/absolute", r"docs\windows", "C:/drive", "docs/./file"):
@@ -190,10 +221,9 @@ class ManifestTests(unittest.TestCase):
             pack = Path(temp)
             (pack / "files").mkdir()
             invalid = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "pack_version": EXPECTED_PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
-                "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
                     {
@@ -219,10 +249,9 @@ class ManifestTests(unittest.TestCase):
             managed.parent.mkdir(parents=True)
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "pack_version": EXPECTED_PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
-                "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "package_files": ["../README.md"],
                 "assets": [
@@ -252,10 +281,9 @@ class ManifestTests(unittest.TestCase):
             )
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "pack_version": EXPECTED_PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
-                "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
                     {"path": "README.md", "type": "managed", "profiles": ["minimal"]},
@@ -376,8 +404,8 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertFalse((target / ".agent-guidelines-version").exists())
             self.assertFalse((target / ".agent-guidelines-manifest.json").exists())
             self.assertFalse((target / "scripts/sync-agent-guidelines.py").exists())
-            self.assertFalse((target / "FEATURES.md").exists())
-            self.assertTrue((target / "docs/project/features.md").is_file())
+            self.assertTrue((target / "FEATURES.md").is_file())
+            self.assertFalse((target / "docs/project/features.md").exists())
             self.assertIn(
                 "Scaffolded content SHA-256:",
                 (target / "README.md").read_text(encoding="utf-8"),
@@ -701,11 +729,9 @@ class SyncBehaviorTests(unittest.TestCase):
             expected = {
                 "README.md",
                 "CHANGELOG.md",
-                "docs/project/features.md",
                 "docs/project/architecture.md",
                 "docs/project/user-guide.md",
                 "docs/project/fsd.md",
-                "docs/project/tsd.md",
             }
             for relative in expected:
                 self.assertTrue((target / relative).is_file(), relative)
@@ -714,6 +740,50 @@ class SyncBehaviorTests(unittest.TestCase):
             readme = (target / "README.md").read_text(encoding="utf-8")
             self.assertIn("<!-- Scaffolded from: docs/templates/readme.template.md -->", readme)
             self.assertNotIn(sync.TEMPLATE_METADATA_START, readme)
+
+    def test_each_project_profile_scaffolds_only_its_living_documents(self):
+        expected = {
+            "minimal": {"README.md", "CHANGELOG.md"},
+            "library": {
+                "README.md",
+                "CHANGELOG.md",
+                "docs/project/architecture.md",
+            },
+            "app": {
+                "README.md",
+                "CHANGELOG.md",
+                "docs/project/architecture.md",
+                "docs/project/fsd.md",
+                "docs/project/user-guide.md",
+            },
+            "game": {
+                "README.md",
+                "CHANGELOG.md",
+                "docs/project/architecture.md",
+                "docs/project/gdd.md",
+            },
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for profile, expected_paths in expected.items():
+                target = root / profile
+                target.mkdir()
+                sync.synchronize(
+                    PACK_ROOT,
+                    target,
+                    profile,
+                    scaffold_project_files=True,
+                )
+                actual = {
+                    path.relative_to(target).as_posix()
+                    for path in target.rglob("*")
+                    if path.is_file()
+                    and (
+                        path.name in {"README.md", "CHANGELOG.md"}
+                        or "docs/project" in path.as_posix()
+                    )
+                }
+                self.assertEqual(actual, expected_paths, profile)
 
     def test_editorconfig_scaffolding_is_explicit(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -731,6 +801,8 @@ class SyncBehaviorTests(unittest.TestCase):
                 ".editorconfig": "root = false\n",
                 ".gitignore": "project-specific-output/\n",
                 ".github/ISSUE_TEMPLATE/bug_report.md": "project bug form\n",
+                "docs/project/features.md": "project capability index\n",
+                "docs/project/tsd.md": "existing project technical document\n",
             }
             for relative, content in existing.items():
                 path = target / relative
@@ -739,7 +811,7 @@ class SyncBehaviorTests(unittest.TestCase):
             actions = sync.synchronize(
                 PACK_ROOT,
                 target,
-                "full",
+                "app",
                 scaffold_project_files=True,
                 scaffold_github_templates=True,
                 scaffold_editorconfig=True,
@@ -758,7 +830,7 @@ class SyncBehaviorTests(unittest.TestCase):
             repeat = sync.synchronize(
                 PACK_ROOT,
                 target,
-                "full",
+                "app",
                 scaffold_project_files=True,
                 scaffold_github_templates=True,
                 scaffold_editorconfig=True,
@@ -806,13 +878,25 @@ class SyncBehaviorTests(unittest.TestCase):
             actions = sync.synchronize(
                 PACK_ROOT,
                 target,
-                "full",
+                "app",
                 scaffold_project_files=True,
                 scaffold_github_templates=True,
                 scaffold_editorconfig=True,
                 dry_run=True,
             )
             self.assertTrue(actions)
+            self.assertEqual(list(target.iterdir()), [])
+
+    def test_full_profile_rejects_project_scaffolding_without_writes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            with self.assertRaisesRegex(ValueError, "reference catalog"):
+                sync.synchronize(
+                    PACK_ROOT,
+                    target,
+                    "full",
+                    scaffold_project_files=True,
+                )
             self.assertEqual(list(target.iterdir()), [])
 
     def test_profile_reduction_removes_unchanged_stale_managed_files(self):
@@ -860,15 +944,17 @@ class SyncBehaviorTests(unittest.TestCase):
                             )
                         self.assertEqual(unknown.read_text(encoding="utf-8"), "keep\n")
 
-    def test_full_to_game_prunes_reference_templates_but_preserves_live_docs(self):
+    def test_app_to_game_prunes_references_but_preserves_live_docs(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             sync.synchronize(
                 PACK_ROOT,
                 target,
-                "full",
+                "app",
                 scaffold_project_files=True,
             )
+            project_tsd = target / "docs/project/tsd.md"
+            project_tsd.write_text("# Existing project TSD\n", encoding="utf-8")
             live_documents = (
                 "docs/project/architecture.md",
                 "docs/project/user-guide.md",
@@ -881,12 +967,15 @@ class SyncBehaviorTests(unittest.TestCase):
             sync.synchronize(PACK_ROOT, target, "game")
 
             for path in (
-                "docs/templates/architecture.template.md",
                 "docs/templates/user-guide.template.md",
                 "docs/templates/fsd.template.md",
-                "docs/templates/tsd.template.md",
             ):
                 self.assertFalse((target / path).exists())
+            for path in (
+                "docs/templates/architecture.template.md",
+                "docs/templates/tsd.template.md",
+            ):
+                self.assertTrue((target / path).is_file())
             for path in live_documents:
                 self.assertTrue((target / path).is_file())
 
@@ -967,17 +1056,6 @@ class SyncBehaviorTests(unittest.TestCase):
             target = Path(temp)
             sync.synchronize(PACK_ROOT, target, "full")
             gdd = target / "docs/templates/gdd.template.md"
-            previous_gdd = gdd.read_text(encoding="utf-8").replace(
-                "The live file is project-owned; only a verified unchanged scaffold may be upgraded",
-                "The live file is project-owned and never overwritten by sync",
-            )
-            gdd.write_text(previous_gdd, encoding="utf-8", newline="\n")
-            gdd_asset = next(
-                asset
-                for asset in sync.load_manifest(PACK_ROOT).assets
-                if asset.path == "docs/templates/gdd.template.md"
-            )
-            self.assertIn(sync.managed_file_hash(gdd), gdd_asset.previous_hashes)
             (target / ".repo-seed-state.json").unlink()
             unknown = target / "project-owned.txt"
             unknown.write_text("keep\n", encoding="utf-8")
@@ -1062,6 +1140,77 @@ class SyncBehaviorTests(unittest.TestCase):
 
 
 class BundleAndCliTests(unittest.TestCase):
+    def test_first_sync_requires_an_explicit_profile(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--target",
+                    str(target),
+                    "--dry-run",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("No reusable project profile is recorded", result.stderr)
+            self.assertEqual(list(target.iterdir()), [])
+
+    def test_later_sync_reuses_the_recorded_profile(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            first = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--target",
+                    str(target),
+                    "--profile",
+                    "library",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(first.returncode, 0, first.stderr)
+
+            repeat = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--target",
+                    str(target),
+                    "--dry-run",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(repeat.returncode, 0, repeat.stderr)
+            self.assertIn("profile        library", repeat.stdout)
+
+    def test_recorded_full_profile_is_not_implicitly_reused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "full")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--target",
+                    str(target),
+                    "--dry-run",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("pass --profile", result.stderr)
+
     def test_universal_archive_contains_exact_manifest_inventory(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
@@ -1092,18 +1241,20 @@ class BundleAndCliTests(unittest.TestCase):
             for profile in ("minimal", "library", "app", "game", "full"):
                 target = temp_root / f"target-{profile}"
                 target.mkdir()
+                command = [
+                    sys.executable,
+                    str(script),
+                    "--target",
+                    str(target),
+                    "--profile",
+                    profile,
+                    "--scaffold-github-templates",
+                    "--scaffold-editorconfig",
+                ]
+                if profile != "full":
+                    command.append("--scaffold-project-files")
                 result = subprocess.run(
-                    [
-                        sys.executable,
-                        str(script),
-                        "--target",
-                        str(target),
-                        "--profile",
-                        profile,
-                        "--scaffold-project-files",
-                        "--scaffold-github-templates",
-                        "--scaffold-editorconfig",
-                    ],
+                    command,
                     cwd=extract_root,
                     capture_output=True,
                     text=True,
@@ -1114,10 +1265,13 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertTrue((target / "scripts/sync-docs.py").is_file())
                 self.assertTrue((target / ".editorconfig").is_file())
                 self.assertTrue((target / ".github/ISSUE_TEMPLATE/feature_request.md").is_file())
-                self.assertIn(
-                    "<!-- Scaffolded from: docs/templates/readme.template.md -->",
-                    (target / "README.md").read_text(encoding="utf-8"),
-                )
+                if profile == "full":
+                    self.assertFalse((target / "README.md").exists())
+                else:
+                    self.assertIn(
+                        "<!-- Scaffolded from: docs/templates/readme.template.md -->",
+                        (target / "README.md").read_text(encoding="utf-8"),
+                    )
                 self.assertFalse((target / "LICENSE").exists())
 
     def test_release_builder_rejects_source_symlinks(self):
@@ -1143,10 +1297,9 @@ class BundleAndCliTests(unittest.TestCase):
             source.parent.mkdir(parents=True)
             source.write_text("# Missing metadata\n", encoding="utf-8")
             manifest = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "pack_version": EXPECTED_PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
-                "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "assets": [
                     {
@@ -1170,10 +1323,9 @@ class BundleAndCliTests(unittest.TestCase):
             managed.parent.mkdir(parents=True)
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "pack_version": EXPECTED_PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
-                "default_profile": "minimal",
                 "profiles": ["minimal"],
                 "package_files": ["README.md"],
                 "assets": [

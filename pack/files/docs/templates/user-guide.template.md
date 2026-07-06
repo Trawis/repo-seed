@@ -11,6 +11,10 @@
 **Audience**:
 **Last Updated**: YYYY-MM-DD
 
+Keep setup and one quick-start path in README. Use this document for current
+user workflows, settings, reference, and troubleshooting. When it grows, retain
+this file as the guide index and move details under `docs/project/guides/`.
+
 ## Introduction
 
 Explain what the application does and who should use it.
@@ -36,6 +40,11 @@ Explain what the application does and who should use it.
 ## Settings
 
 Document user-visible settings and defaults.
+
+## Reference
+
+Document concise command, field, screen, control, or behavior reference that
+users need to look up.
 
 ## Troubleshooting
 

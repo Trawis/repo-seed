@@ -13,7 +13,9 @@ python pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-Choose `minimal`, `library`, `app`, `game`, or `full`. Add only the scaffolding you need:
+Choose `minimal`, `library`, `app`, or `game`. The `full` profile synchronizes
+the complete reference catalog but cannot scaffold project files. Add only the
+scaffolding you need:
 
 ```text
 --scaffold-project-files
@@ -38,9 +40,11 @@ Use the sync script already copied into the target with a newer extracted pack:
 python scripts/sync-docs.py \
   --source /path/to/extracted/pack \
   --target . \
-  --profile app \
   --dry-run
 ```
+
+The recorded profile is reused when `--profile` is omitted. Pass an explicit
+profile to change it.
 
 For complete documentation, visit [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 

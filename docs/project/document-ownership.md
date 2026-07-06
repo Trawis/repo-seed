@@ -4,7 +4,8 @@
 
 **Sync behavior**: Never copied into target repositories
 
-This document defines ownership only. Usage belongs in `README.md`; migration belongs in `upgrading-to-3.md`.
+This document defines ownership only. Usage belongs in `README.md`; migration
+belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 
 ## Ownership Classes
 
@@ -35,6 +36,10 @@ This document defines ownership only. Usage belongs in `README.md`; migration be
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
+Some templates, such as the TSD, are reference-only and have no automatic
+scaffold target. Agents copy them to the suggested project-owned path only when
+the document is needed.
+
 `.editorconfig` and non-Markdown GitHub configuration are missing-only
 scaffolds. `.gitignore` is fully project-owned and is not scaffolded; manage it
 with the tooling of the project's stack. Markdown scaffolds are upgraded only
@@ -44,3 +49,6 @@ are unchanged; otherwise they are preserved and reported.
 The managed state file should be committed. It allows later syncs to distinguish
 pack-owned files from unknown project files and to retry safe removal of stale
 managed files after profile or inventory changes.
+
+Untouched scaffolds and documents containing only placeholders are not approved
+requirements merely because they are located under `docs/project/`.

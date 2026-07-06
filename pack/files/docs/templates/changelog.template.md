@@ -11,7 +11,8 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
-Use semantic versions for releases and remove empty categories when cutting a release.
+Use semantic versions when the project defines a versioned public interface.
+Remove empty categories when cutting a release.
 
 ## Unreleased
 

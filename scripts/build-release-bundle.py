@@ -142,7 +142,7 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
 
     if not isinstance(data, dict):
         raise ValueError("Pack manifest root must be an object")
-    if data.get("schema_version") != 1:
+    if data.get("schema_version") != 2:
         raise ValueError(f"Unsupported manifest schema_version: {data.get('schema_version')}")
     if not isinstance(data.get("pack_version"), str) or not SEMVER_PATTERN.fullmatch(data["pack_version"]):
         raise ValueError("Pack manifest must define a semantic pack_version")
@@ -150,8 +150,6 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
     safe_relative_path(state_file)
 
     profiles = require_string_list(data.get("profiles"), "manifest.profiles")
-    if data.get("default_profile") not in profiles:
-        raise ValueError("Pack manifest default_profile must be listed in profiles")
 
     package_files = optional_string_list(data.get("package_files"), "manifest.package_files")
     for index, package_file in enumerate(package_files):
@@ -193,14 +191,20 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
         scaffold_group = asset.get("scaffold_group")
         scaffold_target = asset.get("scaffold_target")
         if asset_type == "template":
-            if scaffold_group not in VALID_SCAFFOLD_GROUPS or not isinstance(scaffold_target, str):
-                raise ValueError(f"{context} must define a valid scaffold group and target")
-            safe_relative_path(scaffold_target)
+            if (scaffold_group is None) != (scaffold_target is None):
+                raise ValueError(f"{context} must define both scaffold fields or neither")
             if not asset_path.startswith("docs/templates/"):
                 raise ValueError(f"{context}.path must be under docs/templates")
-            if scaffold_target in seen_scaffolds:
-                raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
-            seen_scaffolds.add(scaffold_target)
+            if scaffold_group is not None:
+                if (
+                    scaffold_group not in VALID_SCAFFOLD_GROUPS
+                    or not isinstance(scaffold_target, str)
+                ):
+                    raise ValueError(f"{context} must define a valid scaffold group and target")
+                safe_relative_path(scaffold_target)
+                if scaffold_target in seen_scaffolds:
+                    raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
+                seen_scaffolds.add(scaffold_target)
         elif scaffold_group is not None or scaffold_target is not None:
             raise ValueError(f"{context} managed assets cannot define scaffold fields")
         seen_paths.add(asset_path)

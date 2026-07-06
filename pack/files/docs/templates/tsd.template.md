@@ -1,24 +1,42 @@
-# Technical Specification
+# Technical Design
 
 <!-- repo-seed-template:start -->
 **Document role**: Managed project-document template
 **Template source**: `docs/templates/tsd.template.md`
-**Scaffold destination**: `docs/project/tsd.md`
-**Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
+**Suggested live destination**: `docs/project/designs/<short-name>.md`
+**Usage**: Copy on demand for one substantial technical change
 <!-- repo-seed-template:end -->
 
-**Project / Change**:
-**Status**: Draft
+**Change**:
+**Status**: Proposed / Accepted / Implemented / Superseded / Rejected
 **Owner**:
 **Last Updated**: YYYY-MM-DD
 
-Describe the implementation of one change. Reference the FSD for behavior and the architecture document for stable system structure.
+Describe one substantial technical change. Reference the FSD or GDD for
+behavior and `docs/project/architecture.md` for the current system. This design
+records a transition; it is not the canonical description of the current
+architecture.
 
-## Summary and Requirements
+Create a design for changes involving multiple components, public contracts,
+persistence or migration, security, concurrency, deployment, compatibility,
+high uncertainty, or difficult rollback. Do not create one for routine changes.
 
-Link the FSD, issue, ticket, or acceptance criteria and summarize the approach.
+## Problem and Motivation
 
-## Design and Components
+Link the requirement, issue, or acceptance criteria and explain why the change
+is needed.
+
+## Goals and Non-Goals
+
+### Goals
+
+-
+
+### Non-Goals
+
+-
+
+## Proposed Design
 
 | Component | Change |
 |---|---|
@@ -26,13 +44,19 @@ Link the FSD, issue, ticket, or acceptance criteria and summarize the approach.
 
 Describe changes to architecture boundaries, interfaces, data flow, and dependencies.
 
+## Alternatives and Rationale
+
+Describe credible alternatives, the consequences of doing nothing, and why the
+proposed approach is preferred.
+
 ## Data and Interfaces
 
 Document persistence, migrations, APIs, commands, events, contracts, or messages affected by the change.
 
-## Reliability and Security
+## Security, Reliability, and Observability
 
-Document failures, retries, logging, validation, authentication, authorization, privacy, and secrets.
+Document failures, retries, logging, metrics, tracing, validation,
+authentication, authorization, privacy, and secrets.
 
 ## Performance and Compatibility
 
@@ -48,6 +72,11 @@ Document expected load, limits, concurrency, backward compatibility, and migrati
 
 Describe deployment order, feature flags, migration, rollback, and release notes when applicable.
 
-## Risks, Questions, and References
+## Architecture Documentation Updates
+
+List the current-state architecture sections or detailed technical documents
+that must be updated when this design is implemented.
+
+## Risks, Unresolved Questions, and References
 
 -

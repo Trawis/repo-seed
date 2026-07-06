@@ -1,8 +1,7 @@
 {
-  "schema_version": 1,
-  "pack_version": "3.4.1",
+  "schema_version": 2,
+  "pack_version": "4.0.0",
   "state_file": ".repo-seed-state.json",
-  "default_profile": "full",
   "profiles": [
     "minimal",
     "library",
@@ -59,12 +58,6 @@
         "legacy_target": "CHANGELOG.md",
         "template": "docs/templates/changelog.template.md",
         "content_hashes": ["3c850e2bfae60d6d59e760d45a89be96859f1d7d59781efaf36e40c67431edf1"]
-      },
-      {
-        "from_versions": ["1.31.0"],
-        "legacy_target": "FEATURES.md",
-        "template": "docs/templates/features.template.md",
-        "content_hashes": ["e631771766a79d7b155f015d4d6b538bf25dc1bcff48a75234912b5e4c5abbf2"]
       }
     ]
   },
@@ -128,6 +121,9 @@
       "path": "docs/templates/readme.template.md",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
+      "previous_hashes": [
+        "45ff5832ab06562a8ffe22a1c52bc750e74a6273495cccae8af92841cef45459"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "README.md"
     },
@@ -135,6 +131,9 @@
       "path": "docs/templates/changelog.template.md",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
+      "previous_hashes": [
+        "2a3742308cbd7a4d1176d9a58756373cf13d30e1a8b49acae901f907fee918bc"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "CHANGELOG.md"
     },
@@ -148,16 +147,21 @@
     {
       "path": "docs/templates/features.template.md",
       "type": "template",
-      "profiles": ["app", "game", "full"],
-      "previous_hashes": ["fee7750c636bfcff2d0f32514158747e9b2606d1a6a74d67ff633f0cad21f450"],
-      "scaffold_group": "project",
-      "scaffold_target": "docs/project/features.md"
+      "profiles": ["full"],
+      "previous_hashes": [
+        "fee7750c636bfcff2d0f32514158747e9b2606d1a6a74d67ff633f0cad21f450",
+        "2b70590eb83bd6df79e07c6f6d93fd616537bf29460524d9a855e10e5adab1c7"
+      ]
     },
     {
       "path": "docs/templates/architecture.template.md",
       "type": "template",
-      "profiles": ["app", "full"],
-      "previous_hashes": ["698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1", "0a9f4007eccc5771e7196defd2ede474d405160d80134dfbedf6581f21f0b78f"],
+      "profiles": ["library", "app", "game", "full"],
+      "previous_hashes": [
+        "698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1",
+        "0a9f4007eccc5771e7196defd2ede474d405160d80134dfbedf6581f21f0b78f",
+        "1e8afbe838ffafb951563a2211233003aadf52c2b2e5107fe23ac4c1084285d5"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/architecture.md"
     },
@@ -165,7 +169,10 @@
       "path": "docs/templates/user-guide.template.md",
       "type": "template",
       "profiles": ["app", "full"],
-      "previous_hashes": ["bb41e0f5d44efcfdc3fc5309117b0bacd511aab5f04e13ec971d61587776f379"],
+      "previous_hashes": [
+        "bb41e0f5d44efcfdc3fc5309117b0bacd511aab5f04e13ec971d61587776f379",
+        "49a32bc0c25a47f81474095ec8ace653d761e52c0bbfa292021e64c15301938c"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/user-guide.md"
     },
@@ -173,23 +180,31 @@
       "path": "docs/templates/fsd.template.md",
       "type": "template",
       "profiles": ["app", "full"],
-      "previous_hashes": ["547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242", "e572715e358a5c3bf9e7d30dead963bcfdc3d35b5e127666da67719ee957db11"],
+      "previous_hashes": [
+        "547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242",
+        "e572715e358a5c3bf9e7d30dead963bcfdc3d35b5e127666da67719ee957db11",
+        "fb0c847491d8da08ae2849965c6dd5b0471b42f8cc37cf0895f2e869c3b7fd5f"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/fsd.md"
     },
     {
       "path": "docs/templates/tsd.template.md",
       "type": "template",
-      "profiles": ["app", "full"],
-      "previous_hashes": ["002a859b6446e05f9c1f0ed02651f996e428b7025e1248123ec580a7e1e62870"],
-      "scaffold_group": "project",
-      "scaffold_target": "docs/project/tsd.md"
+      "profiles": ["library", "app", "game", "full"],
+      "previous_hashes": [
+        "002a859b6446e05f9c1f0ed02651f996e428b7025e1248123ec580a7e1e62870",
+        "cc412af38bd6b61ac65ad474c094c5462cc2d74f53cdbb86c25e44eb48fa2d21"
+      ]
     },
     {
       "path": "docs/templates/gdd.template.md",
       "type": "template",
       "profiles": ["game", "full"],
-      "previous_hashes": ["9c78b57c959beb5c2e49b28b5f8e3c4da456a9b90fd9823d67581d6b969d51e7"],
+      "previous_hashes": [
+        "9c78b57c959beb5c2e49b28b5f8e3c4da456a9b90fd9823d67581d6b969d51e7",
+        "90ae5f047032045c33dc536efaa3e863c16d9097f95e1b14185e0866476faadc"
+      ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/gdd.md"
     },
