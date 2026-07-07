@@ -8,11 +8,11 @@
 unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
-**Game**:
-**Status**: Draft
-**Basis**: Intended / As-built / Mixed
-**Owner**:
-**Last Updated**: YYYY-MM-DD
+- **Game**:
+- **Status**: Draft
+- **Basis**: Intended / As-built / Mixed
+- **Owner**:
+- **Last Updated**: YYYY-MM-DD
 
 Define gameplay intent and player experience. Keep current engine and system
 structure in the architecture document and proposed technical changes in design

@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "4.0.2"
+EXPECTED_PACK_VERSION = "4.0.3"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
 PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
@@ -473,6 +473,16 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("<!-- Remove this guidance", rendered)
         self.assertNotIn("Describe the verified current technical system", visible)
         self.assertIn("## Purpose, Scope, and Quality Goals", visible)
+
+    def test_document_field_blocks_render_as_lists(self):
+        bare_field_pattern = re.compile(
+            r"^\*\*(Project|Game|Change|Status|Basis|Owner|Audience|Last Updated)\*\*:",
+            re.MULTILINE,
+        )
+        for path in (PACK_ROOT / "files/docs/templates").rglob("*.template.md"):
+            body = sync.template_body(path)
+            with self.subTest(path=path):
+                self.assertIsNone(bare_field_pattern.search(body))
 
     def test_markdown_source_marker_preserves_github_frontmatter(self):
         asset = next(
