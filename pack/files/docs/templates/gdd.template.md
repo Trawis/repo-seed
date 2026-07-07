@@ -14,9 +14,9 @@ unchanged scaffold may be upgraded
 - **Owner**:
 - **Last Updated**: YYYY-MM-DD
 
-Define gameplay intent and player experience. Keep current engine and system
-structure in the architecture document and proposed technical changes in design
-records under `docs/project/designs/`.
+Define gameplay intent and player experience. Keep engine and system structure
+in architecture and implementation-specific decisions in design records under
+`docs/project/designs/`.
 
 When this document grows, keep it as the game-design overview and move detailed
 systems under `docs/project/game-design/`.
