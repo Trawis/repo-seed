@@ -8,6 +8,16 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.0.2 - 2026-07-07
+
+### Fixed
+
+- Hardened managed Markdown templates against non-ASCII punctuation, long
+  default prose lines, visible scaffold instructions, and placeholder
+  `Unreleased` changelog headings.
+- Recognized untouched v1.30 and v1.31 README/CHANGELOG scaffolds during
+  version 4 migration.
+
 ## 4.0.1 - 2026-07-06
 
 ### Fixed
