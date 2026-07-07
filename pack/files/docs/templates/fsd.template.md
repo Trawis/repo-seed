@@ -8,11 +8,11 @@
 unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
-**Project**:
-**Status**: Draft
-**Basis**: Intended / As-built / Mixed
-**Owner**:
-**Last Updated**: YYYY-MM-DD
+- **Project**:
+- **Status**: Draft
+- **Basis**: Intended / As-built / Mixed
+- **Owner**:
+- **Last Updated**: YYYY-MM-DD
 
 Define accepted application behavior and acceptance criteria. Keep current
 technical structure in the architecture document and proposed implementation

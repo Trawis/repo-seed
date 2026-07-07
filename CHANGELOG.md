@@ -8,6 +8,14 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.0.3 - 2026-07-07
+
+### Fixed
+
+- Changed document metadata fields in FSD, GDD, architecture, technical design,
+  and user-guide templates to lists so populated values render on separate
+  lines.
+
 ## 4.0.2 - 2026-07-07
 
 ### Fixed

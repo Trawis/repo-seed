@@ -8,9 +8,9 @@
 unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
-**Project**:
-**Audience**:
-**Last Updated**: YYYY-MM-DD
+- **Project**:
+- **Audience**:
+- **Last Updated**: YYYY-MM-DD
 
 Keep setup and one quick-start path in README. Use this document for current
 user workflows, settings, reference, and troubleshooting. When it grows, retain
