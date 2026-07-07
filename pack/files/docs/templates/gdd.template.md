@@ -4,7 +4,8 @@
 **Document role**: Managed project-document template
 **Template source**: `docs/templates/gdd.template.md`
 **Scaffold destination**: `docs/project/gdd.md`
-**Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
+**Scaffold behavior**: The live file is project-owned; only a verified
+unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
 **Game**:
@@ -30,7 +31,8 @@ Document audience, platform, input method, and expected session length.
 
 ## Player Goals, Core Loop, and Rules
 
-Describe the repeated gameplay loop, actions, constraints, and win or loss conditions.
+Describe the repeated gameplay loop, actions, constraints, and win or loss
+conditions.
 
 ## Challenge, Difficulty, and Feedback
 
@@ -49,7 +51,8 @@ game communicates success, failure, progress, and consequences.
 
 ## Content, Presentation, and Accessibility
 
-Summarize levels, encounters, items, narrative, UI, art, audio, feedback, controls, and accessibility requirements that matter to the design.
+Summarize levels, encounters, items, narrative, UI, art, audio, feedback,
+controls, and accessibility requirements that matter to the design.
 
 ## Playtest Criteria
 

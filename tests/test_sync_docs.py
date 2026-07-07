@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "4.0.1"
+EXPECTED_PACK_VERSION = "4.0.2"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
 PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
@@ -115,6 +115,28 @@ class ManifestTests(unittest.TestCase):
         self.assertNotIn(".gitignore", retired)
         self.assertNotIn(".github/pull_request_template.md", retired)
         self.assertIn("scripts/sync-agent-guidelines.py", retired)
+        scaffold_upgrades = {
+            upgrade.legacy_target: upgrade
+            for upgrade in migration.scaffold_upgrades
+        }
+        for legacy_target, expected_hashes in {
+            "README.md": {
+                "492c961b06ed45642a58ce62500d214ef6716f4134f19cda43e493fa3aa16918",
+                "5ce5183514b090fc115125cbe50308f031f76b8667b03cacf44eaed4126800c9",
+            },
+            "CHANGELOG.md": {
+                "3c850e2bfae60d6d59e760d45a89be96859f1d7d59781efaf36e40c67431edf1",
+                "c571c769c9da7a6f47fa43bb2cbf3d1a3ca16e1c5bff2cce67fdafd827c0b013",
+            },
+        }.items():
+            self.assertEqual(
+                scaffold_upgrades[legacy_target].from_versions,
+                ("1.30.0", "1.31.0"),
+            )
+            self.assertEqual(
+                set(scaffold_upgrades[legacy_target].content_hashes),
+                expected_hashes,
+            )
 
     def test_invalid_migration_paths_and_hashes_are_rejected(self):
         raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
@@ -429,6 +451,28 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 self.assertTrue(body.strip(), asset.path)
                 self.assertNotIn(sync.TEMPLATE_METADATA_START, body)
                 self.assertNotIn(sync.TEMPLATE_METADATA_END, body)
+
+    def test_markdown_templates_are_plain_ascii_and_wrapped(self):
+        for path in (PACK_ROOT / "files/docs/templates").rglob("*.template.md"):
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(path=path):
+                self.assertTrue(content.isascii())
+                self.assertNotIn("Unreleased", content)
+            for line_number, line in enumerate(content.splitlines(), 1):
+                with self.subTest(path=path, line=line_number):
+                    self.assertLessEqual(len(line), 100)
+
+    def test_architecture_scaffold_guidance_is_not_live_prose(self):
+        asset = next(
+            asset
+            for asset in sync.load_manifest(PACK_ROOT).assets
+            if asset.path == "docs/templates/architecture.template.md"
+        )
+        rendered = sync.render_scaffold(PACK_ROOT, asset)
+        visible = re.sub(r"<!--.*?-->", "", rendered, flags=re.DOTALL)
+        self.assertIn("<!-- Remove this guidance", rendered)
+        self.assertNotIn("Describe the verified current technical system", visible)
+        self.assertIn("## Purpose, Scope, and Quality Goals", visible)
 
     def test_markdown_source_marker_preserves_github_frontmatter(self):
         asset = next(

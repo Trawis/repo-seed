@@ -4,7 +4,8 @@
 **Document role**: Managed project-document template
 **Template source**: `docs/templates/user-guide.template.md`
 **Scaffold destination**: `docs/project/user-guide.md`
-**Scaffold behavior**: The live file is project-owned; only a verified unchanged scaffold may be upgraded
+**Scaffold behavior**: The live file is project-owned; only a verified
+unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
 **Project**:

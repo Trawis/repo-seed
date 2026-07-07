@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "pack_version": "4.0.1",
+  "pack_version": "4.0.2",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -56,16 +56,22 @@
     ],
     "scaffold_upgrades": [
       {
-        "from_versions": ["1.31.0"],
+        "from_versions": ["1.30.0", "1.31.0"],
         "legacy_target": "README.md",
         "template": "docs/templates/readme.template.md",
-        "content_hashes": ["5ce5183514b090fc115125cbe50308f031f76b8667b03cacf44eaed4126800c9"]
+        "content_hashes": [
+          "492c961b06ed45642a58ce62500d214ef6716f4134f19cda43e493fa3aa16918",
+          "5ce5183514b090fc115125cbe50308f031f76b8667b03cacf44eaed4126800c9"
+        ]
       },
       {
-        "from_versions": ["1.31.0"],
+        "from_versions": ["1.30.0", "1.31.0"],
         "legacy_target": "CHANGELOG.md",
         "template": "docs/templates/changelog.template.md",
-        "content_hashes": ["3c850e2bfae60d6d59e760d45a89be96859f1d7d59781efaf36e40c67431edf1"]
+        "content_hashes": [
+          "3c850e2bfae60d6d59e760d45a89be96859f1d7d59781efaf36e40c67431edf1",
+          "c571c769c9da7a6f47fa43bb2cbf3d1a3ca16e1c5bff2cce67fdafd827c0b013"
+        ]
       }
     ]
   },
@@ -131,7 +137,8 @@
       "profiles": ["minimal", "library", "app", "game", "full"],
       "previous_hashes": [
         "45ff5832ab06562a8ffe22a1c52bc750e74a6273495cccae8af92841cef45459",
-        "d0be705d90d1c0cff0f27ed9e70f3848a3ad6498f38d918a2821fe4c2e98ba1c"
+        "d0be705d90d1c0cff0f27ed9e70f3848a3ad6498f38d918a2821fe4c2e98ba1c",
+        "dedfdbef06ccca95a257f1d16d761fb46f976a41a5682f2b6c42ddf3a549298a"
       ],
       "scaffold_group": "project",
       "scaffold_target": "README.md"
@@ -141,7 +148,9 @@
       "type": "template",
       "profiles": ["minimal", "library", "app", "game", "full"],
       "previous_hashes": [
-        "2a3742308cbd7a4d1176d9a58756373cf13d30e1a8b49acae901f907fee918bc"
+        "2a3742308cbd7a4d1176d9a58756373cf13d30e1a8b49acae901f907fee918bc",
+        "731c8ef26b6104fd569f516f344197c0437aa609256aa10257eb3eaff6f6d427",
+        "3b460acaa70f24e69b93e5c041d34fc8ddec3dc4069e6f5cb9180621b9f49566"
       ],
       "scaffold_group": "project",
       "scaffold_target": "CHANGELOG.md"
@@ -169,7 +178,8 @@
       "previous_hashes": [
         "698de7a8c06bb7972d8562e3cc6455e444d18e02d607b5855a72bacad3a754e1",
         "0a9f4007eccc5771e7196defd2ede474d405160d80134dfbedf6581f21f0b78f",
-        "1e8afbe838ffafb951563a2211233003aadf52c2b2e5107fe23ac4c1084285d5"
+        "1e8afbe838ffafb951563a2211233003aadf52c2b2e5107fe23ac4c1084285d5",
+        "701a4193f0c5eb903af5172e2457af01e5148bddbeae8343b80fa1d02ed4fe90"
       ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/architecture.md"
@@ -180,7 +190,8 @@
       "profiles": ["app", "full"],
       "previous_hashes": [
         "bb41e0f5d44efcfdc3fc5309117b0bacd511aab5f04e13ec971d61587776f379",
-        "49a32bc0c25a47f81474095ec8ace653d761e52c0bbfa292021e64c15301938c"
+        "49a32bc0c25a47f81474095ec8ace653d761e52c0bbfa292021e64c15301938c",
+        "05060f633222126c81500925ee9d402b7584ddd8d1162ab50a47c44e88184a76"
       ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/user-guide.md"
@@ -192,7 +203,8 @@
       "previous_hashes": [
         "547c488144cd7694117cc6e98297f2b6bedcbc51b058f90d1a607c59d23db242",
         "e572715e358a5c3bf9e7d30dead963bcfdc3d35b5e127666da67719ee957db11",
-        "fb0c847491d8da08ae2849965c6dd5b0471b42f8cc37cf0895f2e869c3b7fd5f"
+        "fb0c847491d8da08ae2849965c6dd5b0471b42f8cc37cf0895f2e869c3b7fd5f",
+        "4e59d75a16f124403426c7b5cc40ed8f0df2f9bad2a549b20d5a18f153c3fb57"
       ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/fsd.md"
@@ -204,7 +216,8 @@
       "previous_hashes": [
         "002a859b6446e05f9c1f0ed02651f996e428b7025e1248123ec580a7e1e62870",
         "cc412af38bd6b61ac65ad474c094c5462cc2d74f53cdbb86c25e44eb48fa2d21",
-        "718bf526bfabaa33b34f6fc80fadca19ff5fae790a07d2a93239b2004607b7bf"
+        "718bf526bfabaa33b34f6fc80fadca19ff5fae790a07d2a93239b2004607b7bf",
+        "7d03ea43180ad7388a4ec19aa04126a5825f0cb15518d10e575bcaca11136f93"
       ]
     },
     {
@@ -213,7 +226,8 @@
       "profiles": ["game", "full"],
       "previous_hashes": [
         "9c78b57c959beb5c2e49b28b5f8e3c4da456a9b90fd9823d67581d6b969d51e7",
-        "90ae5f047032045c33dc536efaa3e863c16d9097f95e1b14185e0866476faadc"
+        "90ae5f047032045c33dc536efaa3e863c16d9097f95e1b14185e0866476faadc",
+        "f8d7f1e8e4ab94a1c70bc5bdbe3d6a4d4651927609d578e8594b53108c4e973a"
       ],
       "scaffold_group": "project",
       "scaffold_target": "docs/project/gdd.md"
