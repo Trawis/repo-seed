@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "4.0.3"
+EXPECTED_PACK_VERSION = "4.0.4"
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
 PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
@@ -461,6 +461,29 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             for line_number, line in enumerate(content.splitlines(), 1):
                 with self.subTest(path=path, line=line_number):
                     self.assertLessEqual(len(line), 100)
+
+    def test_project_doc_templates_avoid_decision_diary_language(self):
+        banned = (
+            "we decided",
+            "this replaces",
+            "the old system",
+            "consolidated",
+            "tighter redesign",
+            "because we",
+            "because the previous version",
+            "more legal sandbox depth",
+        )
+        for asset in sync.load_manifest(PACK_ROOT).assets:
+            if asset.asset_type != "template" or not asset.path.endswith(".template.md"):
+                continue
+            source = PACK_ROOT / "files" / asset.path
+            generated = sync.template_body(source)
+            if asset.scaffold_target:
+                generated = sync.render_scaffold(PACK_ROOT, asset)
+            generated = generated.lower()
+            with self.subTest(path=asset.path):
+                for phrase in banned:
+                    self.assertNotIn(phrase, generated)
 
     def test_architecture_scaffold_guidance_is_not_live_prose(self):
         asset = next(

@@ -8,6 +8,14 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.0.4 - 2026-07-07
+
+### Changed
+
+- Kept generated project-document templates current-state focused.
+- Added guidance against decision-diary wording in live documentation.
+- Added a regression check for narrative replacement language in templates.
+
 ## 4.0.3 - 2026-07-07
 
 ### Fixed

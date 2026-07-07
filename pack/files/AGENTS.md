@@ -4,7 +4,7 @@ Repository-level instructions for coding agents.
 
 **Document role**: Managed coding-agent instructions
 **Sync destination**: `AGENTS.md`
-**Version**: 4.0.3
+**Version**: 4.0.4
 
 ## Start Here
 
@@ -23,10 +23,14 @@ Instruction precedence is: user request, closest child `AGENTS.md`, `.agents/pro
 - `README.md` and `CHANGELOG.md` are project-owned root entry points.
 - `docs/project/` contains authoritative live project documentation.
 - `docs/templates/` contains managed, read-only references.
+- `.agents/guidelines/` defines reusable agent behavior. It does not define
+  project content.
 - Never edit target templates or treat their placeholders as requirements.
 - Untouched scaffolds and unconfirmed Draft or inferred content are not
   authoritative requirements.
 - When behavior changes, update relevant project-owned documentation when practical.
+- Documentation style: describe the current truth, use bullets for structured
+  lists, and do not narrate agent reasoning, replacement, or redesign history.
 
 Read `.agents/guidelines/documentation.md` for documentation work or changes affecting setup, behavior, architecture, features, guides, or specifications.
 

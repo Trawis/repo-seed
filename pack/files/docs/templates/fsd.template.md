@@ -14,9 +14,9 @@ unchanged scaffold may be upgraded
 - **Owner**:
 - **Last Updated**: YYYY-MM-DD
 
-Define accepted application behavior and acceptance criteria. Keep current
-technical structure in the architecture document and proposed implementation
-changes in design records under `docs/project/designs/`.
+Define accepted application behavior and acceptance criteria. Keep technical
+structure in architecture and implementation-specific decisions in design
+records under `docs/project/designs/`.
 
 When this document grows, keep it as the functional overview and move detailed
 domains under `docs/project/functional/`.
