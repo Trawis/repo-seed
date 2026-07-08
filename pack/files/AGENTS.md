@@ -4,9 +4,11 @@ Repository-level instructions for coding agents.
 
 **Document role**: Managed coding-agent instructions
 **Sync destination**: `AGENTS.md`
-**Version**: 4.0.4
 
 ## Start Here
+
+Agents, automation tools, and contributors using this pack must inspect and
+follow applicable repository guidance before work starts.
 
 Before changing files:
 
@@ -44,6 +46,11 @@ Read `.agents/guidelines/documentation.md` for documentation work or changes aff
 - Keep comments focused on constraints or non-obvious intent.
 - Add or update relevant tests for behavior changes when practical.
 - For review or diagnosis, report evidence without making changes unless a fix is requested.
+- Before editing code, identify applicable conventions from nearby files,
+  implementation patterns, project docs, formatter and linter config, test
+  style, naming, imports, dependencies, error handling, typing, file
+  organization, and module boundaries. Clear mismatches are blocking until
+  fixed or reported.
 
 ## Safety
 
@@ -103,6 +110,12 @@ Run the narrowest relevant checks available:
 5. review the diff against the request and live documentation.
 
 Do not run irrelevant language or project checks. Report checks that could not run and why.
+
+Before reporting completion, recheck the final diff against branch name, base
+branch, PR target, local naming, formatting, import, dependency, typing,
+error-handling, test, and file-placement conventions, managed/project-owned
+ownership rules, documentation tone, validation commands, and diff scope. Fix
+mismatches before completion or report the blocking reason.
 
 ## Sync Ownership
 
