@@ -8,6 +8,13 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.0.5 - 2026-07-08
+
+### Changed
+
+- Clarified branch-model discovery before branch and pull-request work.
+- Added code-convention discovery and final compliance checks to agent guidance.
+
 ## 4.0.4 - 2026-07-07
 
 ### Changed

@@ -16,7 +16,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-EXPECTED_PACK_VERSION = "4.0.4"
+PACK_VERSION = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))[
+    "pack_version"
+]
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
 PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
@@ -43,7 +45,7 @@ class ManifestTests(unittest.TestCase):
 
     def test_manifest_is_versioned_and_complete(self):
         self.assertEqual(self.manifest.schema_version, 2)
-        self.assertEqual(self.manifest.pack_version, EXPECTED_PACK_VERSION)
+        self.assertEqual(self.manifest.pack_version, PACK_VERSION)
         self.assertEqual(self.manifest.state_file, ".repo-seed-state.json")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
         self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE"))
@@ -54,9 +56,11 @@ class ManifestTests(unittest.TestCase):
 
     def test_versions_are_consistent(self):
         agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
+        script = SYNC_SCRIPT.read_text(encoding="utf-8")
         changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertEqual(sync.SCRIPT_VERSION, self.manifest.pack_version)
-        self.assertIn(f"**Version**: {self.manifest.pack_version}", agents)
+        self.assertNotIn("SCRIPT_VERSION", script)
+        self.assertNotIn("**Version**:", agents)
+        self.assertEqual(sync.resolve_cli_version(str(PACK_ROOT), None), self.manifest.pack_version)
         self.assertIn(f"## {self.manifest.pack_version} -", changelog)
 
     def test_pack_directory_and_manifest_inventory_match(self):
@@ -289,7 +293,7 @@ class ManifestTests(unittest.TestCase):
             (pack / "files").mkdir()
             invalid = {
                 "schema_version": 2,
-                "pack_version": EXPECTED_PACK_VERSION,
+                "pack_version": PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
                 "profiles": ["minimal"],
                 "assets": [
@@ -317,7 +321,7 @@ class ManifestTests(unittest.TestCase):
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
                 "schema_version": 2,
-                "pack_version": EXPECTED_PACK_VERSION,
+                "pack_version": PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
                 "profiles": ["minimal"],
                 "package_files": ["../README.md"],
@@ -349,7 +353,7 @@ class ManifestTests(unittest.TestCase):
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
                 "schema_version": 2,
-                "pack_version": EXPECTED_PACK_VERSION,
+                "pack_version": PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
                 "profiles": ["minimal"],
                 "assets": [
@@ -431,6 +435,53 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("issue, acceptance criteria, FSD, or GDD", tsd)
+
+    def test_git_guidance_requires_branch_model_preflight(self):
+        guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(
+            encoding="utf-8"
+        )
+        normalized = " ".join(guidance.split())
+        for required in (
+            "Branch Model Preflight",
+            "current branch and working tree",
+            "root `AGENTS.md`",
+            "child `AGENTS.md` files",
+            ".agents/project.md",
+            "CONTRIBUTING.md",
+            "remote branches after fetch or prune",
+            "protected branches",
+            "GitHub Flow",
+            "GitFlow",
+            "develop` or `dev`",
+            "normal feature PRs must not target `main`",
+            "Unknown model",
+            "Do not infer GitHub Flow only because",
+            "hosted default branch is `main` or `master`",
+            "Unknown base branch",
+            "missing branch-name convention",
+            "wrong PR target is blocking",
+        ):
+            self.assertIn(required, normalized)
+
+    def test_agent_guidance_requires_code_convention_and_final_compliance(self):
+        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
+        normalized = " ".join(agents.split())
+        for required in (
+            "Agents, automation tools, and contributors",
+            "Before editing code",
+            "formatter and linter config",
+            "error handling",
+            "module boundaries",
+            "Before reporting completion",
+            "branch name",
+            "base branch",
+            "PR target",
+            "import, dependency, typing",
+            "managed/project-owned ownership rules",
+            "documentation tone",
+            "diff scope",
+        ):
+            self.assertIn(required, normalized)
 
     def test_update_docs_prefer_the_new_pack_script(self):
         for path in (REPOSITORY_ROOT / "README.md", PACK_ROOT / "README.md"):
@@ -1438,7 +1489,7 @@ class SyncBehaviorTests(unittest.TestCase):
             for relative, content in live_documents.items():
                 self.assertEqual((target / relative).read_text(encoding="utf-8"), content)
             updated_state = json.loads(state_path.read_text(encoding="utf-8"))
-            self.assertEqual(updated_state["pack_version"], EXPECTED_PACK_VERSION)
+            self.assertEqual(updated_state["pack_version"], PACK_VERSION)
             self.assertEqual(updated_state["profile"], "app")
 
     def test_copied_script_updates_from_an_explicit_pack(self):
@@ -1462,6 +1513,26 @@ class SyncBehaviorTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Sync complete.", result.stdout)
+
+    def test_copied_script_reports_version_from_managed_state(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(target / "scripts/sync-docs.py"),
+                    "--target",
+                    str(target),
+                    "--version",
+                ],
+                cwd=target,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), f"sync-docs.py {PACK_VERSION}")
 
     def test_copied_script_without_a_pack_requests_source(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1554,7 +1625,7 @@ class BundleAndCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
             archive = bundle_builder.build_archive(REPOSITORY_ROOT, output)
-            self.assertEqual(archive.name, f"repo-seed-pack-{EXPECTED_PACK_VERSION}.zip")
+            self.assertEqual(archive.name, f"repo-seed-pack-{PACK_VERSION}.zip")
             self.assertEqual(list(output.glob("*.zip")), [archive])
             raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
             expected = {"pack/manifest.json"} | {
@@ -1637,7 +1708,7 @@ class BundleAndCliTests(unittest.TestCase):
             source.write_text("# Missing metadata\n", encoding="utf-8")
             manifest = {
                 "schema_version": 2,
-                "pack_version": EXPECTED_PACK_VERSION,
+                "pack_version": PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
                 "profiles": ["minimal"],
                 "assets": [
@@ -1663,7 +1734,7 @@ class BundleAndCliTests(unittest.TestCase):
             managed.write_text("# Managed\n", encoding="utf-8")
             manifest = {
                 "schema_version": 2,
-                "pack_version": EXPECTED_PACK_VERSION,
+                "pack_version": PACK_VERSION,
                 "state_file": ".repo-seed-state.json",
                 "profiles": ["minimal"],
                 "package_files": ["README.md"],
