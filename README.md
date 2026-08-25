@@ -25,12 +25,10 @@ The scripts use only the Python standard library. Pull-request CI validates Pyth
 
 ## Safety
 
-Unchanged legacy-managed files with matching recorded hashes are retired, and
-current managed files are updated only when their content differs. Project-owned
-files are scaffolded or upgraded only when safely verifiable. Modified or
-unrecorded legacy files are preserved and reported. Run `--dry-run` first and
-commit or back up the target repository because filesystem writes are not
-transactional.
+Current managed files are updated only when their content differs.
+Project-owned files are scaffolded or upgraded only when safely verifiable. Run
+`--dry-run` first and commit or back up the target repository because filesystem
+writes are not transactional.
 
 Each target keeps `.repo-seed-state.json` as committed ownership metadata.
 Profile reductions remove only stale managed files matching their recorded
@@ -55,8 +53,7 @@ recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or `game`
 profile when `--profile` is omitted.
 Profiles select the managed assets retained in the target. Changing to a smaller
 profile prunes unchanged managed assets that are no longer selected; modified
-files are preserved. Eligible legacy cleanup applies independently of the
-selected profile.
+files are preserved.
 
 `full` synchronizes every reference template for review. It cannot be combined
 with `--scaffold-project-files` because FSD and GDD are mutually exclusive
@@ -95,9 +92,8 @@ Optional scaffolding is separated by ownership:
 
 Existing project-owned files are preserved unless an eligible Markdown scaffold is
 verified unchanged from repo-seed and can be upgraded safely.
-On initial sync, version updates, and legacy migration, existing `.gitignore`,
-`.editorconfig`, and pull-request templates are explicitly reported as protected
-project-owned files.
+Existing `.gitignore`, `.editorconfig`, and pull-request templates remain
+project-owned.
 The `.github/workflows/` tree is always project-owned and cannot be managed,
 scaffolded, retired, or deleted by the pack.
 
@@ -116,21 +112,12 @@ The copied `scripts/sync-docs.py` remains available for compatible packs, but it
 cannot cross manifest-schema changes and may not contain fixes introduced by a
 newer pack. Pass `--profile` to change the recorded profile intentionally.
 
-## Upgrade from Version 3
+## Older Installations
 
-Version 3 scripts cannot read the version 4 manifest. Run the script from the
-newly extracted pack so it can update the target copy:
-
-```bash
-python /path/to/extracted/pack/files/scripts/sync-docs.py \
-  --target . \
-  --profile app \
-  --dry-run
-```
-
-See [Migrating from Version 1 or 2](docs/project/upgrading-to-3.md) for legacy
-installations and [Upgrading to Version 4](docs/project/upgrading-to-4.md) for
-the documentation-model changes.
+Automatic migration from repo-seed versions before version 4 is not supported.
+Integrate the current pack as a fresh installation and review obsolete files
+manually. See [Upgrading to Version 4](docs/project/upgrading-to-4.md) for the
+documentation model and profile behavior.
 
 ## Source Layout
 

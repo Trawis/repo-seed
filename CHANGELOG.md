@@ -8,6 +8,13 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## Unreleased
+
+### Removed
+
+- Removed manifest metadata, synchronizer logic, release validation, fixtures,
+  and tests for automatic migration from older repo-seed versions.
+
 ## 4.0.5 - 2026-07-08
 
 ### Changed

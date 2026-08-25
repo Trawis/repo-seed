@@ -7,6 +7,10 @@
 Version 4 clarifies documentation lifecycles and removes the implicit `full`
 profile default.
 
+Automatic migration from versions before version 4 is no longer supported.
+Repositories using those versions must integrate the current pack as a fresh
+installation and review obsolete managed files manually.
+
 ## Before Upgrading
 
 1. Commit or back up the target repository.
