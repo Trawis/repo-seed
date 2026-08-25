@@ -420,6 +420,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ".agents/guidelines/ci-cd.md",
             ".agents/conventions/",
             "scripts/sync-docs.py",
+            "Load only the guidance relevant to the task",
+            "Do not scan `docs/project/` by default",
         ):
             self.assertIn(required, agents)
         self.assertIn("@AGENTS.md", claude)
@@ -436,7 +438,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         )
         self.assertIn("issue, acceptance criteria, FSD, or GDD", tsd)
 
-    def test_git_guidance_requires_branch_model_preflight(self):
+    def test_git_guidance_scopes_branch_model_preflight_to_git_operations(self):
         guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(
             encoding="utf-8"
         )
@@ -444,11 +446,10 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         for required in (
             "Branch Model Preflight",
             "current branch and working tree",
-            "root `AGENTS.md`",
-            "child `AGENTS.md` files",
+            "applicable `AGENTS.md` files",
             ".agents/project.md",
             "CONTRIBUTING.md",
-            "remote branches after fetch or prune",
+            "Consult remote or hosted information only when needed",
             "protected branches",
             "GitHub Flow",
             "GitFlow",
@@ -460,28 +461,31 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "Unknown base branch",
             "missing branch-name convention",
             "wrong PR target is blocking",
+            "Editing files alone does not require",
         ):
             self.assertIn(required, normalized)
+        self.assertNotIn("Before starting work that may change files", normalized)
 
-    def test_agent_guidance_requires_code_convention_and_final_compliance(self):
+    def test_agent_guidance_scopes_code_inspection_and_final_compliance(self):
         agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
         normalized = " ".join(agents.split())
         for required in (
-            "Agents, automation tools, and contributors",
-            "Before editing code",
-            "formatter and linter config",
-            "error handling",
-            "module boundaries",
-            "Before reporting completion",
-            "branch name",
-            "base branch",
-            "PR target",
-            "import, dependency, typing",
-            "managed/project-owned ownership rules",
-            "documentation tone",
-            "diff scope",
+            "Inspect the affected implementation and nearby tests before editing",
+            "Follow nearby established patterns",
+            "only when relevant to the change or needed to resolve an uncertainty",
+            "Make the smallest safe change",
+            "review the final diff against the request",
+            "scope, correctness, applicable local conventions, ownership boundaries",
+            "Check branch and pull-request requirements only when performing Git",
+            "Run the narrowest relevant validation",
         ):
             self.assertIn(required, normalized)
+        for overly_broad in (
+            "Before editing code, identify applicable conventions",
+            "formatter and linter config, test style, naming, imports",
+            "recheck the final diff against branch name, base branch, PR target",
+        ):
+            self.assertNotIn(overly_broad, normalized)
 
     def test_update_docs_prefer_the_new_pack_script(self):
         for path in (REPOSITORY_ROOT / "README.md", PACK_ROOT / "README.md"):

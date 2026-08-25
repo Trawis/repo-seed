@@ -10,11 +10,11 @@ Repository instructions for contributors and coding agents working on `repo-seed
 
 ---
 
-## Required Guidance
+## Distributed Guidance Changes
 
-Read [`pack/files/AGENTS.md`](pack/files/AGENTS.md) before changing this repository. It contains the generic safety, validation, documentation, coding, and Git rules maintained by this pack.
-
-The rules below override the distributed guidance only for work in `repo-seed`.
+When changing distributed agent guidance, inspect the specific managed guidance
+being modified and its related tests. Do not treat distributed instructions as
+repository-level instructions for unrelated `repo-seed` work.
 
 ## Repository Scope
 
@@ -31,6 +31,16 @@ Ownership boundaries:
 - `tests/` contains automated validation for the tooling and pack contents.
 
 Do not use a root repository document as a sync source.
+
+## Working Rules
+
+- Make the smallest change that satisfies the task; do not include unrelated
+  cleanup or alter sync, ownership, migration, profile, scaffold, or packaging
+  behavior unless the task requires it.
+- Do not expose secrets, run destructive commands without authorization, hide
+  failed or skipped checks, bypass branch protections, auto-merge, or approve
+  your own pull request.
+- Prefer source files over generated or release artifacts.
 
 ## GitHub Flow
 
