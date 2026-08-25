@@ -112,13 +112,6 @@ The copied `scripts/sync-docs.py` remains available for compatible packs, but it
 cannot cross manifest-schema changes and may not contain fixes introduced by a
 newer pack. Pass `--profile` to change the recorded profile intentionally.
 
-## Older Installations
-
-Automatic migration from repo-seed versions before version 4 is not supported.
-Integrate the current pack as a fresh installation and review obsolete files
-manually. See [Upgrading to Version 4](docs/project/upgrading-to-4.md) for the
-documentation model and profile behavior.
-
 ## Source Layout
 
 ```text

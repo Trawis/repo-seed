@@ -50,12 +50,6 @@ A recorded `minimal`, `library`, `app`, or `game` profile is reused when
 The copied target script remains available for compatible packs, but it cannot
 cross manifest-schema changes and may not contain the newest preflight fixes.
 
-## Older Installations
-
-Automatic migration from repo-seed versions before version 4 is not supported.
-Integrate the current pack as a fresh installation and review obsolete files
-manually.
-
 For complete documentation, visit [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 
 ## License

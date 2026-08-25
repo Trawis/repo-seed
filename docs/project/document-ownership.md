@@ -4,8 +4,7 @@
 
 **Sync behavior**: Never copied into target repositories
 
-This document defines ownership only. Usage belongs in `README.md`; version 4
-profile and documentation-model changes belong in `upgrading-to-4.md`.
+This document defines ownership only. Usage belongs in `README.md`.
 
 ## Ownership Classes
 
