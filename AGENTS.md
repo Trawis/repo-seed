@@ -41,6 +41,8 @@ Do not use a root repository document as a sync source.
   failed or skipped checks, bypass branch protections, auto-merge, or approve
   your own pull request.
 - Prefer source files over generated or release artifacts.
+- If a repo-seed behavior or public interface changes, update the affected
+  repository-owned documentation.
 
 ## GitHub Flow
 

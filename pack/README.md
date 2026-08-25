@@ -24,8 +24,9 @@ scaffolding you need:
 ```
 
 Review the dry-run output, commit or back up the target repository, then rerun
-without `--dry-run`. Managed guidance is updated when different, and modified
-or unverified project files are preserved.
+without `--dry-run`. Unchanged legacy-managed files with recorded hashes may be
+removed, managed guidance is updated when different, and modified or unverified
+project files are preserved.
 
 The `.github/workflows/` tree is always project-owned and cannot be managed,
 scaffolded, retired, or deleted by this pack.
@@ -49,6 +50,18 @@ A recorded `minimal`, `library`, `app`, or `game` profile is reused when
 `--profile` is omitted. The `full` catalog must always be selected explicitly.
 The copied target script remains available for compatible packs, but it cannot
 cross manifest-schema changes and may not contain the newest preflight fixes.
+
+## Upgrade from Version 3
+
+Version 3 scripts cannot read the version 4 manifest. Run the new pack's script
+for the first version 4 sync:
+
+```bash
+python /path/to/extracted/pack/files/scripts/sync-docs.py \
+  --target . \
+  --profile app \
+  --dry-run
+```
 
 For complete documentation, visit [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 

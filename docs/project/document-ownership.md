@@ -4,7 +4,8 @@
 
 **Sync behavior**: Never copied into target repositories
 
-This document defines ownership only. Usage belongs in `README.md`.
+This document defines ownership only. Usage belongs in `README.md`; migration
+belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 
 ## Ownership Classes
 
@@ -42,8 +43,8 @@ the document is needed.
 `.editorconfig` and non-Markdown GitHub configuration are missing-only
 scaffolds. `.gitignore` is fully project-owned and is not scaffolded; manage it
 with the tooling of the project's stack. Markdown scaffolds are upgraded only
-when their current repo-seed provenance proves they are unchanged; otherwise
-they are preserved and reported.
+when their repo-seed provenance or an approved legacy content hash proves they
+are unchanged; otherwise they are preserved and reported.
 
 The managed state file should be committed. It allows later syncs to distinguish
 pack-owned files from unknown project files and to retry safe removal of stale
