@@ -8,6 +8,17 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.1.0 - 2026-08-26
+
+### Changed
+
+- Made agent guidance discovery demand-driven so agents inspect only the
+  project documentation and specialized guidance relevant to the task.
+- Limited branch-model and hosted-state discovery to Git and pull-request
+  operations where branch choice matters.
+- Clarified managed and project-owned file boundaries while retaining focused
+  safety, validation, and completion requirements.
+
 ## 4.0.5 - 2026-07-08
 
 ### Changed
