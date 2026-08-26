@@ -59,6 +59,11 @@ affected documentation.
 
 ## Specialized Guidance
 
+Use native repository skills when the current agent supports them. The skills
+under `.agents/skills/` and `.claude/skills/` route to the same canonical
+guidance listed below; agents without native skill discovery should load the
+canonical files directly.
+
 Load only the guidance relevant to the task:
 
 - language or script work: `.agents/conventions/`

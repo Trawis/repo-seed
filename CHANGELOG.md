@@ -8,6 +8,22 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.2.0 - 2026-08-26
+
+### Added
+
+- Added native repository skills for Git, CI/CD, and substantial documentation
+  workflows in both Codex and Claude Code discovery locations.
+- Added parity and structure validation so mirrored Codex and Claude skill
+  wrappers remain portable and synchronized.
+
+### Changed
+
+- Kept `.agents/guidelines/` as the canonical tool-neutral workflow guidance
+  while using native skills as a small discovery layer.
+- Kept language conventions as conditionally loaded references instead of
+  advertising each convention as a separate skill.
+
 ## 4.1.0 - 2026-08-26
 
 ### Changed

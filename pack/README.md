@@ -17,6 +17,10 @@ Choose `minimal`, `library`, `app`, or `game`. The `full` profile synchronizes
 the complete reference catalog but cannot scaffold project files. Add only the
 scaffolding you need:
 
+Every profile also installs small native Codex and Claude Code skill wrappers
+for Git, CI/CD, and substantial documentation workflows. The wrappers route to
+the shared `.agents/guidelines/` files, which remain the canonical guidance.
+
 ```text
 --scaffold-project-files
 --scaffold-github-templates
