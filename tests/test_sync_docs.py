@@ -22,6 +22,29 @@ PACK_VERSION = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-
 LEGACY_131_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "legacy-1.31"
 PACK_330_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.3.0"
 PACK_341_FIXTURES = REPOSITORY_ROOT / "tests" / "fixtures" / "pack-3.4.1"
+SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def parse_skill_frontmatter(content: str):
+    lines = content.splitlines()
+    if not lines or lines[0] != "---":
+        raise AssertionError("SKILL.md must start with YAML frontmatter")
+    try:
+        end = lines.index("---", 1)
+    except ValueError as exc:
+        raise AssertionError("SKILL.md frontmatter is not closed") from exc
+
+    fields = {}
+    for line in lines[1:end]:
+        if not line.strip():
+            continue
+        if ":" not in line:
+            raise AssertionError(f"unsupported frontmatter line: {line!r}")
+        key, value = (part.strip() for part in line.split(":", 1))
+        if key in fields:
+            raise AssertionError(f"duplicate frontmatter field: {key}")
+        fields[key] = value
+    return fields, "\n".join(lines[end + 1 :]).strip()
 
 
 def load_module(name: str, path: Path):
@@ -193,6 +216,7 @@ class ManifestTests(unittest.TestCase):
     def test_managed_guidance_matches_profile_scope(self):
         all_profiles = {"minimal", "library", "app", "game", "full"}
         library_profiles = {"library", "app", "game", "full"}
+        non_minimal_profiles = {"library", "app", "game", "full"}
         expected = {
             "AGENTS.md": all_profiles,
             "CLAUDE.md": all_profiles,
@@ -200,6 +224,18 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/documentation.md": all_profiles,
             ".agents/guidelines/git.md": all_profiles,
             ".agents/guidelines/ci-cd.md": all_profiles,
+            ".agents/skills/code-review/SKILL.md": all_profiles,
+            ".agents/skills/bug-fix/SKILL.md": all_profiles,
+            ".agents/skills/refactor/SKILL.md": all_profiles,
+            ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
+            ".claude/skills/code-review/SKILL.md": all_profiles,
+            ".claude/skills/bug-fix/SKILL.md": all_profiles,
+            ".claude/skills/refactor/SKILL.md": all_profiles,
+            ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
+            ".agents/skills/technical-design/SKILL.md": non_minimal_profiles,
+            ".agents/skills/documentation-bootstrap/SKILL.md": non_minimal_profiles,
+            ".claude/skills/technical-design/SKILL.md": non_minimal_profiles,
+            ".claude/skills/documentation-bootstrap/SKILL.md": non_minimal_profiles,
             ".agents/conventions/csharp.md": library_profiles,
             ".agents/conventions/scripts.md": library_profiles,
             ".agents/conventions/python.md": library_profiles,
@@ -419,13 +455,68 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ".agents/guidelines/git.md",
             ".agents/guidelines/ci-cd.md",
             ".agents/conventions/",
+            "native repository skills",
             "scripts/sync-docs.py",
-            "Load only the guidance relevant to the task",
+            "Load only the additional guidance relevant to the task",
             "Do not scan `docs/project/` by default",
         ):
             self.assertIn(required, agents)
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
+
+    def test_codex_and_claude_skills_are_identical(self):
+        codex_root = PACK_ROOT / "files/.agents/skills"
+        claude_root = PACK_ROOT / "files/.claude/skills"
+        codex = {
+            path.relative_to(codex_root): path
+            for path in codex_root.rglob("*")
+            if path.is_file()
+        }
+        claude = {
+            path.relative_to(claude_root): path
+            for path in claude_root.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(set(codex), set(claude))
+        for relative in sorted(codex):
+            with self.subTest(skill=str(relative)):
+                self.assertEqual(codex[relative].read_bytes(), claude[relative].read_bytes())
+
+    def test_managed_skill_files_have_valid_portable_structure(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        skill_assets = [
+            asset
+            for asset in manifest.assets
+            if asset.asset_type == "managed"
+            and "/skills/" in asset.path
+            and asset.path.endswith("/SKILL.md")
+        ]
+        self.assertTrue(skill_assets)
+        for asset in skill_assets:
+            path = PACK_ROOT / "files" / asset.path
+            fields, body = parse_skill_frontmatter(path.read_text(encoding="utf-8"))
+            with self.subTest(path=asset.path):
+                self.assertEqual(set(fields), {"name", "description"})
+                name = fields["name"]
+                description = fields["description"]
+                self.assertRegex(name, SKILL_NAME_RE)
+                self.assertLessEqual(len(name), 64)
+                self.assertEqual(name, path.parent.name)
+                self.assertTrue(description)
+                self.assertLessEqual(len(description), 1024)
+                self.assertTrue(body)
+
+    def test_skills_define_substantive_workflows(self):
+        for root in (".agents/skills", ".claude/skills"):
+            for skill in sorted((PACK_ROOT / "files" / root).glob("*/SKILL.md")):
+                content = skill.read_text(encoding="utf-8")
+                _, body = parse_skill_frontmatter(content)
+                relative = skill.relative_to(PACK_ROOT / "files")
+                workflow_steps = re.findall(r"(?m)^\d+\. ", body)
+                with self.subTest(skill=str(relative)):
+                    self.assertIn("## Workflow", body)
+                    self.assertGreaterEqual(len(workflow_steps), 3)
+                    self.assertIn("## Completion", body)
 
     def test_documentation_guidance_routes_only_applicable_bootstrap_documents(self):
         guidance = (
@@ -1677,6 +1768,22 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, f"{profile}: {result.stderr}")
                 self.assertTrue((target / "AGENTS.md").is_file())
                 self.assertTrue((target / "scripts/sync-docs.py").is_file())
+                core_skills = {
+                    "code-review",
+                    "bug-fix",
+                    "refactor",
+                    "dependency-upgrade",
+                }
+                extended_skills = {"technical-design", "documentation-bootstrap"}
+                expected_skills = core_skills
+                if profile != "minimal":
+                    expected_skills |= extended_skills
+                for root in (".agents/skills", ".claude/skills"):
+                    actual_skills = {
+                        path.parent.name
+                        for path in (target / root).glob("*/SKILL.md")
+                    }
+                    self.assertEqual(actual_skills, expected_skills, f"{profile}: {root}")
                 self.assertTrue((target / ".editorconfig").is_file())
                 self.assertTrue((target / ".github/ISSUE_TEMPLATE/feature_request.md").is_file())
                 if profile == "full":

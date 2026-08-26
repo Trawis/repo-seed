@@ -8,6 +8,25 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.2.0 - 2026-08-26
+
+### Added
+
+- Added native Codex and Claude Code skills for code review, bug fixing,
+  refactoring, dependency upgrades, technical design, and existing-project
+  documentation bootstrap.
+- Added parity and portable-structure validation for mirrored native skill
+  definitions.
+- Added profile-aware skill distribution so the minimal profile carries only
+  the core engineering workflows.
+
+### Changed
+
+- Kept Git, CI/CD, documentation, and language guidance as conditionally loaded
+  cross-cutting rules instead of wrapping those files in trivial skills.
+- Kept skill bodies focused on repeatable investigation, execution, and
+  validation workflows that benefit from on-demand loading.
+
 ## 4.1.0 - 2026-08-26
 
 ### Changed
