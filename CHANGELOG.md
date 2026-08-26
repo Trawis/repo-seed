@@ -12,17 +12,20 @@ Use newest entries first. Do not dump raw git commits here.
 
 ### Added
 
-- Added native repository skills for Git, CI/CD, and substantial documentation
-  workflows in both Codex and Claude Code discovery locations.
-- Added parity and structure validation so mirrored Codex and Claude skill
-  wrappers remain portable and synchronized.
+- Added native Codex and Claude Code skills for code review, bug fixing,
+  refactoring, dependency upgrades, technical design, and existing-project
+  documentation bootstrap.
+- Added parity and portable-structure validation for mirrored native skill
+  definitions.
+- Added profile-aware skill distribution so the minimal profile carries only
+  the core engineering workflows.
 
 ### Changed
 
-- Kept `.agents/guidelines/` as the canonical tool-neutral workflow guidance
-  while using native skills as a small discovery layer.
-- Kept language conventions as conditionally loaded references instead of
-  advertising each convention as a separate skill.
+- Kept Git, CI/CD, documentation, and language guidance as conditionally loaded
+  cross-cutting rules instead of wrapping those files in trivial skills.
+- Kept skill bodies focused on repeatable investigation, execution, and
+  validation workflows that benefit from on-demand loading.
 
 ## 4.1.0 - 2026-08-26
 

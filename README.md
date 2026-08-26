@@ -9,7 +9,9 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 ## What It Provides
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
-- native Codex and Claude Code skills that route repeatable workflows to shared canonical guidance;
+- native Codex and Claude Code skills for focused engineering workflows such as
+  code review, bug fixing, refactoring, dependency upgrades, technical design,
+  and documentation bootstrap;
 - focused documentation, Git, CI/CD, and language references;
 - read-only templates for four project profiles plus a complete reference catalog;
 - missing-only scaffolding plus verified Markdown scaffold upgrades;
@@ -41,9 +43,10 @@ See [Document ownership](docs/project/document-ownership.md) for the authoritati
 
 ## Profiles
 
-All profiles receive the core agent instructions, native Git/CI/CD/documentation
-skill wrappers, canonical documentation and Git guidance, the sync script, and
-common reference templates. Specialized language conventions remain profile-scoped.
+All profiles receive the core agent instructions, canonical guidance, sync
+tooling, and core engineering skills. Library, application, game, and full
+profiles additionally receive technical-design and documentation-bootstrap
+skills alongside their richer project-documentation templates.
 
 | Profile | Guidance and project templates |
 |---|---|
@@ -148,9 +151,9 @@ pack/
     .agents/
       guidelines/
       conventions/
-      skills/                # native Codex project skills
+      skills/                # native Codex workflow skills
     .claude/
-      skills/                # native Claude Code project skills
+      skills/                # native Claude Code workflow skills
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # live documentation about repo-seed
@@ -158,9 +161,9 @@ scripts/                     # repository release tooling
 tests/                       # pack and tooling tests
 ```
 
-The native skill files are intentionally small discovery wrappers. Canonical
-tool-neutral workflow guidance remains under `.agents/guidelines/`, so agents
-without native skill support continue to use the same rules.
+Native skills package repeatable workflows that are too specialized to keep in
+the always-loaded agent instructions. Cross-cutting policy and language rules
+remain under `.agents/guidelines/` and `.agents/conventions/`.
 
 Root files describe `repo-seed` itself and are never target sync sources.
 
