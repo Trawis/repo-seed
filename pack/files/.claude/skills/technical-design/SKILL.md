@@ -5,8 +5,8 @@ description: Investigates and writes a scoped technical design for a substantial
 
 # Technical Design
 
-Follow the applicable `AGENTS.md` files and `.agents/project.md`, then read
-`.agents/guidelines/documentation.md`.
+Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists,
+then read `.agents/guidelines/documentation.md`.
 
 Do not implement the proposed change unless implementation is also requested.
 

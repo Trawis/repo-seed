@@ -5,9 +5,9 @@ description: Reviews diffs, pull requests, patches, or existing code for correct
 
 # Code Review
 
-Follow the applicable `AGENTS.md` files and `.agents/project.md`. Load relevant
-language conventions or specialized guidance only when the reviewed code
-requires them.
+Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
+Load relevant language conventions or specialized guidance only when the
+reviewed code requires them.
 
 Do not modify files unless the user also asks for fixes.
 

@@ -512,9 +512,11 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 content = skill.read_text(encoding="utf-8")
                 _, body = parse_skill_frontmatter(content)
                 relative = skill.relative_to(PACK_ROOT / "files")
+                workflow_steps = re.findall(r"(?m)^\d+\. ", body)
                 with self.subTest(skill=str(relative)):
                     self.assertIn("## Workflow", body)
-                    self.assertGreater(len(body), 800)
+                    self.assertGreaterEqual(len(workflow_steps), 3)
+                    self.assertIn("## Completion", body)
 
     def test_documentation_guidance_routes_only_applicable_bootstrap_documents(self):
         guidance = (

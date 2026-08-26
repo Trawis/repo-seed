@@ -5,8 +5,8 @@ description: Bootstraps accurate live project documentation for an existing repo
 
 # Documentation Bootstrap
 
-Follow the applicable `AGENTS.md` files and `.agents/project.md`, then read
-`.agents/guidelines/documentation.md`.
+Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists,
+then read `.agents/guidelines/documentation.md`.
 
 This skill is for documenting an existing repository from evidence, not for
 inventing product intent.

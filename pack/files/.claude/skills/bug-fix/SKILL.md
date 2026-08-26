@@ -5,8 +5,9 @@ description: Diagnoses and fixes incorrect existing behavior with a root-cause-f
 
 # Bug Fix
 
-Follow the applicable `AGENTS.md` files and `.agents/project.md`. Load the
-relevant language conventions and specialized guidance for the affected code.
+Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
+Load the relevant language conventions and specialized guidance for the
+affected code.
 
 ## Workflow
 
