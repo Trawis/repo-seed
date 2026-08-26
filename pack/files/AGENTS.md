@@ -49,10 +49,11 @@ affected documentation.
 - Add or update relevant tests for behavior changes when practical.
 - For review or diagnosis, report evidence without changing files unless a fix
   is requested.
-- Do not expose secrets; run destructive commands without authorization;
-  conceal failures; or alter production infrastructure, schemas,
-  authentication, payments, licensing, telemetry, public contracts, or
-  production dependencies unless the task requires it.
+- Do not expose secrets or conceal failures.
+- Do not run destructive commands without authorization.
+- Do not alter production infrastructure, schemas, authentication, payments,
+  licensing, telemetry, public contracts, or production dependencies unless
+  the task requires it.
 - Ask before broad refactors, framework replacement, repository restructuring,
   or new cross-codebase patterns unless explicitly requested.
 
