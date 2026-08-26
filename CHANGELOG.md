@@ -8,6 +8,14 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.1.0 - 2026-08-26
+
+### Changed
+
+- Made agent guidance demand-driven for project documentation, specialized
+  conventions, Git discovery, and final validation.
+- Clarified downstream safety rules without changing their requirements.
+
 ## 4.0.5 - 2026-07-08
 
 ### Changed

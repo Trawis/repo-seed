@@ -8,19 +8,24 @@ applies to agents, automation tools, and contributors using this pack.
 
 ## Branch Model Preflight
 
-Before starting work that may change files, create or switch branches, commit,
-or open a pull request, resolve the repository's branch model and branch-name
-convention.
+Before creating or switching branches, committing or pushing where branch
+choice matters, or opening or targeting a pull request, resolve the
+repository's branch model and branch-name convention. Editing files alone does
+not require branch-model or hosted-state investigation.
 
-Inspect applicable sources:
+Discover the model progressively, using only what is needed. Start with local
+or repository information:
 
-- current branch and working tree;
-- root `AGENTS.md`, child `AGENTS.md` files, and `.agents/project.md`;
-- `CONTRIBUTING.md` and other repository guidance;
-- remote branches after fetch or prune when tooling is available;
-- hosted default branch and protected branches when available;
-- existing long-lived branches;
-- open or recently merged pull requests when available.
+- repository instructions, including applicable `AGENTS.md` files and
+  `.agents/project.md`;
+- the current branch and working tree when relevant;
+- documented contribution rules such as `CONTRIBUTING.md`;
+- existing local branch structure.
+
+Consult remote or hosted information only when needed to resolve ambiguity.
+Fetching or pruning remotes, inspecting protected branches, and reviewing
+recent pull requests are not required when the model and target are already
+clear.
 
 If the base branch, PR target, current branch family, or branch-name convention
 is unclear, stop and resolve it before branch or PR work. Unknown base branch,
