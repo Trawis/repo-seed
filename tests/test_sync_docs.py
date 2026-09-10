@@ -230,14 +230,14 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/documentation.md": all_profiles,
             ".agents/guidelines/git.md": all_profiles,
             ".agents/guidelines/ci-cd.md": all_profiles,
-            ".agents/skills/code-review/SKILL.md": library_profiles,
-            ".agents/skills/bug-fix/SKILL.md": library_profiles,
-            ".agents/skills/refactor/SKILL.md": library_profiles,
-            ".agents/skills/dependency-upgrade/SKILL.md": library_profiles,
-            ".claude/skills/code-review/SKILL.md": library_profiles,
-            ".claude/skills/bug-fix/SKILL.md": library_profiles,
-            ".claude/skills/refactor/SKILL.md": library_profiles,
-            ".claude/skills/dependency-upgrade/SKILL.md": library_profiles,
+            ".agents/skills/code-review/SKILL.md": all_profiles,
+            ".agents/skills/bug-fix/SKILL.md": all_profiles,
+            ".agents/skills/refactor/SKILL.md": all_profiles,
+            ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
+            ".claude/skills/code-review/SKILL.md": all_profiles,
+            ".claude/skills/bug-fix/SKILL.md": all_profiles,
+            ".claude/skills/refactor/SKILL.md": all_profiles,
+            ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
             ".claude/skills/technical-design/SKILL.md": library_profiles,
@@ -1774,15 +1774,16 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, f"{profile}: {result.stderr}")
                 self.assertTrue((target / "AGENTS.md").is_file())
                 self.assertTrue((target / "scripts/sync-docs.py").is_file())
-                all_skills = {
+                core_skills = {
                     "code-review",
                     "bug-fix",
                     "refactor",
                     "dependency-upgrade",
-                    "technical-design",
-                    "documentation-bootstrap",
                 }
-                expected_skills = set() if profile == "minimal" else all_skills
+                extended_skills = {"technical-design", "documentation-bootstrap"}
+                expected_skills = core_skills
+                if profile != "minimal":
+                    expected_skills |= extended_skills
                 for root in (".agents/skills", ".claude/skills"):
                     actual_skills = {
                         path.parent.name

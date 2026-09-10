@@ -6,7 +6,7 @@ description: Refactors existing code while preserving intended behavior and redu
 # Refactor
 
 Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
-Load relevant language conventions before editing.
+Load any relevant language conventions the repository provides before editing.
 
 ## Workflow
 

@@ -6,8 +6,9 @@ description: Upgrades project dependencies, frameworks, runtimes, or tooling wit
 # Dependency Upgrade
 
 Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
-Load relevant language conventions. If the upgrade changes build, release, or
-hosted automation, also read `.agents/guidelines/ci-cd.md`.
+Load any relevant language conventions the repository provides. If the upgrade
+changes build, release, or hosted automation, also read
+`.agents/guidelines/ci-cd.md`.
 
 ## Workflow
 

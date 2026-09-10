@@ -109,22 +109,22 @@
     {
       "path": ".agents/skills/code-review/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".agents/skills/bug-fix/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".agents/skills/refactor/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".agents/skills/dependency-upgrade/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".agents/skills/technical-design/SKILL.md",
@@ -139,22 +139,22 @@
     {
       "path": ".claude/skills/code-review/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".claude/skills/bug-fix/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".claude/skills/refactor/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".claude/skills/dependency-upgrade/SKILL.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
       "path": ".claude/skills/technical-design/SKILL.md",
