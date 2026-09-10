@@ -43,15 +43,18 @@ See [Document ownership](docs/project/document-ownership.md) for the authoritati
 
 ## Profiles
 
-All profiles receive the core agent instructions, canonical guidance, sync
-tooling, and core engineering skills. Library, application, game, and full
-profiles additionally receive technical-design and documentation-bootstrap
-skills alongside their richer project-documentation templates.
+All profiles receive the core agent instructions, canonical guidance, and sync
+tooling. Library, application, game, and full profiles additionally receive the
+native engineering-workflow skills (code-review, bug-fix, refactor,
+dependency-upgrade, technical-design, and documentation-bootstrap) alongside
+their coding conventions and richer project-documentation templates. The
+minimal profile omits these skills and conventions; agents there load the
+canonical guidance directly.
 
 | Profile | Guidance and project templates |
 |---|---|
 | `minimal` | Core guidance plus README and changelog |
-| `library` | Minimal plus coding conventions, architecture, and an on-demand TSD reference |
+| `library` | Minimal plus engineering-workflow skills, coding conventions, architecture, and an on-demand TSD reference |
 | `app` | Library guidance plus FSD and user-guide templates |
 | `game` | Library guidance plus Unity conventions and a GDD template |
 | `full` | Complete reference catalog; not a project type |

@@ -17,8 +17,9 @@ Use newest entries first. Do not dump raw git commits here.
   documentation bootstrap.
 - Added parity and portable-structure validation for mirrored native skill
   definitions.
-- Added profile-aware skill distribution so the minimal profile carries only
-  the core engineering workflows.
+- Added profile-aware skill distribution: the engineering-workflow skills ship
+  to the library, application, game, and full profiles, while the minimal
+  profile omits them and loads the canonical guidance directly.
 
 ### Changed
 
