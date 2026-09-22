@@ -11,11 +11,14 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
 BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
+GITHUB_LABELS_SCRIPT = REPOSITORY_ROOT / "scripts" / "sync-github-labels.py"
+GITHUB_LABELS_CATALOG = PACK_ROOT / "github-labels.json"
 PACK_VERSION = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))[
     "pack_version"
 ]
@@ -36,6 +39,7 @@ def load_module(name: str, path: Path):
 
 sync = load_module("sync_docs", SYNC_SCRIPT)
 bundle_builder = load_module("build_release_bundle", BUILD_SCRIPT)
+github_labels = load_module("sync_github_labels", GITHUB_LABELS_SCRIPT)
 
 
 class ManifestTests(unittest.TestCase):
@@ -48,7 +52,7 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(self.manifest.pack_version, PACK_VERSION)
         self.assertEqual(self.manifest.state_file, ".repo-seed-state.json")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game", "full"))
-        self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE"))
+        self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE", "github-labels.json"))
         for package_file in self.manifest.package_files:
             self.assertTrue((PACK_ROOT / package_file).is_file(), package_file)
         for asset in self.manifest.assets:
@@ -200,7 +204,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/documentation.md": all_profiles,
             ".agents/guidelines/git.md": all_profiles,
             ".agents/guidelines/ci-cd.md": all_profiles,
-            ".agents/guidelines/labels.md": all_profiles,
+            ".agents/guidelines/issues.md": all_profiles,
             ".agents/conventions/csharp.md": library_profiles,
             ".agents/conventions/scripts.md": library_profiles,
             ".agents/conventions/python.md": library_profiles,
@@ -419,7 +423,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ".agents/guidelines/documentation.md",
             ".agents/guidelines/git.md",
             ".agents/guidelines/ci-cd.md",
-            ".agents/guidelines/labels.md",
+            ".agents/guidelines/issues.md",
             ".agents/conventions/",
             "scripts/sync-docs.py",
             "Load only the guidance relevant to the task",
@@ -428,6 +432,23 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn(required, agents)
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
+
+    def test_issue_guidance_is_not_conflated_with_pull_request_guidance(self):
+        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
+        normalized = " ".join(agents.split())
+        self.assertIn(
+            "Git, branches, commits, pull requests, or PR descriptions: `.agents/guidelines/git.md`",
+            normalized,
+        )
+        self.assertIn(
+            "issue creation, labels, issue structure, or triage: `.agents/guidelines/issues.md`",
+            normalized,
+        )
+        issues_guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
+        git_guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(encoding="utf-8")
+        self.assertIn("Keep PR titles and descriptions concise", git_guidance)
+        self.assertNotIn("Keep PR titles", issues_guidance)
+        self.assertNotIn("pull-request template", issues_guidance.lower())
 
     def test_documentation_guidance_routes_only_applicable_bootstrap_documents(self):
         guidance = (
@@ -595,8 +616,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertNotIn("labels: bug", bug_rendered)
         self.assertNotIn("labels: enhancement", feature_rendered)
 
-    def test_labels_guidance_defines_canonical_catalog(self):
-        labels = (PACK_ROOT / "files/.agents/guidelines/labels.md").read_text(encoding="utf-8")
+    def test_issues_guidance_defines_canonical_catalog_and_entry_points(self):
+        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
         for required in (
             "type: bug",
             "type: feature",
@@ -610,8 +631,48 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "priority: low",
             "Do not establish a mandatory shared `area:*` taxonomy",
             "Priority is optional",
+            "Bug Report",
+            "Feature Request",
+            "Blank issue -> assign type manually",
+            "blank_issues_enabled: false",
+            "do not add GitHub Issue Forms",
+            "Do not replace `type:*` labels with GitHub's native issue types",
+            "pack/github-labels.json",
+            "scripts/sync-github-labels.py",
         ):
-            self.assertIn(required, labels)
+            self.assertIn(required, guidance)
+        for legacy, replacement in {
+            "bug": "type: bug",
+            "enhancement": "type: feature",
+            "critical": "priority: critical",
+            "lowest": "priority: low",
+        }.items():
+            self.assertIn(legacy, guidance)
+            self.assertIn(replacement, guidance)
+
+    def test_manifest_has_exactly_two_contributor_issue_templates(self):
+        github_scaffolds = {
+            asset.scaffold_target
+            for asset in sync.load_manifest(PACK_ROOT).assets
+            if asset.scaffold_group == "github"
+        }
+        self.assertEqual(
+            github_scaffolds,
+            {
+                ".github/ISSUE_TEMPLATE/bug_report.md",
+                ".github/ISSUE_TEMPLATE/feature_request.md",
+                ".github/ISSUE_TEMPLATE/config.yml",
+            },
+        )
+
+    def test_scaffolded_templates_have_no_forced_title_or_assignee(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        for suffix in ("bug-report.template.md", "feature-request.template.md"):
+            asset = next(asset for asset in manifest.assets if asset.path.endswith(suffix))
+            rendered = sync.render_scaffold(PACK_ROOT, asset)
+            self.assertIn('title: ""', rendered)
+            self.assertIn('assignees: ""', rendered)
+            self.assertNotIn("[BUG]", rendered)
 
     def test_root_issue_chooser_has_two_valid_markdown_templates(self):
         issue_root = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE"
@@ -1892,6 +1953,121 @@ class BundleAndCliTests(unittest.TestCase):
                 relative = raw_target.split("#", 1)[0]
                 with self.subTest(path=path, target=relative):
                     self.assertTrue((path.parent / relative).resolve().exists())
+
+
+class GitHubLabelToolTests(unittest.TestCase):
+    def test_catalog_matches_issues_guidance(self):
+        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        names = {label["name"] for label in catalog}
+        self.assertEqual(
+            names,
+            {
+                "type: bug",
+                "type: feature",
+                "type: tech-debt",
+                "type: chore",
+                "type: decision",
+                "type: idea",
+                "priority: critical",
+                "priority: high",
+                "priority: medium",
+                "priority: low",
+            },
+        )
+        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
+        for name in names:
+            self.assertIn(name, guidance)
+
+    def test_catalog_rejects_duplicate_or_incomplete_entries(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "labels.json"
+            path.write_text(
+                json.dumps({"labels": [{"name": "type: bug", "description": "x"}, {"name": "type: bug", "description": "y"}]}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "Duplicate"):
+                github_labels.load_catalog(path)
+
+            path.write_text(json.dumps({"labels": [{"name": "type: bug"}]}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "description"):
+                github_labels.load_catalog(path)
+
+    def test_audit_reports_missing_drift_and_legacy_labels(self):
+        catalog = [
+            {"name": "type: bug", "description": "Existing behavior is incorrect.", "color": "d73a4a"},
+            {"name": "type: feature", "description": "New capability.", "color": "0e8a16"},
+        ]
+        hosted = [
+            {"name": "type: bug", "description": "wrong description", "color": "d73a4a"},
+            {"name": "bug", "description": "legacy", "color": "ffffff"},
+            {"name": "component: cli", "description": "project-specific", "color": "ffffff"},
+        ]
+
+        findings = github_labels.audit(catalog, hosted)
+
+        self.assertTrue(any(finding == "missing: type: feature" for finding in findings))
+        self.assertTrue(any("drift: type: bug" in finding for finding in findings))
+        self.assertTrue(any("legacy label: 'bug'" in finding for finding in findings))
+        self.assertFalse(any("component: cli" in finding for finding in findings))
+
+    def test_audit_reports_no_findings_for_a_matching_catalog(self):
+        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        findings = github_labels.audit(catalog, catalog)
+        self.assertEqual(findings, [])
+
+    def test_apply_creates_missing_updates_drifted_and_never_deletes(self):
+        catalog = [
+            {"name": "type: bug", "description": "Existing behavior is incorrect.", "color": "d73a4a"},
+            {"name": "type: feature", "description": "New capability.", "color": "0e8a16"},
+        ]
+        hosted = [
+            {"name": "type: bug", "description": "stale description", "color": "d73a4a"},
+            {"name": "component: cli", "description": "project-specific", "color": "ffffff"},
+            {"name": "enhancement", "description": "legacy", "color": "ffffff"},
+        ]
+
+        with mock.patch.object(github_labels, "create_label") as create, mock.patch.object(
+            github_labels, "update_label"
+        ) as update:
+            report = github_labels.apply_catalog("gh", None, catalog, hosted)
+
+        create.assert_called_once_with("gh", None, catalog[1])
+        update.assert_called_once_with("gh", None, catalog[0])
+        self.assertTrue(any("created: type: feature" in line for line in report))
+        self.assertTrue(any("updated: type: bug" in line for line in report))
+        self.assertTrue(any("legacy label present, not removed: 'enhancement'" in line for line in report))
+        self.assertFalse(any("component: cli" in line for line in report))
+
+    def test_cli_check_and_apply_are_mutually_exclusive(self):
+        parser = github_labels.build_parser()
+        with self.assertRaises(SystemExit):
+            parser.parse_args([])
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["--check", "--apply"])
+
+    def test_main_reports_a_clear_error_without_the_github_cli(self):
+        with mock.patch.object(shutil, "which", return_value=None):
+            result = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
+        self.assertEqual(result, 2)
+
+    def test_cli_help_documents_check_and_apply(self):
+        result = subprocess.run(
+            [sys.executable, str(GITHUB_LABELS_SCRIPT), "--help"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for option in ("--check", "--apply", "--catalog", "--repo"):
+            self.assertIn(option, result.stdout)
+
+    def test_normal_sync_does_not_require_the_github_cli_or_network(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            with mock.patch.object(shutil, "which", return_value=None):
+                actions = sync.synchronize(PACK_ROOT, target, "minimal")
+            self.assertTrue(any(action.action == "copy" for action in actions))
+            self.assertTrue((target / "AGENTS.md").is_file())
 
 
 if __name__ == "__main__":

@@ -10,7 +10,8 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
 - focused documentation, Git, CI/CD, and language references;
-- a canonical shared label catalog and lightweight issue/decision structure;
+- a canonical shared label catalog and lightweight issue/decision structure,
+  plus an optional tool to reconcile it with hosted GitHub labels;
 - read-only templates for four project profiles plus a complete reference catalog;
 - missing-only scaffolding plus verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
@@ -39,6 +40,30 @@ Profile reductions remove only stale managed files matching their recorded
 hashes. Modified stale files remain in place and stay tombstoned for review.
 
 See [Document ownership](docs/project/document-ownership.md) for the authoritative path classification.
+
+## Hosted GitHub Labels
+
+`pack/github-labels.json` is the canonical machine-readable catalog behind
+the `type:*` and `priority:*` labels described in
+[Issue guidance](pack/files/.agents/guidelines/issues.md). Repository files
+can only describe the intended catalog; they cannot prove what labels
+actually exist in a GitHub repository. `scripts/sync-github-labels.py`
+reconciles the two, but is optional, requires explicit invocation, and is
+never run as part of normal `sync-docs.py` synchronization:
+
+```bash
+python scripts/sync-github-labels.py --check
+python scripts/sync-github-labels.py --apply
+```
+
+It requires the [GitHub CLI](https://cli.github.com/) (`gh`), authenticated
+against the target repository. `--check` reports missing or drifted
+canonical labels and known legacy labels (`bug`, `enhancement`, `feature`,
+`critical`, `high`, `medium`, `low`, `lowest`) without writing anything, and
+exits non-zero when it finds drift. `--apply` creates missing canonical
+labels and updates the description or color of existing ones; it never
+deletes any label, including legacy ones that may still be attached to open
+or historical issues.
 
 ## Profiles
 
@@ -141,6 +166,7 @@ pack/
   manifest.json              # sole distributed-asset inventory
   README.md                  # package-only quick start
   LICENSE                    # package-only license
+  github-labels.json         # canonical hosted-label catalog
   files/                     # mirrors target repository paths
     AGENTS.md
     CLAUDE.md
@@ -148,7 +174,8 @@ pack/
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # live documentation about repo-seed
-scripts/                     # repository release tooling
+scripts/                     # repository tooling, including the optional
+                              # sync-github-labels.py hosted-label tool
 tests/                       # pack and tooling tests
 ```
 
@@ -161,7 +188,8 @@ python scripts/build-release-bundle.py
 python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py
+python scripts/sync-github-labels.py --help
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py
 git diff --check
 ```
 
@@ -170,7 +198,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 ## Project and Community
 
 - [Document ownership](docs/project/document-ownership.md)
-- [Label and issue guidance](pack/files/.agents/guidelines/labels.md)
+- [Issue guidance](pack/files/.agents/guidelines/issues.md)
 - [Upgrading to Version 4](docs/project/upgrading-to-4.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)

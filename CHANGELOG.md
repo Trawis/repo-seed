@@ -13,13 +13,23 @@ Use newest entries first. Do not dump raw git commits here.
 ### Added
 
 - Added a canonical shared label catalog and lightweight issue/decision
-  structure in `.agents/guidelines/labels.md`: `type:*` and optional
+  structure in `.agents/guidelines/issues.md`: `type:*` and optional
   `priority:*` labels, an idea/decision/feature lifecycle, and a
-  Summary/Goal/Suggested-approach/Done-when issue shape.
-- Added `--audit` to `scripts/sync-docs.py` for diagnostic-only drift
+  Summary/Goal/Suggested-approach/Done-when issue shape. Contributors keep
+  exactly two Markdown templates (Bug Report, Feature Request); the
+  remaining types are maintainer classifications applied through a blank
+  issue.
+- Added `pack/github-labels.json` as the canonical machine-readable label
+  catalog, and the optional, explicitly invoked
+  `scripts/sync-github-labels.py --check` / `--apply` tool to reconcile it
+  against a GitHub repository's hosted labels (via the GitHub CLI). It never
+  runs as part of normal `sync-docs.py` synchronization, never deletes
+  labels, and reports known legacy labels for manual migration.
+- Added `--audit` to `scripts/sync-docs.py` for diagnostic-only local drift
   reporting: pack version, active profile, managed-file drift, a missing
   `.agents/project.md`, and legacy `bug`/`enhancement` labels in scaffolded
-  issue templates. It never writes or overwrites files.
+  issue templates. It never writes or overwrites files and never requires
+  GitHub network access.
 
 ### Changed
 
@@ -27,8 +37,14 @@ Use newest entries first. Do not dump raw git commits here.
   and feature-request templates with the canonical `type: bug` and
   `type: feature` labels, and reduced both templates to the lightweight
   shared issue structure.
+- Simplified repo-seed's own feature-request template to the same
+  lightweight Summary/Goal/Suggested-approach/Done-when structure, and
+  normalized its own bug-report template's first heading to `## Summary`.
 - Documented `.agents/project.md` content expectations and explicitly
   classified `.github/pull_request_template.md` as project-owned.
+- Fixed the generated `AGENTS.md` specialized-guidance mapping so issue
+  guidance no longer claims to cover pull-request descriptions; PR guidance
+  stays solely in `.agents/guidelines/git.md`.
 
 ## 4.1.0 - 2026-08-26
 

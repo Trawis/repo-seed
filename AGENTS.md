@@ -70,7 +70,8 @@ For sync-script or packaging changes, run:
 python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py
+python scripts/sync-github-labels.py --help
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py
 git diff --check
 ```
 

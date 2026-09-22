@@ -46,13 +46,18 @@ requirements, and unusual project constraints. Do not copy generic repo-seed
 instructions into it; that guidance already lives in the managed files
 above.
 
-## Canonical Label Catalog
+## Canonical Issue and Label Catalog
 
-`.agents/guidelines/labels.md` is the single canonical source for shared
-label names, meanings, and lightweight issue structure. Scaffolded issue
+`.agents/guidelines/issues.md` is the single canonical source for issue
+creation, labels, and lightweight issue structure. Scaffolded issue
 templates and other guidance agree with it instead of defining a competing
-list. Repository files can only describe the intended label catalog; they
-cannot prove which labels are actually configured in the GitHub repository.
+list. `pack/github-labels.json` is the machine-readable label catalog it
+describes. Repository files can only represent the intended label catalog;
+they cannot prove which labels are actually configured in the GitHub
+repository. Reconcile hosted labels explicitly with
+`scripts/sync-github-labels.py` (see [README](../../README.md)); this is
+separate from normal file synchronization and from the local `--audit`
+diagnostics, neither of which needs GitHub network access.
 
 Some templates, such as the TSD, are reference-only and have no automatic
 scaffold target. Agents copy them to the suggested project-owned path only when

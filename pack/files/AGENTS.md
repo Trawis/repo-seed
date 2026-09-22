@@ -65,12 +65,14 @@ affected documentation.
 Load only the guidance relevant to the task:
 
 - language or script work: `.agents/conventions/`
-- Git, branches, commits, or pull requests: `.agents/guidelines/git.md`
+- Git, branches, commits, pull requests, or PR descriptions:
+  `.agents/guidelines/git.md`
 - CI/CD or releases: `.agents/guidelines/ci-cd.md`
 - substantial documentation work, including creation, restructuring,
   bootstrapping, technical designs or specifications, and significant
   maintenance: `.agents/guidelines/documentation.md`
-- issue labels, issue structure, or PR descriptions: `.agents/guidelines/labels.md`
+- issue creation, labels, issue structure, or triage:
+  `.agents/guidelines/issues.md`
 
 Repository-specific rules and nearby code take precedence over managed
 conventions. Do not create or materially alter workflows, permissions,

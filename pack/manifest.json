@@ -11,7 +11,8 @@
   ],
   "package_files": [
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "github-labels.json"
   ],
   "migration": {
     "legacy_manifest": ".agent-guidelines-manifest.json",
@@ -107,7 +108,7 @@
       "profiles": ["minimal", "library", "app", "game", "full"]
     },
     {
-      "path": ".agents/guidelines/labels.md",
+      "path": ".agents/guidelines/issues.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game", "full"]
     },

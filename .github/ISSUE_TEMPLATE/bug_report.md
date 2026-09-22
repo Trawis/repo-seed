@@ -8,7 +8,7 @@ assignees: ''
 
 <!-- Document role: Repo-seed-only issue template. Sync behavior: Never copied into targets. -->
 
-## Description
+## Summary
 
 <!-- A clear, concise description of the bug. -->
 
