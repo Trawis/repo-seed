@@ -45,6 +45,12 @@ Use newest entries first. Do not dump raw git commits here.
 - Fixed the generated `AGENTS.md` specialized-guidance mapping so issue
   guidance no longer claims to cover pull-request descriptions; PR guidance
   stays solely in `.agents/guidelines/git.md`.
+- Reduced the generated `CLAUDE.md` to a minimal `@AGENTS.md` import with an
+  ownership comment, removing prose that duplicated the import and `AGENTS.md`
+  itself; `AGENTS.md` remains the sole canonical, cross-agent instruction
+  source and `CLAUDE.md` stays a compatibility wrapper, not a second policy
+  file. Documented why the wrapper is kept alongside native Claude Code
+  `AGENTS.md` support.
 
 ## 4.1.0 - 2026-08-26
 

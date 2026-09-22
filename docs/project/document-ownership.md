@@ -36,6 +36,20 @@ belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
+## Claude Code Wrapper
+
+`AGENTS.md` is the canonical, cross-agent instruction file. `CLAUDE.md`
+stays a minimal Claude Code compatibility wrapper (`@AGENTS.md`, a real
+Claude Code import) rather than a second policy source, because current
+Claude Code loads a project's `CLAUDE.md` instead of separately loading
+`AGENTS.md` when both are present. Modern Claude Code can also load
+`AGENTS.md` natively, but the wrapper is kept for configurations where
+`CLAUDE.md` takes precedence or native `AGENTS.md` support is unavailable.
+Do not add other `@` imports to `CLAUDE.md`; that would expand specialized
+guidance into every session's context and defeat the demand-driven model in
+`AGENTS.md`. To verify the import is loaded, run `/context` in Claude Code
+and confirm `CLAUDE.md` appears under Memory files.
+
 ## `.agents/project.md` Content
 
 `.agents/project.md` holds only information specific to the target

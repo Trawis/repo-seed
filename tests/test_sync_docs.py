@@ -433,6 +433,25 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
 
+    def test_managed_claude_wrapper_is_a_minimal_agents_import(self):
+        claude = (PACK_ROOT / "files/CLAUDE.md").read_text(encoding="utf-8")
+        visible = re.sub(r"<!--.*?-->", "", claude, flags=re.DOTALL).strip()
+        self.assertEqual(visible, "@AGENTS.md")
+        for duplicated in (
+            "primary project instruction file",
+            "Use the imported",
+            "## Claude Code",
+            "Document role",
+        ):
+            self.assertNotIn(duplicated, claude)
+        for guidance_import in (
+            "@.agents/guidelines/",
+            "@.agents/conventions/",
+            "@.agents/project.md",
+            "@AGENTS.md\n@",
+        ):
+            self.assertNotIn(guidance_import, claude)
+
     def test_issue_guidance_is_not_conflated_with_pull_request_guidance(self):
         agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
         normalized = " ".join(agents.split())
@@ -1004,6 +1023,32 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertFalse((target / ".agent-guidelines-conflicts").exists())
             self.assertFalse((target / "README.md").exists())
             self.assertFalse((target / "LICENSE").exists())
+
+    def test_old_format_claude_wrapper_is_overwritten_with_the_minimal_import(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            claude = target / "CLAUDE.md"
+            claude.write_text(
+                "# CLAUDE.md\n\n@AGENTS.md\n\n## Claude Code\n\n"
+                "Use the imported `AGENTS.md` as the primary project instruction file.\n",
+                encoding="utf-8",
+            )
+
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
+
+            self.assertEqual(claude.read_bytes(), (PACK_ROOT / "files/CLAUDE.md").read_bytes())
+            self.assertNotIn("primary project instruction file", claude.read_text(encoding="utf-8"))
+            self.assertTrue(any(action.path == "CLAUDE.md" and action.action == "copy" for action in actions))
+
+    def test_every_profile_syncs_the_identical_minimal_claude_wrapper(self):
+        source_bytes = (PACK_ROOT / "files/CLAUDE.md").read_bytes()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for profile in sync.load_manifest(PACK_ROOT).profiles:
+                target = root / profile
+                target.mkdir()
+                sync.synchronize(PACK_ROOT, target, profile)
+                self.assertEqual((target / "CLAUDE.md").read_bytes(), source_bytes, profile)
 
     def test_matching_managed_files_are_unchanged_without_rewriting(self):
         with tempfile.TemporaryDirectory() as temp:
