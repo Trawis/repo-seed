@@ -1208,7 +1208,7 @@ def audit_target(
     """Report drift diagnostics for a target without writing any files.
 
     This is a local, file-based diagnostic: it never contacts GitHub and
-    never requires network access, unlike scripts/sync-github-labels.py.
+    never requires network access.
     """
     source_root = source_root.expanduser().resolve()
     target_root = target_root.expanduser().resolve()
@@ -1243,10 +1243,14 @@ def audit_target(
         elif managed_file_hash(target) != managed_file_hash(source):
             lines.append(f"drift: {asset.path} differs from the current managed content")
 
+    # .agents/project.md is project-owned and optional: a repository with no
+    # meaningful project-specific instructions legitimately has none. This is
+    # informational only, never a drift/failure finding.
     project_guidance = safe_child(target_root, ".agents/project.md", "project guidance path")
     if not project_guidance.is_file():
-        lines.append("missing: .agents/project.md (project-specific guidance not found)")
+        lines.append("info: .agents/project.md not present")
 
+    legacy_state_for_scaffolds = read_legacy_state(target_root, manifest.migration)
     for asset in selected:
         if asset.asset_type != "template" or asset.scaffold_target is None:
             continue
@@ -1262,8 +1266,27 @@ def audit_target(
                 f"legacy label: {asset.scaffold_target} uses '{match.group(1).strip()}' "
                 "instead of a canonical type: label"
             )
-        if verified_current_scaffold(content, asset) is False or verified_legacy_scaffold(content, asset) is False:
-            lines.append(f"outdated scaffold: {asset.scaffold_target} does not match a known repo-seed scaffold")
+        # Reuse the same verification the sync path uses to decide whether a
+        # scaffold may be upgraded, so "outdated" is reported only when there
+        # is reliable evidence of an unchanged old repo-seed scaffold, never
+        # for an ordinary customized project-owned document.
+        upgrade_status = upgrade_scaffold_asset(
+            source_root, target_root, asset, manifest.migration, legacy_state_for_scaffolds, dry_run=True
+        )
+        if upgrade_status is not None and upgrade_status.action == "upgrade":
+            lines.append(
+                f"outdated scaffold: {asset.scaffold_target} is a verified unchanged repo-seed "
+                "scaffold and can be safely upgraded"
+            )
+        elif (
+            upgrade_status is not None
+            and upgrade_status.action == "preserve"
+            and "does not match local content" in upgrade_status.detail
+        ):
+            lines.append(
+                f"info: {asset.scaffold_target} has repo-seed scaffold markers that no longer "
+                "match its content; treated as a customized, project-owned document"
+            )
 
     for convention, asset in convention_assets(manifest).items():
         if convention in active_conventions:

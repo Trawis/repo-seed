@@ -45,13 +45,19 @@ See [Document ownership](docs/project/document-ownership.md) for the authoritati
 
 ## Hosted GitHub Labels
 
-`pack/github-labels.json` is the canonical machine-readable catalog behind
-the `type:*` and `priority:*` labels described in
-[Issue guidance](pack/files/.agents/guidelines/issues.md). Repository files
-can only describe the intended catalog; they cannot prove what labels
-actually exist in a GitHub repository. `scripts/sync-github-labels.py`
-reconciles the two, but is optional, requires explicit invocation, and is
-never run as part of normal `sync-docs.py` synchronization:
+`pack/github-labels.json` and `scripts/sync-github-labels.py` are
+repo-seed-side maintainer tooling: unlike everything under `pack/files/`,
+neither is synced into target repositories. `pack/github-labels.json` is
+the canonical machine-readable catalog behind the `type:*` and `priority:*`
+labels described in
+[Issue guidance](pack/files/.agents/guidelines/issues.md), which target
+repositories receive as the label convention itself, not this catalog file
+or tool. Repository files can only describe the intended catalog; they
+cannot prove what labels actually exist in a GitHub repository.
+`scripts/sync-github-labels.py` reconciles the two for repo-seed's own
+repository, or any repository a maintainer points it at, but is optional,
+requires explicit invocation, and is never run as part of normal
+`sync-docs.py` synchronization:
 
 ```bash
 python scripts/sync-github-labels.py --check

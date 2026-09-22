@@ -101,13 +101,14 @@ above.
 ## Canonical Issue and Label Catalog
 
 `.agents/guidelines/issues.md` is the single canonical source for issue
-creation, labels, and lightweight issue structure. Scaffolded issue
-templates and other guidance agree with it instead of defining a competing
-list. `pack/github-labels.json` is the machine-readable label catalog it
-describes. Repository files can only represent the intended label catalog;
-they cannot prove which labels are actually configured in the GitHub
-repository. Reconcile hosted labels explicitly with
-`scripts/sync-github-labels.py` (see [README](../../README.md)); this is
+creation, labels, and lightweight issue structure, and is the only part of
+this catalog distributed to target repositories. `pack/github-labels.json`
+and `scripts/sync-github-labels.py` are repo-seed-side maintainer tooling,
+never synced into a target: the machine-readable catalog backing the
+distributed convention, and the optional, explicitly invoked reconciler for
+it (see [README](../../README.md)). Repository files can only represent the
+intended label catalog; they cannot prove which labels are actually
+configured in the GitHub repository. Hosted-label reconciliation is
 separate from normal file synchronization and from the local `--audit`
 diagnostics, neither of which needs GitHub network access.
 

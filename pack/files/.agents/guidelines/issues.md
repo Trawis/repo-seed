@@ -146,15 +146,14 @@ expected, actual, and environment fields; see
 
 ## GitHub-Hosted Labels
 
-`pack/github-labels.json` is the canonical machine-readable catalog backing
-the type and priority labels above; repository files and generated
-templates agree with it. Repository files can only describe the intended
-label catalog, not what is actually configured in the GitHub repository.
-Confirm and reconcile hosted labels with the optional, explicitly invoked
-`scripts/sync-github-labels.py --check` / `--apply` tool, or an equivalent
-GitHub-native mechanism. This is separate from repo-seed's normal file
-synchronization and from its local `--audit` diagnostics, neither of which
-requires GitHub network access.
+The labels defined above are the shared repository convention.
+
+Actual GitHub-hosted labels are external to repo-seed's normal file
+synchronization. When hosted label configuration matters, verify it
+directly through GitHub.
+
+Legacy labels may remain on historical issues and should be migrated
+deliberately rather than deleted automatically.
 
 Legacy shared labels map to the canonical catalog as follows:
 

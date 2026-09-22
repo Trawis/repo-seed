@@ -80,6 +80,23 @@ Use newest entries first. Do not dump raw git commits here.
   hypothetical one, and stale rules should be removed rather than
   accumulated.
 
+### Fixed
+
+- Removed references to repo-seed-only paths (`pack/github-labels.json`,
+  `scripts/sync-github-labels.py`) from the distributed
+  `.agents/guidelines/issues.md` and from a docstring in the distributed
+  `scripts/sync-docs.py`; neither path exists after a normal sync, so a
+  target-repository agent could not have followed them.
+- Downgraded a missing `.agents/project.md` in `--audit` from a `missing:`
+  drift finding to an `info:` line that is not counted, since the file is
+  project-owned and optional; a repository without one can still report "no
+  drift detected".
+- Reworked scaffold status in `--audit` to reuse the same verification the
+  sync path already uses before upgrading a scaffold, instead of a
+  standalone check. An ordinary customized project-owned document is no
+  longer reported as `outdated scaffold`; that label is now reserved for a
+  verified, unchanged repo-seed scaffold that could safely be upgraded.
+
 ## 4.1.0 - 2026-08-26
 
 ### Changed

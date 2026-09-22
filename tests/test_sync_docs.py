@@ -670,8 +670,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "blank_issues_enabled: false",
             "do not add GitHub Issue Forms",
             "Do not replace `type:*` labels with GitHub's native issue types",
-            "pack/github-labels.json",
-            "scripts/sync-github-labels.py",
         ):
             self.assertIn(required, guidance)
         for legacy, replacement in {
@@ -682,6 +680,31 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         }.items():
             self.assertIn(legacy, guidance)
             self.assertIn(replacement, guidance)
+
+    def test_distributed_issue_guidance_is_self_contained_for_target_repositories(self):
+        # pack/github-labels.json and scripts/sync-github-labels.py are repo-seed
+        # maintainer/fleet tooling; they are never synced into a target repository,
+        # so the distributed issues.md must not send a target-repo agent looking for them.
+        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
+        self.assertNotIn("pack/github-labels.json", guidance)
+        self.assertNotIn("scripts/sync-github-labels.py", guidance)
+        self.assertIn("GitHub-Hosted Labels", guidance)
+        self.assertIn("verify it\ndirectly through GitHub", guidance)
+
+    def test_no_distributed_file_references_repo_seed_only_tooling_paths(self):
+        # Anything under pack/files/ is synced verbatim into a target repository.
+        # scripts/sync-github-labels.py and pack/github-labels.json only exist in
+        # repo-seed itself, so no distributed file may point a target-repo agent
+        # (or its own generated CLI help/docstrings) at either path.
+        forbidden = ("pack/github-labels.json", "scripts/sync-github-labels.py")
+        files_root = PACK_ROOT / "files"
+        for path in files_root.rglob("*"):
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            content = path.read_text(encoding="utf-8")
+            for needle in forbidden:
+                with self.subTest(path=path.relative_to(PACK_ROOT), needle=needle):
+                    self.assertNotIn(needle, content)
 
     def test_manifest_has_exactly_two_contributor_issue_templates(self):
         github_scaffolds = {
@@ -1700,9 +1723,85 @@ class SyncBehaviorTests(unittest.TestCase):
 
             report = sync.audit_target(PACK_ROOT, target, "minimal")
 
-            self.assertTrue(any("missing: .agents/project.md" in line for line in report))
+            self.assertTrue(any(line == "info: .agents/project.md not present" for line in report))
+            self.assertFalse(any(line.startswith("missing: .agents/project.md") for line in report))
             self.assertTrue(any(line.startswith("drift: AGENTS.md") for line in report))
             self.assertTrue(any("legacy label" in line and "bug_report.md" in line for line in report))
+
+    def test_audit_missing_project_md_is_informational_and_allows_no_drift(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            self.assertFalse((target / ".agents/project.md").exists())
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+
+            self.assertIn("info: .agents/project.md not present", report)
+            self.assertTrue(any(line.endswith("no drift detected") for line in report))
+            self.assertFalse(any(line.startswith(("drift:", "missing:")) for line in report))
+
+    def test_audit_scaffold_status_distinguishes_current_legacy_customized_and_invalid(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            manifest = sync.load_manifest(PACK_ROOT)
+            bug_asset = next(a for a in manifest.assets if a.path.endswith("bug-report.template.md"))
+            source_body = sync.template_body(PACK_ROOT / "files" / bug_asset.path)
+
+            # Verified current scaffold: exactly what the sync path would produce.
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            current_report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("outdated scaffold:") for line in current_report))
+            self.assertFalse(any(line.startswith("info:") and "bug_report.md" in line for line in current_report))
+
+            # Verified legacy (old-marker) scaffold: eligible for a safe upgrade.
+            legacy_body = source_body.rstrip()
+            legacy_marker = (
+                '<!-- repo-seed-template id="github-bug-template" '
+                f'sha256="{sync.content_hash(legacy_body)}" -->'
+            )
+            bug_report = target / bug_asset.scaffold_target
+            bug_report.write_text(f"{legacy_body}\n\n{legacy_marker}\n", encoding="utf-8")
+            legacy_report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertTrue(
+                any(
+                    line.startswith("outdated scaffold:") and "bug_report.md" in line and "safely upgraded" in line
+                    for line in legacy_report
+                )
+            )
+            # Still present on disk: audit is diagnostic-only and never writes.
+            self.assertIn(legacy_marker, bug_report.read_text(encoding="utf-8"))
+
+            # Locally customized scaffold (provenance present but content has since
+            # changed) must never be reported as "outdated"; at most informational.
+            bug_report.write_text(
+                sync.add_source_marker(source_body, bug_asset.path) + "\nSome locally added section.\n",
+                encoding="utf-8",
+            )
+            customized_report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("outdated scaffold:") for line in customized_report))
+            self.assertTrue(
+                any(
+                    line.startswith("info:") and "bug_report.md" in line and "customized" in line
+                    for line in customized_report
+                )
+            )
+            self.assertFalse(any("bug_report.md" in line for line in customized_report if line.startswith("drift:")))
+
+            # Fully customized/hand-written scaffold with no repo-seed markers at all:
+            # no provenance to evaluate, so no warning of any kind.
+            bug_report.write_text("# Our own bug report form\n", encoding="utf-8")
+            no_provenance_report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any("bug_report.md" in line for line in no_provenance_report))
+
+            # Invalid/mismatched provenance: markers present but pointing at the
+            # wrong template. Not "outdated" (misleading), at most informational.
+            wrong_marker = (
+                '<!-- repo-seed-template id="github-feature-template" '
+                f'sha256="{sync.content_hash(legacy_body)}" -->'
+            )
+            bug_report.write_text(f"{legacy_body}\n\n{wrong_marker}\n", encoding="utf-8")
+            mismatched_report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("outdated scaffold:") for line in mismatched_report))
 
     def test_audit_without_a_recorded_profile_reports_and_does_not_write(self):
         with tempfile.TemporaryDirectory() as temp:
