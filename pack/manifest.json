@@ -115,27 +115,32 @@
     {
       "path": ".agents/conventions/csharp.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "convention": "csharp"
     },
     {
       "path": ".agents/conventions/scripts.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "convention": "scripts"
     },
     {
       "path": ".agents/conventions/python.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "convention": "python"
     },
     {
       "path": ".agents/conventions/shell.md",
       "type": "managed",
-      "profiles": ["library", "app", "game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "convention": "shell"
     },
     {
       "path": ".agents/conventions/unity.md",
       "type": "managed",
-      "profiles": ["game", "full"]
+      "profiles": ["minimal", "library", "app", "game", "full"],
+      "convention": "unity"
     },
     {
       "path": "docs/templates/readme.template.md",
@@ -187,7 +192,7 @@
         "1e8afbe838ffafb951563a2211233003aadf52c2b2e5107fe23ac4c1084285d5",
         "701a4193f0c5eb903af5172e2457af01e5148bddbeae8343b80fa1d02ed4fe90"
       ],
-      "scaffold_group": "project",
+      "scaffold_group": "optional",
       "scaffold_target": "docs/project/architecture.md"
     },
     {
@@ -199,7 +204,7 @@
         "49a32bc0c25a47f81474095ec8ace653d761e52c0bbfa292021e64c15301938c",
         "05060f633222126c81500925ee9d402b7584ddd8d1162ab50a47c44e88184a76"
       ],
-      "scaffold_group": "project",
+      "scaffold_group": "optional",
       "scaffold_target": "docs/project/user-guide.md"
     },
     {
@@ -212,7 +217,7 @@
         "fb0c847491d8da08ae2849965c6dd5b0471b42f8cc37cf0895f2e869c3b7fd5f",
         "4e59d75a16f124403426c7b5cc40ed8f0df2f9bad2a549b20d5a18f153c3fb57"
       ],
-      "scaffold_group": "project",
+      "scaffold_group": "optional",
       "scaffold_target": "docs/project/fsd.md"
     },
     {
@@ -235,7 +240,7 @@
         "90ae5f047032045c33dc536efaa3e863c16d9097f95e1b14185e0866476faadc",
         "f8d7f1e8e4ab94a1c70bc5bdbe3d6a4d4651927609d578e8594b53108c4e973a"
       ],
-      "scaffold_group": "project",
+      "scaffold_group": "optional",
       "scaffold_target": "docs/project/gdd.md"
     },
     {

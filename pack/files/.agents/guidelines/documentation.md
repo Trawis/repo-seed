@@ -34,6 +34,13 @@
 
 Update only documents affected by verified behavior. Do not create documentation as busywork.
 
+`fsd.md`, `gdd.md`, `architecture.md`, and `user-guide.md` are on-demand
+documents: repo-seed makes their templates available for the profile but
+does not scaffold them automatically. Create one with
+`scripts/sync-docs.py --scaffold <name>` (`architecture`, `fsd`, `gdd`, or
+`user-guide`) only when the project actually needs it, not merely because
+the profile could provide it.
+
 ## Growth Without Reorganization
 
 Keep `fsd.md`, `gdd.md`, `architecture.md`, and `user-guide.md` as stable

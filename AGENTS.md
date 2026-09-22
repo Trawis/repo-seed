@@ -44,6 +44,20 @@ Do not use a root repository document as a sync source.
 - If a repo-seed behavior or public interface changes, update the affected
   repository-owned documentation.
 
+## Adding Persistent Agent Rules
+
+Before adding a new instruction to distributed guidance
+(`pack/files/AGENTS.md`, `.agents/guidelines/`, or `.agents/conventions/`),
+confirm:
+
+1. has this caused repeated mistakes across repositories, not a hypothetical one;
+2. is the rule applicable to multiple projects, not one repository's quirk;
+3. does it need to be persistent, rather than resolved once and forgotten;
+4. could it instead live in a target's own `.agents/project.md`;
+5. could it be loaded only for the relevant task instead of always.
+
+Prefer removing a stale rule over indefinitely accumulating new ones.
+
 ## GitHub Flow
 
 - `main` is the only long-lived branch.

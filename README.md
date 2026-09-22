@@ -9,11 +9,13 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 ## What It Provides
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
-- focused documentation, Git, CI/CD, and language references;
+- focused documentation, Git, and CI/CD guidance, independently selectable
+  from language/tool conventions;
 - a canonical shared label catalog and lightweight issue/decision structure,
   plus an optional tool to reconcile it with hosted GitHub labels;
 - read-only templates for four project profiles plus a complete reference catalog;
-- missing-only scaffolding plus verified Markdown scaffold upgrades;
+- baseline scaffolding plus on-demand, named optional-document scaffolds and
+  verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
 - a sync script copied into each target repository for future updates, including
   a diagnostic `--audit` report.
@@ -65,29 +67,82 @@ labels and updates the description or color of existing ones; it never
 deletes any label, including legacy ones that may still be attached to open
 or historical issues.
 
-## Profiles
+## Profiles, Conventions, and Scaffolds
 
-All profiles receive the core agent instructions, documentation and Git guidance, sync script, and common reference templates. Specialized guidance is included only where the profile benefits from it.
+Three independent choices, not one:
 
-| Profile | Guidance and project templates |
+```text
+profile      = project shape (which core guidance and templates are available)
+conventions  = languages/tools actually used (which are installed)
+scaffolds    = optional project documents, created only when needed
+```
+
+### Profiles
+
+| Profile | Reference templates available |
 |---|---|
-| `minimal` | Core guidance plus README and changelog |
-| `library` | Minimal plus coding conventions, architecture, and an on-demand TSD reference |
-| `app` | Library guidance plus FSD and user-guide templates |
-| `game` | Library guidance plus Unity conventions and a GDD template |
-| `full` | Complete reference catalog; not a project type |
+| `minimal` | README and changelog only |
+| `library` | Minimal plus architecture and an on-demand TSD reference |
+| `app` | Library plus FSD and user-guide templates |
+| `game` | Library plus a GDD template |
+| `full` | Complete reference catalog and every convention; for repo-seed testing/reference, not a project type |
 
-The first sync requires an explicit project profile when no reusable profile is
-recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or `game`
-profile when `--profile` is omitted.
-Profiles select the managed assets retained in the target. Changing to a smaller
-profile prunes unchanged managed assets that are no longer selected; modified
-files are preserved. Eligible legacy cleanup applies independently of the
-selected profile.
+All profiles receive the same core agent instructions, documentation, Git,
+CI/CD, and issue guidance. A profile only changes which optional reference
+templates are available; it says nothing about programming language and
+never installs a language convention by itself.
 
-`full` synchronizes every reference template for review. It cannot be combined
-with `--scaffold-project-files` because FSD and GDD are mutually exclusive
-project models, and it must always be selected explicitly.
+The first sync requires an explicit project profile when no reusable profile
+is recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or
+`game` profile when `--profile` is omitted.
+
+### Conventions
+
+Language and tool guidance (`csharp`, `python`, `scripts`, `shell`, `unity`)
+is selected independently of profile with `--conventions`, and persisted in
+`.repo-seed-state.json` so later syncs reuse it when `--conventions` is
+omitted:
+
+```bash
+python pack/files/scripts/sync-docs.py --target . --profile app --conventions csharp
+python pack/files/scripts/sync-docs.py --target . --conventions csharp,unity
+```
+
+A fresh sync with no `--conventions` installs none. `full` always installs
+every known convention, since it is a complete reference catalog. Changing
+the selection prunes an unchanged, now-unselected convention file and
+preserves one with local modifications, exactly like a profile change.
+
+Examples:
+
+```text
+C# desktop application:  profile app,     conventions csharp
+Unity game:              profile game,    conventions csharp,unity
+small Python utility:    profile minimal, conventions python
+```
+
+An installation synced before conventions existed is migrated safely on its
+first 4.2+ sync: repo-seed never deletes an already-installed convention
+file outright, deriving an initial selection from what is already installed
+plus strong repository evidence (see
+[Document ownership](docs/project/document-ownership.md#migration-to-explicit-conventions)).
+
+### Scaffolds
+
+`README.md` and `CHANGELOG.md` are the baseline, created by
+`--scaffold-project-files`. `architecture`, `fsd`, `gdd`, and `user-guide`
+are on-demand: their templates are available under the applicable profile,
+but repo-seed never creates them automatically. Create one explicitly when
+the project needs it:
+
+```bash
+python pack/files/scripts/sync-docs.py --target . --scaffold architecture
+python pack/files/scripts/sync-docs.py --target . --scaffold fsd --scaffold user-guide
+```
+
+`--scaffold` refuses to overwrite an existing document and reports its
+destination; pass a name only available for the current profile (for
+example, `gdd` requires `game` or `full`).
 
 Living documents have distinct responsibilities:
 
@@ -107,6 +162,7 @@ Download the latest universal ZIP from [GitHub Releases](https://github.com/Traw
 python pack/files/scripts/sync-docs.py \
   --target /path/to/project \
   --profile app \
+  --conventions csharp \
   --scaffold-project-files \
   --scaffold-github-templates \
   --dry-run
@@ -116,9 +172,10 @@ Review the output, then rerun without `--dry-run`.
 
 Optional scaffolding is separated by ownership:
 
-- `--scaffold-project-files` creates missing project documents, or upgrades verified unchanged Markdown;
+- `--scaffold-project-files` creates the missing baseline README/CHANGELOG, or upgrades verified unchanged Markdown;
 - `--scaffold-github-templates` creates missing bug, feature, and chooser files, or upgrades verified unchanged Markdown;
-- `--scaffold-editorconfig` creates `.editorconfig` only when missing.
+- `--scaffold-editorconfig` creates `.editorconfig` only when missing;
+- `--scaffold <name>` creates one on-demand document (`architecture`, `fsd`, `gdd`, `user-guide`) available for the selected profile; repeat the flag for more than one.
 
 Existing project-owned files are preserved unless an eligible Markdown scaffold is
 verified unchanged from repo-seed and can be upgraded safely.

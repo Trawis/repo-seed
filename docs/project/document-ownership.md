@@ -36,6 +36,44 @@ belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
+## Profiles, Conventions, and Scaffolds
+
+These are three independent concepts and should not be conflated:
+
+- **Profile** (`minimal`, `library`, `app`, `game`, `full`) selects
+  project-shape assets: which core guidance and which reference document
+  templates a target may draw from. It says nothing about programming
+  language.
+- **Conventions** (`csharp`, `python`, `scripts`, `shell`, `unity`) select
+  which `.agents/conventions/*.md` language/tool guidance files are actually
+  installed, chosen explicitly with `--conventions` and persisted in
+  `.repo-seed-state.json`. A convention file is available under every
+  profile; nothing selects it automatically except an upgrading pre-4.2
+  installation (see Migration below). `full` always installs every known
+  convention, since it exists as a complete reference/testing catalog.
+- **Scaffolds** are optional project documents created from a template only
+  on request. `README.md` and `CHANGELOG.md` remain the baseline, created by
+  `--scaffold-project-files`. `architecture.md`, `fsd.md`, `gdd.md`, and
+  `user-guide.md` are on-demand: their templates are available for the
+  applicable profile, but creating them requires
+  `--scaffold <name>` (for example `--scaffold architecture`). Being
+  available for a profile never implies a document must exist.
+
+## Migration to Explicit Conventions
+
+Installations synced before conventions existed had every convention
+implied by their profile (for example, `app` always included C#, Python,
+and script/shell guidance). The first sync of such a target under a pack
+that supports explicit conventions never deletes an already-installed
+convention file outright. It derives an initial selection from whichever
+convention files are already installed plus strong repository evidence
+(`*.sln`/`*.csproj` for `csharp`; `pyproject.toml`/`requirements*.txt` for
+`python`; Unity project markers for `unity` and `csharp`), reports the
+derived selection, and persists it. Pass `--conventions` explicitly to
+change it going forward; from that point, switching conventions prunes an
+unchanged, unselected convention file exactly like any other profile
+change, and preserves and tombstones one with local modifications.
+
 ## Claude Code Wrapper
 
 `AGENTS.md` is the canonical, cross-agent instruction file. `CLAUDE.md`

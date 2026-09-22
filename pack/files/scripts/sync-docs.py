@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -18,7 +19,8 @@ DEFAULT_STATE_FILE = ".repo-seed-state.json"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 VALID_TYPES = {"managed", "template"}
-VALID_SCAFFOLD_GROUPS = {"project", "github", "editorconfig"}
+VALID_SCAFFOLD_GROUPS = {"project", "optional", "github", "editorconfig"}
+IGNORED_EVIDENCE_DIRS = {".git", "bin", "obj", "node_modules", ".venv", "venv", "__pycache__"}
 PROJECT_OWNED_TREES = (".github/workflows",)
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -46,6 +48,7 @@ class Asset:
     previous_hashes: tuple[str, ...] = ()
     scaffold_group: str | None = None
     scaffold_target: str | None = None
+    convention: str | None = None
 
 
 @dataclass(frozen=True)
@@ -108,6 +111,7 @@ class LegacyState:
 class ManagedState:
     pack_version: str | None
     profile: str | None
+    conventions: frozenset[str] | None
     managed_files: dict[str, str]
     tombstones: dict[str, str]
     exists: bool
@@ -395,6 +399,7 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
         previous_hashes = optional_string_list(raw_asset, "previous_hashes", context)
         scaffold_group = raw_asset.get("scaffold_group")
         scaffold_target = raw_asset.get("scaffold_target")
+        convention = raw_asset.get("convention")
 
         relative_path(path, f"{context}.path")
         reject_project_owned_tree_path(path, f"{context}.path")
@@ -406,6 +411,10 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
             raise ValueError(f"{context}.profiles contains an unknown profile")
         if not all(SHA256_PATTERN.fullmatch(hash_value) for hash_value in previous_hashes):
             raise ValueError(f"{context}.previous_hashes must contain SHA-256 values")
+        if convention is not None and (not isinstance(convention, str) or not convention):
+            raise ValueError(f"{context}.convention must be a non-empty string")
+        if convention is not None and asset_type != "managed":
+            raise ValueError(f"{context}.convention only applies to managed assets")
 
         if asset_type == "template":
             if (scaffold_group is None) != (scaffold_target is None):
@@ -448,6 +457,7 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
                 previous_hashes=previous_hashes,
                 scaffold_group=scaffold_group if isinstance(scaffold_group, str) else None,
                 scaffold_target=scaffold_target if isinstance(scaffold_target, str) else None,
+                convention=convention if isinstance(convention, str) else None,
             )
         )
 
@@ -482,10 +492,92 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
     )
 
 
-def assets_for_profile(manifest: PackManifest, profile: str) -> tuple[Asset, ...]:
+def known_conventions(manifest: PackManifest) -> frozenset[str]:
+    return frozenset(asset.convention for asset in manifest.assets if asset.convention)
+
+
+def convention_assets(manifest: PackManifest) -> dict[str, Asset]:
+    return {asset.convention: asset for asset in manifest.assets if asset.convention}
+
+
+def validate_conventions(conventions: frozenset[str], manifest: PackManifest) -> None:
+    unknown = conventions - known_conventions(manifest)
+    if unknown:
+        raise ValueError(
+            f"Unknown convention(s): {', '.join(sorted(unknown))}. "
+            f"Known: {', '.join(sorted(known_conventions(manifest))) or 'none'}"
+        )
+
+
+def assets_for_profile(
+    manifest: PackManifest, profile: str, conventions: frozenset[str] = frozenset()
+) -> tuple[Asset, ...]:
     if profile not in manifest.profiles:
         raise ValueError(f"Unknown profile '{profile}'. Choices: {', '.join(manifest.profiles)}")
-    return tuple(asset for asset in manifest.assets if profile in asset.profiles)
+    validate_conventions(conventions, manifest)
+    # The full profile is a reference/testing catalog: it always includes every convention.
+    effective_conventions = known_conventions(manifest) if profile == "full" else conventions
+    return tuple(
+        asset
+        for asset in manifest.assets
+        if profile in asset.profiles
+        and (asset.convention is None or asset.convention in effective_conventions)
+    )
+
+
+def scaffold_name(asset: Asset) -> str:
+    name = Path(asset.path).name
+    for suffix in (".template.md", ".template.yml", ".template"):
+        if name.endswith(suffix):
+            return name[: -len(suffix)]
+    return name
+
+
+def detect_convention_evidence(target_root: Path) -> frozenset[str]:
+    """Detect strong, unambiguous filesystem evidence for a convention.
+
+    Used only to derive an initial convention selection when migrating a
+    pre-4.2 managed state that predates explicit convention selection.
+    """
+    detected: set[str] = set()
+    for root, dirs, files in os.walk(target_root):
+        dirs[:] = [name for name in dirs if name not in IGNORED_EVIDENCE_DIRS and not name.startswith(".")]
+        for name in files:
+            lower = name.lower()
+            if lower.endswith(".sln") or lower.endswith(".csproj"):
+                detected.add("csharp")
+            elif lower == "pyproject.toml" or (lower.startswith("requirements") and lower.endswith(".txt")):
+                detected.add("python")
+    if (target_root / "Assets").is_dir() and (target_root / "ProjectSettings").is_dir():
+        detected.add("unity")
+        detected.add("csharp")
+    return frozenset(detected)
+
+
+def derive_migrated_conventions(
+    manifest: PackManifest, target_root: Path, managed_state: ManagedState
+) -> tuple[frozenset[str], SyncAction]:
+    """Derive an initial convention selection for a pre-4.2 managed state.
+
+    Never removes anything: any convention file already installed under the
+    old profile-driven model stays selected, and strong repository evidence
+    may add more. Ambiguous or undetectable cases keep whatever was already
+    installed rather than guessing.
+    """
+    catalog = convention_assets(manifest)
+    already_installed = frozenset(
+        convention for convention, asset in catalog.items() if asset.path in managed_state.managed_files
+    )
+    detected = detect_convention_evidence(target_root) & frozenset(catalog)
+    resolved = already_installed | detected
+    if resolved:
+        detail = (
+            f"derived conventions from the existing installation and repository evidence: "
+            f"{', '.join(sorted(resolved))}; pass --conventions to change this"
+        )
+    else:
+        detail = "no conventions detected or previously installed; pass --conventions to select any"
+    return resolved, SyncAction("migrate", "conventions", detail)
 
 
 def discover_source_root() -> Path | None:
@@ -629,6 +721,7 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
         return ManagedState(
             pack_version=None,
             profile=None,
+            conventions=None,
             managed_files={},
             tombstones={},
             exists=False,
@@ -686,9 +779,21 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     tombstones = hash_map("tombstones")
     if set(managed_files).intersection(tombstones):
         raise ValueError("Managed state paths cannot be both active and tombstoned")
+
+    conventions: frozenset[str] | None = None
+    if "conventions" in raw:
+        raw_conventions = raw["conventions"]
+        if not isinstance(raw_conventions, list) or not all(isinstance(item, str) for item in raw_conventions):
+            raise ValueError("Managed state conventions must be a string array")
+        unknown = set(raw_conventions) - known_conventions(manifest)
+        if unknown:
+            raise ValueError(f"Managed state contains unknown convention(s): {', '.join(sorted(unknown))}")
+        conventions = frozenset(raw_conventions)
+
     return ManagedState(
         pack_version=raw["pack_version"],
         profile=raw["profile"],
+        conventions=conventions,
         managed_files=managed_files,
         tombstones=tombstones,
         exists=True,
@@ -813,6 +918,7 @@ def write_managed_state(
     target_root: Path,
     manifest: PackManifest,
     profile: str,
+    conventions: frozenset[str],
     selected: tuple[Asset, ...],
     tombstones: dict[str, str],
     dry_run: bool,
@@ -822,6 +928,7 @@ def write_managed_state(
         "schema_version": 1,
         "pack_version": manifest.pack_version,
         "profile": profile,
+        "conventions": sorted(conventions),
         "managed_files": {
             asset.path: managed_file_hash(
                 safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
@@ -1092,8 +1199,17 @@ def scaffold_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: 
     return SyncAction("scaffold", asset.scaffold_target, f"created from {asset.path}")
 
 
-def audit_target(source_root: Path, target_root: Path, profile: str | None) -> list[str]:
-    """Report drift diagnostics for a target without writing any files."""
+def audit_target(
+    source_root: Path,
+    target_root: Path,
+    profile: str | None,
+    conventions: frozenset[str] | None = None,
+) -> list[str]:
+    """Report drift diagnostics for a target without writing any files.
+
+    This is a local, file-based diagnostic: it never contacts GitHub and
+    never requires network access, unlike scripts/sync-github-labels.py.
+    """
     source_root = source_root.expanduser().resolve()
     target_root = target_root.expanduser().resolve()
     manifest = load_manifest(source_root)
@@ -1115,7 +1231,10 @@ def audit_target(source_root: Path, target_root: Path, profile: str | None) -> l
         return lines
     lines.append(f"profile: {active_profile}")
 
-    selected = assets_for_profile(manifest, active_profile)
+    active_conventions = conventions if conventions is not None else (state.conventions or frozenset())
+    lines.append(f"conventions: {', '.join(sorted(active_conventions)) or 'none selected'}")
+
+    selected = assets_for_profile(manifest, active_profile, active_conventions)
     for asset in selected:
         target = safe_child(target_root, asset.path, "asset target")
         source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
@@ -1146,10 +1265,22 @@ def audit_target(source_root: Path, target_root: Path, profile: str | None) -> l
         if verified_current_scaffold(content, asset) is False or verified_legacy_scaffold(content, asset) is False:
             lines.append(f"outdated scaffold: {asset.scaffold_target} does not match a known repo-seed scaffold")
 
+    for convention, asset in convention_assets(manifest).items():
+        if convention in active_conventions:
+            continue
+        target = safe_child(target_root, asset.path, "asset target")
+        if target.is_file():
+            lines.append(
+                f"unused managed convention: {asset.path} "
+                f"(selected conventions: {', '.join(sorted(active_conventions)) or 'none'})"
+            )
+
     findings = [
         line
         for line in lines
-        if line.startswith(("drift:", "missing:", "legacy label:", "outdated scaffold:"))
+        if line.startswith(
+            ("drift:", "missing:", "legacy label:", "outdated scaffold:", "unused managed convention:")
+        )
     ]
     lines.append("no drift detected" if not findings else f"{len(findings)} finding(s) reported above")
     return lines
@@ -1159,9 +1290,11 @@ def synchronize(
     source_root: Path,
     target_root: Path,
     profile: str,
+    conventions: frozenset[str] | None = None,
     scaffold_project_files: bool = False,
     scaffold_github_templates: bool = False,
     scaffold_editorconfig: bool = False,
+    scaffold_names: tuple[str, ...] = (),
     dry_run: bool = False,
 ) -> list[SyncAction]:
     source_root = source_root.expanduser().resolve()
@@ -1170,7 +1303,6 @@ def synchronize(
         raise ValueError(f"Target repository does not exist or is not a directory: {target_root}")
 
     manifest = load_manifest(source_root)
-    selected = assets_for_profile(manifest, profile)
     if profile == "full" and scaffold_project_files:
         raise ValueError(
             "The full profile is a reference catalog and cannot scaffold project files; "
@@ -1178,6 +1310,20 @@ def synchronize(
         )
     legacy_state = read_legacy_state(target_root, manifest.migration)
     managed_state = read_managed_state(target_root, manifest)
+
+    convention_migration_actions: list[SyncAction] = []
+    if conventions is not None:
+        resolved_conventions = frozenset(conventions)
+        validate_conventions(resolved_conventions, manifest)
+    elif managed_state.conventions is not None:
+        resolved_conventions = managed_state.conventions
+    elif managed_state.exists:
+        resolved_conventions, migration_action = derive_migrated_conventions(manifest, target_root, managed_state)
+        convention_migration_actions.append(migration_action)
+    else:
+        resolved_conventions = frozenset()
+
+    selected = assets_for_profile(manifest, profile, resolved_conventions)
 
     requested_groups: set[str] = set()
     if scaffold_project_files:
@@ -1187,11 +1333,24 @@ def synchronize(
     if scaffold_editorconfig:
         requested_groups.add("editorconfig")
 
-    scaffold_assets = tuple(
+    group_scaffold_assets = [
         asset
         for asset in selected
         if asset.asset_type == "template" and asset.scaffold_group in requested_groups
-    )
+    ]
+    optional_by_name = {
+        scaffold_name(asset): asset
+        for asset in selected
+        if asset.asset_type == "template" and asset.scaffold_group == "optional"
+    }
+    named_scaffold_assets: list[Asset] = []
+    for name in scaffold_names:
+        asset = optional_by_name.get(name)
+        if asset is None:
+            available = ", ".join(sorted(optional_by_name)) or "none for this profile"
+            raise ValueError(f"Unknown or unavailable scaffold '{name}' for profile '{profile}'. Available: {available}")
+        named_scaffold_assets.append(asset)
+    scaffold_assets = tuple(dict.fromkeys(group_scaffold_assets + named_scaffold_assets))
 
     for asset in selected:
         validate_managed_destination(target_root, asset)
@@ -1201,6 +1360,7 @@ def synchronize(
     validate_parent_directory(state_path, target_root, "Managed state")
 
     actions = retire_legacy_paths(target_root, manifest.migration, legacy_state, dry_run)
+    actions.extend(convention_migration_actions)
     actions.extend(
         report_project_owned_paths(
             target_root,
@@ -1240,6 +1400,7 @@ def synchronize(
             target_root,
             manifest,
             profile,
+            resolved_conventions,
             selected,
             tombstones,
             dry_run,
@@ -1262,9 +1423,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Profile name. Required on first sync; later syncs reuse the recorded profile when omitted.",
     )
     parser.add_argument(
+        "--conventions",
+        help=(
+            "Comma-separated language/tool convention ids to install, e.g. 'csharp,unity' "
+            "(known: csharp, python, scripts, shell, unity). Optional; later syncs reuse the "
+            "recorded selection when omitted. Persisted in the managed state."
+        ),
+    )
+    parser.add_argument(
         "--scaffold-project-files",
         action="store_true",
-        help="Create missing project files or upgrade verified unchanged Markdown.",
+        help="Create missing baseline project files (README, CHANGELOG) or upgrade verified unchanged Markdown.",
     )
     parser.add_argument(
         "--scaffold-github-templates",
@@ -1275,6 +1444,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--scaffold-editorconfig",
         action="store_true",
         help="Create .editorconfig only when it is missing.",
+    )
+    parser.add_argument(
+        "--scaffold",
+        action="append",
+        metavar="NAME",
+        dest="scaffold_names",
+        help=(
+            "Create one on-demand project document scaffold by name: architecture, fsd, gdd, "
+            "user-guide (only those available for the selected profile can be created). "
+            "May be passed multiple times."
+        ),
     )
     parser.add_argument("--dry-run", action="store_true", help="Validate and show operations without writing files.")
     parser.add_argument(
@@ -1309,8 +1489,12 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"Target repository does not exist or is not a directory: {target_root}")
 
         manifest = load_manifest(source_root)
+        conventions: frozenset[str] | None = None
+        if args.conventions is not None:
+            conventions = frozenset(item.strip() for item in args.conventions.split(",") if item.strip())
+            validate_conventions(conventions, manifest)
         if args.audit:
-            report = audit_target(source_root, target_root, args.profile)
+            report = audit_target(source_root, target_root, args.profile, conventions)
             print(f"source         {source_root}")
             print(f"target         {target_root}")
             for line in report:
@@ -1334,9 +1518,11 @@ def main(argv: list[str] | None = None) -> int:
             source_root=source_root,
             target_root=target_root,
             profile=profile,
+            conventions=conventions,
             scaffold_project_files=args.scaffold_project_files,
             scaffold_github_templates=args.scaffold_github_templates,
             scaffold_editorconfig=args.scaffold_editorconfig,
+            scaffold_names=tuple(args.scaffold_names or ()),
             dry_run=args.dry_run,
         )
     except (OSError, ValueError) as ex:
@@ -1356,11 +1542,13 @@ def main(argv: list[str] | None = None) -> int:
     state_updates = sum(action.action == "state" for action in actions)
     unchanged = sum(action.action == "unchanged" for action in actions)
     preserved = sum(action.action in {"preserve", "skip"} for action in actions)
+    migrations = sum(action.action == "migrate" for action in actions)
     mode = "Dry run" if args.dry_run else "Sync"
     print(
         f"{mode} complete. Removals: {removals}. Upgrades: {upgrades}. "
         f"Managed copies: {copies}. Scaffolds: {scaffolds}. "
-        f"State updates: {state_updates}. Unchanged: {unchanged}. Preserved: {preserved}."
+        f"State updates: {state_updates}. Unchanged: {unchanged}. Preserved: {preserved}. "
+        f"Migrated: {migrations}."
     )
     return 0
 

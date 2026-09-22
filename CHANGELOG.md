@@ -51,6 +51,34 @@ Use newest entries first. Do not dump raw git commits here.
   source and `CLAUDE.md` stays a compatibility wrapper, not a second policy
   file. Documented why the wrapper is kept alongside native Claude Code
   `AGENTS.md` support.
+- Decoupled language/tool conventions (`csharp`, `python`, `scripts`,
+  `shell`, `unity`) from project-shape profiles. A profile no longer implies
+  any programming language; conventions are selected explicitly with
+  `--conventions` (e.g. `--conventions csharp,unity`) and persisted in
+  `.repo-seed-state.json`. A fresh sync installs none by default. `full`
+  still installs every convention, since it remains a complete reference and
+  testing catalog rather than a project type.
+- Stopped automatically scaffolding `architecture.md`, `fsd.md`, `gdd.md`,
+  and `user-guide.md` from `--scaffold-project-files`. Their templates
+  remain available for the applicable profile as a library, but creating
+  the document is now an explicit, on-demand action:
+  `sync-docs.py --scaffold <name>` (`architecture`, `fsd`, `gdd`, or
+  `user-guide`), which refuses to overwrite an existing document.
+  `--scaffold-project-files` now only creates the baseline README and
+  CHANGELOG.
+- Migrated pre-4.2 installations safely: a state file recorded before
+  explicit conventions existed derives its initial `--conventions` selection
+  from whatever convention files are already installed, plus strong
+  repository evidence (`*.sln`/`*.csproj`, `pyproject.toml`/
+  `requirements*.txt`, Unity project markers), and reports the result. It
+  never deletes an already-installed convention file on this transition.
+- Extended `--audit` to report an installed but unselected (`unused
+  managed convention`) file. Audit remains fully diagnostic and never
+  deletes anything.
+- Added a maintainer principle to `AGENTS.md`: new persistent distributed
+  agent rules should solve a recurring, cross-project problem, not a
+  hypothetical one, and stale rules should be removed rather than
+  accumulated.
 
 ## 4.1.0 - 2026-08-26
 
