@@ -34,6 +34,8 @@ LEGACY_PROVENANCE_PATTERN = re.compile(
     r'^<!-- repo-seed-template id="(?P<id>[^"]+)" sha256="(?P<hash>[0-9a-f]{64})" -->$',
     re.MULTILINE,
 )
+LEGACY_LABEL_PATTERN = re.compile(r"^labels:\s*(.+)$", re.MULTILINE)
+LEGACY_LABEL_VALUES = {"bug", "enhancement"}
 
 
 @dataclass(frozen=True)
@@ -1090,6 +1092,69 @@ def scaffold_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: 
     return SyncAction("scaffold", asset.scaffold_target, f"created from {asset.path}")
 
 
+def audit_target(source_root: Path, target_root: Path, profile: str | None) -> list[str]:
+    """Report drift diagnostics for a target without writing any files."""
+    source_root = source_root.expanduser().resolve()
+    target_root = target_root.expanduser().resolve()
+    manifest = load_manifest(source_root)
+    state = read_managed_state(target_root, manifest)
+
+    lines: list[str] = [
+        f"pack version (source): {manifest.pack_version}",
+        f"pack version (target): {state.pack_version or 'not recorded'}",
+    ]
+    if state.pack_version and state.pack_version != manifest.pack_version:
+        lines.append("drift: target pack version is behind the source pack")
+
+    active_profile = profile or state.profile
+    if active_profile is None:
+        lines.append("drift: no recorded or requested profile; pass --profile to audit one")
+        return lines
+    if active_profile not in manifest.profiles:
+        lines.append(f"drift: '{active_profile}' is not a known profile")
+        return lines
+    lines.append(f"profile: {active_profile}")
+
+    selected = assets_for_profile(manifest, active_profile)
+    for asset in selected:
+        target = safe_child(target_root, asset.path, "asset target")
+        source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+        if not target.is_file():
+            lines.append(f"missing: {asset.path} (expected managed file for profile '{active_profile}')")
+        elif managed_file_hash(target) != managed_file_hash(source):
+            lines.append(f"drift: {asset.path} differs from the current managed content")
+
+    project_guidance = safe_child(target_root, ".agents/project.md", "project guidance path")
+    if not project_guidance.is_file():
+        lines.append("missing: .agents/project.md (project-specific guidance not found)")
+
+    for asset in selected:
+        if asset.asset_type != "template" or asset.scaffold_target is None:
+            continue
+        if not asset.scaffold_target.endswith(".md"):
+            continue
+        scaffold = safe_child(target_root, asset.scaffold_target, "scaffold target")
+        if not scaffold.is_file():
+            continue
+        content = scaffold.read_text(encoding="utf-8")
+        match = LEGACY_LABEL_PATTERN.search(content)
+        if match and match.group(1).strip() in LEGACY_LABEL_VALUES:
+            lines.append(
+                f"legacy label: {asset.scaffold_target} uses '{match.group(1).strip()}' "
+                "instead of a canonical type: label"
+            )
+        if verified_current_scaffold(content, asset) is False or verified_legacy_scaffold(content, asset) is False:
+            lines.append(f"outdated scaffold: {asset.scaffold_target} does not match a known repo-seed scaffold")
+
+    findings = [
+        line
+        for line in lines
+        if line.startswith(("drift:", "missing:", "legacy label:", "outdated scaffold:"))
+    ]
+    lines.append("no drift detected" if not findings else f"{len(findings)} finding(s) reported above")
+    return lines
+
+
 def synchronize(
     source_root: Path,
     target_root: Path,
@@ -1217,6 +1282,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Show the detected pack version and exit.",
     )
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help="Report drift diagnostics for the target without writing any files.",
+    )
     return parser
 
 
@@ -1239,6 +1309,13 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"Target repository does not exist or is not a directory: {target_root}")
 
         manifest = load_manifest(source_root)
+        if args.audit:
+            report = audit_target(source_root, target_root, args.profile)
+            print(f"source         {source_root}")
+            print(f"target         {target_root}")
+            for line in report:
+                print(line)
+            return 0
         if args.profile:
             profile = args.profile
         else:

@@ -2,7 +2,7 @@
 name: Feature Request
 about: Propose a new guideline, convention, template, sync option, or tooling improvement.
 title: ''
-labels: enhancement
+labels: ["type: feature"]
 assignees: ''
 ---
 

@@ -8,27 +8,22 @@ unchanged scaffold may be upgraded
 
 ---
 name: Feature request
-about: Propose an improvement
+about: Propose an implementation-ready capability
 title: ""
-labels: enhancement
+labels: ["type: feature"]
 assignees: ""
 ---
 
-# Feature Request
+<!-- Not implementation-ready yet? Use `type: idea` instead of this template. -->
 
-## Problem
+## Summary
 
-Describe the problem or unmet need.
+Describe the requested capability.
 
-## Proposed Outcome
+## Goal
 
-Describe the desired behavior without prescribing unnecessary implementation
-details.
+What problem should this solve?
 
-## Acceptance Notes
+## Done when
 
--
-
-## Alternatives
-
-Describe relevant alternatives or workarounds.
+- Describe the expected outcome.

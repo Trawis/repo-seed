@@ -10,10 +10,12 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
 - focused documentation, Git, CI/CD, and language references;
+- a canonical shared label catalog and lightweight issue/decision structure;
 - read-only templates for four project profiles plus a complete reference catalog;
 - missing-only scaffolding plus verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
-- a sync script copied into each target repository for future updates.
+- a sync script copied into each target repository for future updates, including
+  a diagnostic `--audit` report.
 
 ## Requirements
 
@@ -168,6 +170,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 ## Project and Community
 
 - [Document ownership](docs/project/document-ownership.md)
+- [Label and issue guidance](pack/files/.agents/guidelines/labels.md)
 - [Upgrading to Version 4](docs/project/upgrading-to-4.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)

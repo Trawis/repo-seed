@@ -2,7 +2,7 @@
 name: Bug Report
 about: Report a reproducible problem with the guideline pack, sync script, templates, or convention docs.
 title: ''
-labels: bug
+labels: ["type: bug"]
 assignees: ''
 ---
 

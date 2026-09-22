@@ -8,6 +8,28 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 4.2.0 - 2026-09-22
+
+### Added
+
+- Added a canonical shared label catalog and lightweight issue/decision
+  structure in `.agents/guidelines/labels.md`: `type:*` and optional
+  `priority:*` labels, an idea/decision/feature lifecycle, and a
+  Summary/Goal/Suggested-approach/Done-when issue shape.
+- Added `--audit` to `scripts/sync-docs.py` for diagnostic-only drift
+  reporting: pack version, active profile, managed-file drift, a missing
+  `.agents/project.md`, and legacy `bug`/`enhancement` labels in scaffolded
+  issue templates. It never writes or overwrites files.
+
+### Changed
+
+- Replaced the `bug` and `enhancement` labels in the scaffolded bug-report
+  and feature-request templates with the canonical `type: bug` and
+  `type: feature` labels, and reduced both templates to the lightweight
+  shared issue structure.
+- Documented `.agents/project.md` content expectations and explicitly
+  classified `.github/pull_request_template.md` as project-owned.
+
 ## 4.1.0 - 2026-08-26
 
 ### Changed

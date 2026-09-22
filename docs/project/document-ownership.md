@@ -32,9 +32,27 @@ belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 - `.agents/project.md` and child `AGENTS.md` files
 - root `README.md`, `CHANGELOG.md`, `.gitignore`, and `.editorconfig`
 - `docs/project/`
-- scaffolded GitHub issue files
+- scaffolded GitHub issue files and `.github/pull_request_template.md`
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
+
+## `.agents/project.md` Content
+
+`.agents/project.md` holds only information specific to the target
+repository: project purpose, architecture notes, supported runtimes or
+versions, important paths, build and test commands, validation
+expectations, branch or release workflow, documentation rules, compatibility
+requirements, and unusual project constraints. Do not copy generic repo-seed
+instructions into it; that guidance already lives in the managed files
+above.
+
+## Canonical Label Catalog
+
+`.agents/guidelines/labels.md` is the single canonical source for shared
+label names, meanings, and lightweight issue structure. Scaffolded issue
+templates and other guidance agree with it instead of defining a competing
+list. Repository files can only describe the intended label catalog; they
+cannot prove which labels are actually configured in the GitHub repository.
 
 Some templates, such as the TSD, are reference-only and have no automatic
 scaffold target. Agents copy them to the suggested project-owned path only when

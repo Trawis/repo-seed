@@ -200,6 +200,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/documentation.md": all_profiles,
             ".agents/guidelines/git.md": all_profiles,
             ".agents/guidelines/ci-cd.md": all_profiles,
+            ".agents/guidelines/labels.md": all_profiles,
             ".agents/conventions/csharp.md": library_profiles,
             ".agents/conventions/scripts.md": library_profiles,
             ".agents/conventions/python.md": library_profiles,
@@ -418,6 +419,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ".agents/guidelines/documentation.md",
             ".agents/guidelines/git.md",
             ".agents/guidelines/ci-cd.md",
+            ".agents/guidelines/labels.md",
             ".agents/conventions/",
             "scripts/sync-docs.py",
             "Load only the guidance relevant to the task",
@@ -577,6 +579,39 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn(f"<!-- Scaffolded from: {asset.path} -->", content)
             self.assertRegex(content, r"<!-- Scaffolded content SHA-256: [0-9a-f]{64} -->")
             self.assertLess(content.index("\n---", 4), content.index("<!-- Scaffolded from:"))
+
+    def test_scaffolded_issue_templates_use_canonical_type_labels(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        bug_asset = next(
+            asset for asset in manifest.assets if asset.path.endswith("bug-report.template.md")
+        )
+        feature_asset = next(
+            asset for asset in manifest.assets if asset.path.endswith("feature-request.template.md")
+        )
+        bug_rendered = sync.render_scaffold(PACK_ROOT, bug_asset)
+        feature_rendered = sync.render_scaffold(PACK_ROOT, feature_asset)
+        self.assertIn('labels: ["type: bug"]', bug_rendered)
+        self.assertIn('labels: ["type: feature"]', feature_rendered)
+        self.assertNotIn("labels: bug", bug_rendered)
+        self.assertNotIn("labels: enhancement", feature_rendered)
+
+    def test_labels_guidance_defines_canonical_catalog(self):
+        labels = (PACK_ROOT / "files/.agents/guidelines/labels.md").read_text(encoding="utf-8")
+        for required in (
+            "type: bug",
+            "type: feature",
+            "type: tech-debt",
+            "type: chore",
+            "type: decision",
+            "type: idea",
+            "priority: critical",
+            "priority: high",
+            "priority: medium",
+            "priority: low",
+            "Do not establish a mandatory shared `area:*` taxonomy",
+            "Priority is optional",
+        ):
+            self.assertIn(required, labels)
 
     def test_root_issue_chooser_has_two_valid_markdown_templates(self):
         issue_root = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE"
@@ -1495,6 +1530,72 @@ class SyncBehaviorTests(unittest.TestCase):
             updated_state = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertEqual(updated_state["pack_version"], PACK_VERSION)
             self.assertEqual(updated_state["profile"], "app")
+
+    def test_audit_reports_no_drift_for_a_fresh_sync(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            project_guidance = target / ".agents/project.md"
+            project_guidance.parent.mkdir(parents=True, exist_ok=True)
+            project_guidance.write_text("# Project\n", encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+
+            self.assertTrue(any(line.endswith("no drift detected") for line in report))
+            self.assertIn("profile: minimal", report)
+
+    def test_audit_reports_missing_guidance_drift_and_legacy_labels(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            bug_report = target / ".github/ISSUE_TEMPLATE/bug_report.md"
+            content = sync.SCAFFOLD_HASH_PATTERN.sub("", bug_report.read_text(encoding="utf-8"), count=1)
+            content = re.sub(r'labels: \["type: bug"\]', "labels: bug", content, count=1)
+            bug_report.write_text(content, encoding="utf-8")
+            (target / "AGENTS.md").write_text("local edit\n", encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+
+            self.assertTrue(any("missing: .agents/project.md" in line for line in report))
+            self.assertTrue(any(line.startswith("drift: AGENTS.md") for line in report))
+            self.assertTrue(any("legacy label" in line and "bug_report.md" in line for line in report))
+
+    def test_audit_without_a_recorded_profile_reports_and_does_not_write(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            report = sync.audit_target(PACK_ROOT, target, None)
+            self.assertTrue(any("no recorded or requested profile" in line for line in report))
+            self.assertEqual(list(target.iterdir()), [])
+
+    def test_cli_audit_reports_without_writing_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            before = sorted(
+                path.relative_to(target).as_posix() for path in target.rglob("*") if path.is_file()
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SYNC_SCRIPT),
+                    "--source",
+                    str(PACK_ROOT),
+                    "--target",
+                    str(target),
+                    "--audit",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            after = sorted(
+                path.relative_to(target).as_posix() for path in target.rglob("*") if path.is_file()
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("profile: minimal", result.stdout)
+            self.assertEqual(before, after)
 
     def test_copied_script_updates_from_an_explicit_pack(self):
         with tempfile.TemporaryDirectory() as temp:
