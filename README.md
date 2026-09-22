@@ -13,7 +13,7 @@ Reusable coding-agent guidance and project-document templates with a small, pred
   from language/tool conventions;
 - a canonical shared label catalog and lightweight issue/decision structure,
   plus an optional tool to reconcile it with hosted GitHub labels;
-- read-only templates for four project profiles plus a complete reference catalog;
+- read-only templates for four project profiles;
 - baseline scaffolding plus on-demand, named optional-document scaffolds and
   verified Markdown scaffold upgrades;
 - one universal release archive with package instructions and license;
@@ -30,16 +30,17 @@ The scripts use only the Python standard library. Pull-request CI validates Pyth
 
 ## Safety
 
-Unchanged legacy-managed files with matching recorded hashes are retired, and
-current managed files are updated only when their content differs. Project-owned
-files are scaffolded or upgraded only when safely verifiable. Modified or
-unrecorded legacy files are preserved and reported. Run `--dry-run` first and
-commit or back up the target repository because filesystem writes are not
-transactional.
+Current managed files are updated only when their content differs from the
+target. Project-owned scaffolds are created only when missing, or upgraded
+only when their content is verifiably an unchanged repo-seed scaffold.
+Modified managed or scaffolded files are preserved and reported, never
+overwritten. Run `--dry-run` first and commit or back up the target
+repository because filesystem writes are not transactional.
 
 Each target keeps `.repo-seed-state.json` as committed ownership metadata.
-Profile reductions remove only stale managed files matching their recorded
-hashes. Modified stale files remain in place and stay tombstoned for review.
+Profile or convention reductions remove only stale managed files matching
+their recorded hashes. Modified stale files remain in place and stay
+tombstoned for review.
 
 See [Document ownership](docs/project/document-ownership.md) for the authoritative path classification.
 
@@ -91,7 +92,10 @@ scaffolds    = optional project documents, created only when needed
 | `library` | Minimal plus architecture and an on-demand TSD reference |
 | `app` | Library plus FSD and user-guide templates |
 | `game` | Library plus a GDD template |
-| `full` | Complete reference catalog and every convention; for repo-seed testing/reference, not a project type |
+
+There is no "install everything" profile: the release archive already
+contains the complete pack, and repo-seed's own tests validate the
+manifest/catalog directly.
 
 All profiles receive the same core agent instructions, documentation, Git,
 CI/CD, and issue guidance. A profile only changes which optional reference
@@ -114,10 +118,9 @@ python pack/files/scripts/sync-docs.py --target . --profile app --conventions cs
 python pack/files/scripts/sync-docs.py --target . --conventions csharp,unity
 ```
 
-A fresh sync with no `--conventions` installs none. `full` always installs
-every known convention, since it is a complete reference catalog. Changing
-the selection prunes an unchanged, now-unselected convention file and
-preserves one with local modifications, exactly like a profile change.
+A fresh sync with no `--conventions` installs none. Changing the selection
+prunes an unchanged, now-unselected convention file and preserves one with
+local modifications, exactly like a profile change.
 
 Examples:
 
@@ -127,11 +130,10 @@ Unity game:              profile game,    conventions csharp,unity
 small Python utility:    profile minimal, conventions python
 ```
 
-An installation synced before conventions existed is migrated safely on its
-first 4.2+ sync: repo-seed never deletes an already-installed convention
-file outright, deriving an initial selection from what is already installed
-plus strong repository evidence (see
-[Document ownership](docs/project/document-ownership.md#migration-to-explicit-conventions)).
+A target with a pre-5.0 state file (recorded before explicit conventions
+existed) requires one `--conventions <list>` sync, explicitly chosen by
+whoever runs it, to convert; see
+[Upgrading to Version 5](docs/project/upgrading-to-5.md).
 
 ### Scaffolds
 
@@ -148,7 +150,7 @@ python pack/files/scripts/sync-docs.py --target . --scaffold fsd --scaffold user
 
 `--scaffold` refuses to overwrite an existing document and reports its
 destination; pass a name only available for the current profile (for
-example, `gdd` requires `game` or `full`).
+example, `gdd` requires `game`).
 
 Living documents have distinct responsibilities:
 
@@ -185,11 +187,11 @@ Optional scaffolding is separated by ownership:
 
 Existing project-owned files are preserved unless an eligible Markdown scaffold is
 verified unchanged from repo-seed and can be upgraded safely.
-On initial sync, version updates, and legacy migration, existing `.gitignore`,
-`.editorconfig`, and pull-request templates are explicitly reported as protected
-project-owned files.
+`.gitignore`, `.editorconfig`, and the pull-request template are never
+managed, scaffolded, or otherwise touched by the pack; they are entirely
+project-owned.
 The `.github/workflows/` tree is always project-owned and cannot be managed,
-scaffolded, retired, or deleted by the pack.
+scaffolded, or deleted by the pack.
 
 ## Update an Existing Project
 
@@ -206,21 +208,14 @@ The copied `scripts/sync-docs.py` remains available for compatible packs, but it
 cannot cross manifest-schema changes and may not contain fixes introduced by a
 newer pack. Pass `--profile` to change the recorded profile intentionally.
 
-## Upgrade from Version 3
+## Upgrading a Pre-5.0 Target
 
-Version 3 scripts cannot read the version 4 manifest. Run the script from the
-newly extracted pack so it can update the target copy:
-
-```bash
-python /path/to/extracted/pack/files/scripts/sync-docs.py \
-  --target . \
-  --profile app \
-  --dry-run
-```
-
-See [Migrating from Version 1 or 2](docs/project/upgrading-to-3.md) for legacy
-installations and [Upgrading to Version 4](docs/project/upgrading-to-4.md) for
-the documentation-model changes.
+Version 5 is a compatibility reset: its manifest schema and managed-state
+schema are not compatible with older packs, and pre-4.x legacy migration
+support has been removed entirely. A target with no `.repo-seed-state.json`
+at all is simply a fresh install. A target with a `.repo-seed-state.json`
+from before explicit conventions existed needs one `--conventions <list>`
+sync to convert. See [Upgrading to Version 5](docs/project/upgrading-to-5.md).
 
 ## Source Layout
 
@@ -262,7 +257,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 
 - [Document ownership](docs/project/document-ownership.md)
 - [Issue guidance](pack/files/.agents/guidelines/issues.md)
-- [Upgrading to Version 4](docs/project/upgrading-to-4.md)
+- [Upgrading to Version 5](docs/project/upgrading-to-5.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 

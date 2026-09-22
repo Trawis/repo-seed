@@ -4,8 +4,8 @@
 
 **Sync behavior**: Never copied into target repositories
 
-This document defines ownership only. Usage belongs in `README.md`; migration
-belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
+This document defines ownership only. Usage belongs in `README.md`; upgrading
+belongs in `upgrading-to-5.md`.
 
 ## Ownership Classes
 
@@ -40,17 +40,20 @@ belongs in `upgrading-to-3.md` and `upgrading-to-4.md`.
 
 These are three independent concepts and should not be conflated:
 
-- **Profile** (`minimal`, `library`, `app`, `game`, `full`) selects
-  project-shape assets: which core guidance and which reference document
-  templates a target may draw from. It says nothing about programming
-  language.
+- **Profile** (`minimal`, `library`, `app`, `game`) selects project-shape
+  assets: which core guidance and which reference document templates a
+  target may draw from. It says nothing about programming language. There is
+  no "install everything" profile; the release archive already contains the
+  complete pack, and the manifest/catalog can be tested directly.
 - **Conventions** (`csharp`, `python`, `scripts`, `shell`, `unity`) select
   which `.agents/conventions/*.md` language/tool guidance files are actually
   installed, chosen explicitly with `--conventions` and persisted in
   `.repo-seed-state.json`. A convention file is available under every
-  profile; nothing selects it automatically except an upgrading pre-4.2
-  installation (see Migration below). `full` always installs every known
-  convention, since it exists as a complete reference/testing catalog.
+  profile; nothing selects one automatically. A fresh install has none until
+  `--conventions` is passed. The one exception is converting a pre-5.0
+  (`schema_version: 1`) state, which requires `--conventions` once, explicitly
+  chosen by whoever runs the sync, never inferred from the filesystem; see
+  `upgrading-to-5.md`.
 - **Scaffolds** are optional project documents created from a template only
   on request. `README.md` and `CHANGELOG.md` remain the baseline, created by
   `--scaffold-project-files`. `architecture.md`, `fsd.md`, `gdd.md`, and
@@ -58,21 +61,6 @@ These are three independent concepts and should not be conflated:
   applicable profile, but creating them requires
   `--scaffold <name>` (for example `--scaffold architecture`). Being
   available for a profile never implies a document must exist.
-
-## Migration to Explicit Conventions
-
-Installations synced before conventions existed had every convention
-implied by their profile (for example, `app` always included C#, Python,
-and script/shell guidance). The first sync of such a target under a pack
-that supports explicit conventions never deletes an already-installed
-convention file outright. It derives an initial selection from whichever
-convention files are already installed plus strong repository evidence
-(`*.sln`/`*.csproj` for `csharp`; `pyproject.toml`/`requirements*.txt` for
-`python`; Unity project markers for `unity` and `csharp`), reports the
-derived selection, and persists it. Pass `--conventions` explicitly to
-change it going forward; from that point, switching conventions prunes an
-unchanged, unselected convention file exactly like any other profile
-change, and preserves and tombstones one with local modifications.
 
 ## Claude Code Wrapper
 
@@ -118,9 +106,10 @@ the document is needed.
 
 `.editorconfig` and non-Markdown GitHub configuration are missing-only
 scaffolds. `.gitignore` is fully project-owned and is not scaffolded; manage it
-with the tooling of the project's stack. Markdown scaffolds are upgraded only
-when their repo-seed provenance or an approved legacy content hash proves they
-are unchanged; otherwise they are preserved and reported.
+with the tooling of the project's stack. A Markdown scaffold is upgraded only
+when its current repo-seed provenance markers prove it is unchanged; a
+scaffold with no provenance, or with provenance that does not match, is
+treated as project-owned and preserved without further identification.
 
 The managed state file should be committed. It allows later syncs to distinguish
 pack-owned files from unknown project files and to retry safe removal of stale
