@@ -79,6 +79,27 @@ def schema_1_state(profile: str = "app", managed_files: dict[str, str] | None = 
     }
 
 
+def schema_2_state(
+    profile: str = "app",
+    conventions: list[str] | None = None,
+    managed_files: dict[str, str] | None = None,
+    tombstones: dict[str, str] | None = None,
+    pack_version: str = "5.0.0",
+) -> dict:
+    """A schema-2 state, optionally carrying historical evidence a current
+    manifest no longer fully recognizes (a removed convention id, a managed
+    path no longer in the manifest).
+    """
+    return {
+        "schema_version": 2,
+        "pack_version": pack_version,
+        "profile": profile,
+        "conventions": list(conventions or []),
+        "managed_files": managed_files or {},
+        "tombstones": tombstones or {},
+    }
+
+
 class ManifestTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1038,6 +1059,101 @@ class ConventionSelectionTests(unittest.TestCase):
                 any("unused managed convention: .agents/conventions/csharp.md" in line for line in report)
             )
 
+    def test_state_parsing_succeeds_when_a_recorded_convention_is_removed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            old_tool = target / ".agents/conventions/old-tool.md"
+            old_tool.parent.mkdir(parents=True, exist_ok=True)
+            old_tool.write_text("old tool convention content\n", encoding="utf-8")
+            state = schema_2_state(
+                conventions=["csharp", "old-tool"],
+                managed_files={".agents/conventions/old-tool.md": sync.managed_file_hash(old_tool)},
+            )
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+            manifest = sync.load_manifest(PACK_ROOT)
+            parsed = sync.read_managed_state(target, manifest)
+
+            self.assertEqual(parsed.schema_version, 2)
+            self.assertEqual(parsed.conventions, frozenset({"csharp", "old-tool"}))
+
+    def test_sync_without_conventions_fails_clearly_when_a_recorded_convention_is_removed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            old_tool = target / ".agents/conventions/old-tool.md"
+            old_tool.parent.mkdir(parents=True, exist_ok=True)
+            old_tool.write_text("old tool convention content\n", encoding="utf-8")
+            state = schema_2_state(
+                conventions=["csharp", "old-tool"],
+                managed_files={".agents/conventions/old-tool.md": sync.managed_file_hash(old_tool)},
+            )
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+            before = (target / ".repo-seed-state.json").read_bytes()
+
+            with self.assertRaisesRegex(ValueError, "no longer available"):
+                sync.synchronize(PACK_ROOT, target, "app")
+
+            self.assertEqual((target / ".repo-seed-state.json").read_bytes(), before)
+            self.assertFalse((target / "AGENTS.md").exists())
+            self.assertEqual(old_tool.read_text(encoding="utf-8"), "old tool convention content\n")
+
+    def test_sync_with_explicit_conventions_resolves_a_removed_convention(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            old_tool = target / ".agents/conventions/old-tool.md"
+            old_tool.parent.mkdir(parents=True, exist_ok=True)
+            old_tool.write_text("old tool convention content\n", encoding="utf-8")
+            state = schema_2_state(
+                conventions=["csharp", "old-tool"],
+                managed_files={".agents/conventions/old-tool.md": sync.managed_file_hash(old_tool)},
+            )
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+            actions = sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
+
+            self.assertTrue((target / ".agents/conventions/csharp.md").is_file())
+            new_state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(new_state["conventions"], ["csharp"])
+
+            # The removed convention's managed file is no longer a manifest
+            # asset at all: the existing historical-managed-path mechanism
+            # preserves and tombstones it, exactly like any other retired
+            # managed asset, with no convention-specific migration logic.
+            self.assertTrue(old_tool.is_file())
+            self.assertIn(".agents/conventions/old-tool.md", new_state["tombstones"])
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == ".agents/conventions/old-tool.md"
+                    and "no longer in the manifest" in action.detail
+                    for action in actions
+                )
+            )
+
+    def test_audit_does_not_crash_on_a_removed_recorded_convention(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            state = schema_2_state(conventions=["csharp", "old-tool"])
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            self.assertTrue(any("recorded convention unavailable: old-tool" in line for line in report))
+            self.assertIn("conventions: unresolved (recorded convention no longer available)", report)
+            self.assertFalse(any(line == "conventions: none selected" for line in report))
+            self.assertTrue(any("finding(s) reported above" in line for line in report))
+
+    def test_audit_with_explicit_conventions_resolves_the_removed_convention_finding(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            state = schema_2_state(conventions=["csharp", "old-tool"])
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
+
+            self.assertFalse(any("recorded convention unavailable" in line for line in report))
+            self.assertIn("conventions: csharp", report)
+
     def test_cli_conventions_flag_is_persisted_and_reused(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
@@ -1728,6 +1844,65 @@ class SyncBehaviorTests(unittest.TestCase):
 
             self.assertTrue(any(line.endswith("no drift detected") for line in report))
             self.assertIn("profile: minimal", report)
+
+    def test_audit_reports_an_existing_tombstone_as_a_finding(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "game")
+            gdd = target / "docs/templates/gdd.template.md"
+            gdd.write_text("local changes\n", encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "app")
+            self.assertTrue(gdd.is_file())
+            state_before = (target / ".repo-seed-state.json").read_bytes()
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            self.assertIn(
+                "tombstone: docs/templates/gdd.template.md (preserved stale managed content requires review)",
+                report,
+            )
+            self.assertFalse(any(line.endswith("no drift detected") for line in report))
+            self.assertTrue(any("finding(s) reported above" in line for line in report))
+            # Audit is read-only: it never touches state, even when it finds
+            # something to report.
+            self.assertEqual((target / ".repo-seed-state.json").read_bytes(), state_before)
+
+    def test_audit_reports_a_historical_managed_path_not_yet_tombstoned(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            historical = target / "docs/templates/old-asset.md"
+            historical.parent.mkdir(parents=True, exist_ok=True)
+            historical.write_text("retired content\n", encoding="utf-8")
+            state = schema_2_state(
+                profile="app",
+                managed_files={"docs/templates/old-asset.md": sync.managed_file_hash(historical)},
+            )
+            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            matching = [
+                line
+                for line in report
+                if line.startswith("tombstone:") and "docs/templates/old-asset.md" in line
+            ]
+            self.assertEqual(len(matching), 1)
+
+    def test_audit_becomes_clean_after_a_tombstoned_file_is_removed_and_synced(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "game")
+            gdd = target / "docs/templates/gdd.template.md"
+            gdd.write_text("local changes\n", encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "app")
+            self.assertTrue(any(line.startswith("tombstone:") for line in sync.audit_target(PACK_ROOT, target, "app")))
+
+            gdd.unlink()
+            sync.synchronize(PACK_ROOT, target, "app")
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+            self.assertFalse(any(line.startswith("tombstone:") for line in report))
+            self.assertTrue(any(line.endswith("no drift detected") for line in report))
 
     def test_audit_reports_missing_guidance_drift_and_legacy_labels(self):
         with tempfile.TemporaryDirectory() as temp:

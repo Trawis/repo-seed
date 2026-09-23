@@ -38,6 +38,15 @@ PRE_5_0_STATE_ERROR = (
 )
 
 
+def format_unavailable_conventions_error(unavailable: frozenset[str]) -> str:
+    names = ", ".join(sorted(unavailable))
+    return (
+        "The recorded convention selection contains conventions no longer available\n"
+        f"in this repo-seed pack: {names}.\n\n"
+        "Rerun with --conventions <current-list> to confirm the new selection."
+    )
+
+
 @dataclass(frozen=True)
 class Asset:
     path: str
@@ -465,14 +474,22 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     # Schema 1 is the one small pre-5.0 bridge: it never records conventions,
     # so `conventions` stays None to signal that an explicit --conventions is
     # required before this state can be synced. Schema 2 always records them.
+    #
+    # A persisted convention id is not required to exist in the current
+    # manifest: state is historical ownership/configuration evidence, and a
+    # future pack may legitimately remove a convention. Callers that need a
+    # convention selection made only of currently known ids (synchronize(),
+    # audit_target()) are responsible for checking that and failing clearly;
+    # this parser only validates shape.
     conventions: frozenset[str] | None = None
     if schema_version == 2:
         raw_conventions = raw.get("conventions")
-        if not isinstance(raw_conventions, list) or not all(isinstance(item, str) for item in raw_conventions):
-            raise ValueError("Managed state conventions must be a string array")
-        unknown = set(raw_conventions) - known_conventions(manifest)
-        if unknown:
-            raise ValueError(f"Managed state contains unknown convention(s): {', '.join(sorted(unknown))}")
+        if not isinstance(raw_conventions, list) or not all(
+            isinstance(item, str) and item for item in raw_conventions
+        ):
+            raise ValueError("Managed state conventions must be a non-empty-string array")
+        if len(raw_conventions) != len(set(raw_conventions)):
+            raise ValueError("Managed state conventions contains duplicates")
         conventions = frozenset(raw_conventions)
 
     return ManagedState(
@@ -746,10 +763,19 @@ def audit_target(
     lines.append(f"profile: {active_profile}")
 
     conventions_resolved = True
+    unresolved_reason: str | None = None
     if conventions is not None:
         active_conventions = frozenset(conventions)
     elif state.conventions is not None:
-        active_conventions = state.conventions
+        unavailable = state.conventions - known_conventions(manifest)
+        if unavailable:
+            for name in sorted(unavailable):
+                lines.append(f"recorded convention unavailable: {name}")
+            active_conventions = frozenset()
+            conventions_resolved = False
+            unresolved_reason = "recorded convention no longer available"
+        else:
+            active_conventions = state.conventions
     elif state.schema_version == 1:
         lines.append(
             "info: pre-5.0 state has no explicit convention selection; "
@@ -757,12 +783,13 @@ def audit_target(
         )
         active_conventions = frozenset()
         conventions_resolved = False
+        unresolved_reason = "pre-5.0 state"
     else:
         active_conventions = frozenset()
     lines.append(
         f"conventions: {', '.join(sorted(active_conventions)) or 'none selected'}"
         if conventions_resolved
-        else "conventions: unresolved (pre-5.0 state)"
+        else f"conventions: unresolved ({unresolved_reason})"
     )
 
     selected = assets_for_profile(manifest, active_profile, active_conventions)
@@ -827,11 +854,40 @@ def audit_target(
                     f"(selected conventions: {', '.join(sorted(active_conventions)) or 'none'})"
                 )
 
+    # A tombstone means stale managed content was preserved and still needs
+    # manual review; a state-owned path no longer in the manifest at all is
+    # the same situation before a normal sync has moved it into tombstones.
+    # Report both, without touching state (audit never writes anything).
+    known_paths = {asset.path for asset in manifest.assets}
+    reported_stale_paths: set[str] = set()
+    for path in sorted(state.tombstones):
+        if path in reported_stale_paths:
+            continue
+        target = safe_child(target_root, path, "tombstone target")
+        if target.is_file():
+            lines.append(f"tombstone: {path} (preserved stale managed content requires review)")
+            reported_stale_paths.add(path)
+    for path in sorted(state.managed_files):
+        if path in reported_stale_paths or path in known_paths:
+            continue
+        target = safe_child(target_root, path, "historical managed target")
+        if target.is_file():
+            lines.append(f"tombstone: {path} (preserved stale managed content requires review)")
+            reported_stale_paths.add(path)
+
     findings = [
         line
         for line in lines
         if line.startswith(
-            ("drift:", "missing:", "legacy label:", "outdated scaffold:", "unused managed convention:")
+            (
+                "drift:",
+                "missing:",
+                "legacy label:",
+                "outdated scaffold:",
+                "unused managed convention:",
+                "recorded convention unavailable:",
+                "tombstone:",
+            )
         )
     ]
     lines.append("no drift detected" if not findings else f"{len(findings)} finding(s) reported above")
@@ -861,6 +917,9 @@ def synchronize(
         resolved_conventions = frozenset(conventions)
         validate_conventions(resolved_conventions, manifest)
     elif managed_state.conventions is not None:
+        unavailable = managed_state.conventions - known_conventions(manifest)
+        if unavailable:
+            raise ValueError(format_unavailable_conventions_error(unavailable))
         resolved_conventions = managed_state.conventions
     elif managed_state.exists:
         # Schema 1: the one small pre-5.0 bridge. Require an explicit choice
