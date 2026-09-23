@@ -435,8 +435,12 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     if not isinstance(raw.get("profile"), str) or not raw["profile"]:
         raise ValueError("Managed state profile must be a non-empty string")
 
-    allowed_paths = {asset.path for asset in manifest.assets}
-
+    # A path recorded here does not need to exist in the current manifest: a
+    # future pack version may remove a managed asset entirely, and the state
+    # file is sufficient historical ownership evidence on its own. Safety is
+    # enforced by path validation below, not by manifest membership; a path
+    # no longer in the manifest is handled conservatively by
+    # prune_stale_assets (preserved and tombstoned, never auto-deleted).
     def hash_map(key: str) -> dict[str, str]:
         value = raw.get(key)
         if not isinstance(value, dict):
@@ -450,8 +454,6 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
                 raise ValueError("Managed state cannot own itself")
             if not SHA256_PATTERN.fullmatch(hash_value):
                 raise ValueError(f"Managed state hash is invalid for: {path}")
-            if path not in allowed_paths:
-                raise ValueError(f"Managed state contains an unknown pack-owned path: {path}")
             result[path] = hash_value
         return result
 
@@ -509,7 +511,6 @@ def copy_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: bool
 
 
 def prune_stale_assets(
-    source_root: Path,
     target_root: Path,
     manifest: PackManifest,
     selected: tuple[Asset, ...],
@@ -517,6 +518,7 @@ def prune_stale_assets(
     dry_run: bool,
 ) -> tuple[list[SyncAction], dict[str, str]]:
     selected_paths = {asset.path for asset in selected}
+    known_paths = {asset.path for asset in manifest.assets}
     candidates = {
         path: hash_value
         for path, hash_value in state.tombstones.items()
@@ -527,11 +529,6 @@ def prune_stale_assets(
         for path, hash_value in state.managed_files.items()
         if path not in selected_paths
     )
-    if not state.exists:
-        for asset in manifest.assets:
-            if asset.path not in selected_paths:
-                source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
-                candidates.setdefault(asset.path, managed_file_hash(source))
 
     actions: list[SyncAction] = []
     tombstones: dict[str, str] = {}
@@ -546,6 +543,14 @@ def prune_stale_assets(
             continue
         if path in protected_paths:
             actions.append(SyncAction("preserve", path, "stale path is now project-owned"))
+            continue
+        if path not in known_paths:
+            # No longer a managed asset in the current manifest at all. The
+            # state file is the only historical evidence for it, so it is
+            # never auto-deleted merely because its hash matches; it stays
+            # tombstoned for manual review until the file itself is removed.
+            actions.append(SyncAction("preserve", path, "historical managed path is no longer in the manifest"))
+            tombstones[path] = expected_hash
             continue
         if target.is_symlink() or not target_resolves_within_root(target_root, target):
             actions.append(SyncAction("preserve", path, "stale managed path is a symbolic link"))
@@ -740,16 +745,25 @@ def audit_target(
         return lines
     lines.append(f"profile: {active_profile}")
 
+    conventions_resolved = True
     if conventions is not None:
         active_conventions = frozenset(conventions)
     elif state.conventions is not None:
         active_conventions = state.conventions
     elif state.schema_version == 1:
-        lines.append("info: pre-5.0 state without explicit conventions; pass --conventions to audit them")
+        lines.append(
+            "info: pre-5.0 state has no explicit convention selection; "
+            "pass --conventions to audit convention state"
+        )
         active_conventions = frozenset()
+        conventions_resolved = False
     else:
         active_conventions = frozenset()
-    lines.append(f"conventions: {', '.join(sorted(active_conventions)) or 'none selected'}")
+    lines.append(
+        f"conventions: {', '.join(sorted(active_conventions)) or 'none selected'}"
+        if conventions_resolved
+        else "conventions: unresolved (pre-5.0 state)"
+    )
 
     selected = assets_for_profile(manifest, active_profile, active_conventions)
     for asset in selected:
@@ -802,15 +816,16 @@ def audit_target(
                 "match its content; treated as a customized, project-owned document"
             )
 
-    for convention, asset in convention_assets(manifest).items():
-        if convention in active_conventions:
-            continue
-        target = safe_child(target_root, asset.path, "asset target")
-        if target.is_file():
-            lines.append(
-                f"unused managed convention: {asset.path} "
-                f"(selected conventions: {', '.join(sorted(active_conventions)) or 'none'})"
-            )
+    if conventions_resolved:
+        for convention, asset in convention_assets(manifest).items():
+            if convention in active_conventions:
+                continue
+            target = safe_child(target_root, asset.path, "asset target")
+            if target.is_file():
+                lines.append(
+                    f"unused managed convention: {asset.path} "
+                    f"(selected conventions: {', '.join(sorted(active_conventions)) or 'none'})"
+                )
 
     findings = [
         line
@@ -890,7 +905,7 @@ def synchronize(
     state_path = safe_child(target_root, manifest.state_file, "managed state path")
     validate_parent_directory(state_path, target_root, "Managed state")
 
-    prune_actions, tombstones = prune_stale_assets(source_root, target_root, manifest, selected, managed_state, dry_run)
+    prune_actions, tombstones = prune_stale_assets(target_root, manifest, selected, managed_state, dry_run)
     actions: list[SyncAction] = list(prune_actions)
     actions.extend(copy_asset(source_root, target_root, asset, dry_run) for asset in selected)
     for asset in scaffold_assets:

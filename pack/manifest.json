@@ -101,11 +101,6 @@
       "scaffold_target": ".editorconfig"
     },
     {
-      "path": "docs/templates/features.template.md",
-      "type": "template",
-      "profiles": ["minimal", "library", "app", "game"]
-    },
-    {
       "path": "docs/templates/architecture.template.md",
       "type": "template",
       "profiles": ["library", "app", "game"],

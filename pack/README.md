@@ -55,10 +55,11 @@ cross manifest-schema changes and may not contain the newest preflight fixes.
 
 ## Upgrading a Pre-5.0 Target
 
-Version 5 is a compatibility reset: its manifest and state schemas are not
-compatible with older packs. A target with a `.repo-seed-state.json` written
-before explicit conventions existed requires one `--conventions <list>` sync
-to convert:
+Version 5 is a compatibility reset. Its manifest schema (`schema_version: 3`)
+is intentionally incompatible with older pack scripts. Its managed-state
+schema has exactly one supported transition: a `.repo-seed-state.json`
+written before explicit conventions existed (schema 1) requires one
+explicit `--conventions <list>` sync to convert to the current schema 2:
 
 ```bash
 python /path/to/extracted/pack/files/scripts/sync-docs.py \

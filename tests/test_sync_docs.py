@@ -170,7 +170,7 @@ class ManifestTests(unittest.TestCase):
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
-        common = {"changelog.template.md", "readme.template.md", "features.template.md"}
+        common = {"changelog.template.md", "readme.template.md"}
         expected = {
             "minimal": common,
             "library": common | {"architecture.template.md", "tsd.template.md"},
@@ -192,11 +192,20 @@ class ManifestTests(unittest.TestCase):
     def test_reference_only_templates_have_no_scaffold_destination(self):
         assets = {asset.path: asset for asset in self.manifest.assets}
         self.assertIsNone(assets["docs/templates/tsd.template.md"].scaffold_target)
-        self.assertIsNone(assets["docs/templates/features.template.md"].scaffold_target)
         self.assertEqual(
             assets["docs/templates/architecture.template.md"].scaffold_target,
             "docs/project/architecture.md",
         )
+
+    def test_features_template_is_not_distributed(self):
+        # repo-seed does not distribute a standard FEATURES/capability-index
+        # template; GitHub Issues and CHANGELOG already cover that need.
+        # A project's own FEATURES.md or docs/project/features.md remains
+        # project-owned if it already has one.
+        self.assertFalse(
+            any(asset.path.endswith("features.template.md") for asset in self.manifest.assets)
+        )
+        self.assertFalse((PACK_ROOT / "files/docs/templates/features.template.md").exists())
 
     def test_optional_group_covers_the_on_demand_documents(self):
         optional_targets = {
@@ -651,6 +660,27 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 with self.subTest(path=path.relative_to(PACK_ROOT), needle=needle):
                     self.assertNotIn(needle, content)
 
+    def test_readme_does_not_claim_all_modified_managed_files_are_preserved(self):
+        content = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn(
+            "Modified managed or scaffolded files are preserved and reported, never overwritten",
+            content,
+        )
+        self.assertIn("repo-seed-owned and are updated", content)
+        self.assertIn("overwritten on the next sync", content)
+
+    def test_documentation_guidance_has_no_legacy_scaffold_hash_claim(self):
+        content = (PACK_ROOT / "files/.agents/guidelines/documentation.md").read_text(encoding="utf-8")
+        self.assertNotIn("Known older scaffolds", content)
+        self.assertNotIn("approved legacy content hash", content)
+        self.assertIn("No recognized provenance is also preserved as", content)
+
+    def test_editorconfig_scaffold_docs_are_internally_consistent(self):
+        content = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("--scaffold-editorconfig", content)
+        self.assertIn("may be created once as a missing-only scaffold", content)
+        self.assertNotIn(".editorconfig` is also project-owned; it is never touched", content)
+
     def test_manifest_has_exactly_two_contributor_issue_templates(self):
         github_scaffolds = {
             asset.scaffold_target
@@ -854,9 +884,61 @@ class ConventionSelectionTests(unittest.TestCase):
             report = sync.audit_target(PACK_ROOT, target, "app")
 
             self.assertTrue(
-                any("pre-5.0 state without explicit conventions" in line and line.startswith("info:") for line in report)
+                any(
+                    "pre-5.0 state has no explicit convention selection" in line and line.startswith("info:")
+                    for line in report
+                )
             )
+            self.assertIn("conventions: unresolved (pre-5.0 state)", report)
             self.assertEqual(list(target.iterdir()), [target / ".repo-seed-state.json"])
+
+    def test_audit_on_a_pre_5_0_state_without_conventions_does_not_flag_installed_convention_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            csharp = target / ".agents/conventions/csharp.md"
+            csharp.parent.mkdir(parents=True)
+            csharp.write_text("legacy csharp convention content\n", encoding="utf-8")
+            (target / ".repo-seed-state.json").write_text(
+                json.dumps(
+                    schema_1_state(managed_files={".agents/conventions/csharp.md": sync.managed_file_hash(csharp)})
+                ),
+                encoding="utf-8",
+            )
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            self.assertFalse(any("unused managed convention" in line for line in report))
+            self.assertFalse(any(line.startswith("missing:") and "conventions" in line for line in report))
+
+    def test_audit_on_a_pre_5_0_state_with_explicit_conventions_evaluates_convention_state(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            csharp = target / ".agents/conventions/csharp.md"
+            python = target / ".agents/conventions/python.md"
+            csharp.parent.mkdir(parents=True)
+            csharp.write_text("legacy csharp convention content\n", encoding="utf-8")
+            python.write_text("legacy python convention content\n", encoding="utf-8")
+            (target / ".repo-seed-state.json").write_text(
+                json.dumps(
+                    schema_1_state(
+                        managed_files={
+                            ".agents/conventions/csharp.md": sync.managed_file_hash(csharp),
+                            ".agents/conventions/python.md": sync.managed_file_hash(python),
+                        }
+                    )
+                ),
+                encoding="utf-8",
+            )
+
+            report = sync.audit_target(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
+
+            self.assertIn("conventions: csharp", report)
+            self.assertTrue(
+                any("unused managed convention: .agents/conventions/python.md" in line for line in report)
+            )
+            self.assertFalse(
+                any("unused managed convention: .agents/conventions/csharp.md" in line for line in report)
+            )
 
     def test_cli_conventions_flag_is_persisted_and_reused(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1133,7 +1215,7 @@ class SyncBehaviorTests(unittest.TestCase):
             state = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertNotIn("docs/templates/gdd.template.md", state["tombstones"])
 
-    def test_state_bootstrap_prunes_known_current_assets_but_not_unknown_files(self):
+    def test_state_bootstrap_without_a_state_file_never_infers_ownership(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             sync.synchronize(PACK_ROOT, target, "game")
@@ -1143,7 +1225,11 @@ class SyncBehaviorTests(unittest.TestCase):
 
             sync.synchronize(PACK_ROOT, target, "app")
 
-            self.assertFalse((target / "docs/templates/gdd.template.md").exists())
+            # No state file means no historical ownership knowledge: a
+            # previously-synced asset no longer selected by the new profile
+            # must be preserved rather than pruned, exactly like any other
+            # unrecognized pre-existing file.
+            self.assertTrue((target / "docs/templates/gdd.template.md").exists())
             self.assertEqual(unknown.read_text(encoding="utf-8"), "keep\n")
 
     def test_project_scaffolding_excludes_editorconfig(self):
@@ -1372,46 +1458,109 @@ class SyncBehaviorTests(unittest.TestCase):
 
             self.assertFalse((target / "AGENTS.md").exists())
 
-    def test_managed_state_rejects_unknown_pack_owned_paths_before_copying(self):
+    def test_state_path_not_in_the_current_manifest_is_preserved_not_rejected(self):
+        # A state-recorded path does not need to exist in the current manifest:
+        # a future pack may remove a managed asset entirely, and the state file
+        # alone is sufficient historical ownership evidence. Reading such state
+        # must succeed, and the historical file must never be auto-deleted
+        # merely because its hash matches.
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
-            important = target / "src/important.py"
-            important.parent.mkdir(parents=True)
-            important.write_text("important = True\n", encoding="utf-8")
+            historical = target / "src/important.py"
+            historical.parent.mkdir(parents=True)
+            historical.write_text("important = True\n", encoding="utf-8")
             state = {
                 "schema_version": 2,
                 "pack_version": "5.0.0",
                 "profile": "minimal",
                 "conventions": [],
                 "managed_files": {
-                    "src/important.py": sync.managed_file_hash(important),
+                    "src/important.py": sync.managed_file_hash(historical),
                 },
                 "tombstones": {},
             }
             (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "unknown pack-owned path"):
-                sync.synchronize(PACK_ROOT, target, "minimal")
+            actions = sync.synchronize(PACK_ROOT, target, "minimal")
 
-            self.assertEqual(important.read_text(encoding="utf-8"), "important = True\n")
-            self.assertFalse((target / "AGENTS.md").exists())
+            self.assertEqual(historical.read_text(encoding="utf-8"), "important = True\n")
+            self.assertTrue((target / "AGENTS.md").is_file())
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == "src/important.py"
+                    and "no longer in the manifest" in action.detail
+                    for action in actions
+                )
+            )
+            new_state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertIn("src/important.py", new_state["tombstones"])
 
-    def test_state_rejects_editorconfig_recorded_as_a_managed_path(self):
-        # .editorconfig is only ever a scaffold_target, never an asset path, so a
-        # state file that records it under managed_files is invalid state, not a
-        # legitimate historical reclassification.
+            # Once the user manually removes the historical file, the tombstone
+            # naturally drops on the next sync.
+            historical.unlink()
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            final_state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertNotIn("src/important.py", final_state["tombstones"])
+
+    def test_a_future_manifest_that_removes_a_managed_asset_preserves_its_historical_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / "target"
+            future_pack = root / "future-pack"
+            target.mkdir()
+            shutil.copytree(PACK_ROOT / "files", future_pack / "files")
+            for package_file in ("README.md", "LICENSE", "github-labels.json"):
+                shutil.copy2(PACK_ROOT / package_file, future_pack / package_file)
+
+            sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
+            state_path = target / ".repo-seed-state.json"
+            self.assertIn(".agents/guidelines/ci-cd.md", json.loads(state_path.read_text(encoding="utf-8"))["managed_files"])
+
+            manifest_raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+            manifest_raw["assets"] = [
+                asset for asset in manifest_raw["assets"] if asset["path"] != ".agents/guidelines/ci-cd.md"
+            ]
+            (future_pack / "manifest.json").write_text(json.dumps(manifest_raw), encoding="utf-8")
+            (future_pack / "files/.agents/guidelines/ci-cd.md").unlink()
+
+            actions = sync.synchronize(future_pack, target, "app", conventions=frozenset({"csharp"}))
+
+            # The state remains readable, sync proceeds normally, and the removed
+            # asset's historical file is preserved rather than auto-deleted.
+            self.assertTrue((target / ".agents/guidelines/ci-cd.md").is_file())
+            self.assertTrue((target / "AGENTS.md").is_file())
+            self.assertTrue(
+                any(
+                    action.action == "preserve"
+                    and action.path == ".agents/guidelines/ci-cd.md"
+                    and "no longer in the manifest" in action.detail
+                    for action in actions
+                )
+            )
+            new_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertIn(".agents/guidelines/ci-cd.md", new_state["tombstones"])
+
+            (target / ".agents/guidelines/ci-cd.md").unlink()
+            sync.synchronize(future_pack, target, "app", conventions=frozenset({"csharp"}))
+            final_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertNotIn(".agents/guidelines/ci-cd.md", final_state["tombstones"])
+
+    def test_fresh_sync_with_no_state_never_infers_ownership_of_a_matching_file(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
-            sync.synchronize(PACK_ROOT, target, "minimal")
-            editorconfig = target / ".editorconfig"
-            editorconfig.write_text("root = false\n", encoding="utf-8")
-            state_path = target / ".repo-seed-state.json"
-            state = json.loads(state_path.read_text(encoding="utf-8"))
-            state["managed_files"][".editorconfig"] = sync.managed_file_hash(editorconfig)
-            state_path.write_text(json.dumps(state), encoding="utf-8")
+            source = PACK_ROOT / "files/.agents/conventions/unity.md"
+            preexisting = target / ".agents/conventions/unity.md"
+            preexisting.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, preexisting)
 
-            with self.assertRaisesRegex(ValueError, "unknown pack-owned path"):
-                sync.synchronize(PACK_ROOT, target, "minimal")
+            sync.synchronize(PACK_ROOT, target, "app")
+
+            # No .repo-seed-state.json existed, so repo-seed has no historical
+            # ownership knowledge: it must not infer ownership of an unselected
+            # pre-existing file merely because its bytes match a pack asset.
+            self.assertTrue(preexisting.is_file())
+            self.assertEqual(preexisting.read_bytes(), source.read_bytes())
 
     def test_copied_script_updates_from_an_explicit_pack(self):
         with tempfile.TemporaryDirectory() as temp:

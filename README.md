@@ -30,17 +30,24 @@ The scripts use only the Python standard library. Pull-request CI validates Pyth
 
 ## Safety
 
-Current managed files are updated only when their content differs from the
-target. Project-owned scaffolds are created only when missing, or upgraded
-only when their content is verifiably an unchanged repo-seed scaffold.
-Modified managed or scaffolded files are preserved and reported, never
-overwritten. Run `--dry-run` first and commit or back up the target
-repository because filesystem writes are not transactional.
+Selected managed files are repo-seed-owned and are updated to the current
+pack content whenever they differ. Do not customize them in target
+repositories; local changes to a selected managed file are simply
+overwritten on the next sync.
+
+Project-owned scaffolds are different: they are created only when missing,
+and preserved unless their repo-seed provenance proves they are unchanged
+and safe to upgrade.
+
+When a managed file becomes unselected because of a profile or convention
+change, repo-seed removes it only if it still matches the recorded managed
+hash. A modified stale managed file is preserved and tombstoned for review
+instead of being deleted.
+
+Run `--dry-run` first and commit or back up the target repository because
+filesystem writes are not transactional.
 
 Each target keeps `.repo-seed-state.json` as committed ownership metadata.
-Profile or convention reductions remove only stale managed files matching
-their recorded hashes. Modified stale files remain in place and stay
-tombstoned for review.
 
 See [Document ownership](docs/project/document-ownership.md) for the authoritative path classification.
 
@@ -187,9 +194,10 @@ Optional scaffolding is separated by ownership:
 
 Existing project-owned files are preserved unless an eligible Markdown scaffold is
 verified unchanged from repo-seed and can be upgraded safely.
-`.gitignore`, `.editorconfig`, and the pull-request template are never
-managed, scaffolded, or otherwise touched by the pack; they are entirely
-project-owned.
+`.gitignore` and the pull-request template are entirely project-owned: the
+pack never scaffolds or otherwise touches either one. `.editorconfig` is
+also project-owned, but may be created once as a missing-only scaffold with
+`--scaffold-editorconfig`; once it exists, the pack never rewrites it.
 The `.github/workflows/` tree is always project-owned and cannot be managed,
 scaffolded, or deleted by the pack.
 
@@ -210,12 +218,17 @@ newer pack. Pass `--profile` to change the recorded profile intentionally.
 
 ## Upgrading a Pre-5.0 Target
 
-Version 5 is a compatibility reset: its manifest schema and managed-state
-schema are not compatible with older packs, and pre-4.x legacy migration
-support has been removed entirely. A target with no `.repo-seed-state.json`
-at all is simply a fresh install. A target with a `.repo-seed-state.json`
-from before explicit conventions existed needs one `--conventions <list>`
-sync to convert. See [Upgrading to Version 5](docs/project/upgrading-to-5.md).
+Version 5 is a compatibility reset, with two distinct schemas:
+
+- **Manifest schema**: `schema_version: 3` is intentionally incompatible
+  with older pack scripts. Pre-4.x legacy migration support has been
+  removed entirely; a target with no `.repo-seed-state.json` at all is
+  simply a fresh install.
+- **Managed state**: schema 1 (written before explicit conventions existed)
+  has exactly one supported transition, to schema 2, requiring one explicit
+  `--conventions <list>` sync.
+
+See [Upgrading to Version 5](docs/project/upgrading-to-5.md).
 
 ## Source Layout
 
