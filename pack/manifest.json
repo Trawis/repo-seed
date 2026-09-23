@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "pack_version": "4.1.0",
+  "pack_version": "4.2.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -105,6 +105,66 @@
       "path": ".agents/guidelines/ci-cd.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/code-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/bug-fix/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/refactor/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/dependency-upgrade/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/technical-design/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game", "full"]
+    },
+    {
+      "path": ".agents/skills/documentation-bootstrap/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/code-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/bug-fix/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/refactor/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/dependency-upgrade/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/technical-design/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game", "full"]
+    },
+    {
+      "path": ".claude/skills/documentation-bootstrap/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game", "full"]
     },
     {
       "path": ".agents/conventions/csharp.md",

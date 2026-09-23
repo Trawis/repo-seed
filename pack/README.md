@@ -14,8 +14,15 @@ python pack/files/scripts/sync-docs.py \
 ```
 
 Choose `minimal`, `library`, `app`, or `game`. The `full` profile synchronizes
-the complete reference catalog but cannot scaffold project files. Add only the
-scaffolding you need:
+the complete reference catalog but cannot scaffold project files.
+
+Every profile installs native Codex and Claude Code skills for code review, bug
+fixing, refactoring, and dependency upgrades. Library, application, game, and
+full profiles also install technical-design and documentation-bootstrap skills.
+Cross-cutting Git, CI/CD, documentation, and language rules remain in the
+conditionally loaded `.agents/` guidance.
+
+Add only the scaffolding you need:
 
 ```text
 --scaffold-project-files
