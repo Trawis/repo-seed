@@ -1,0 +1,9 @@
+{
+  "skillOverrides": {
+    "bug-fix": "off",
+    "refactor": "off",
+    "dependency-upgrade": "off",
+    "technical-design": "off",
+    "documentation-bootstrap": "off"
+  }
+}

@@ -16,6 +16,14 @@ When changing distributed agent guidance, inspect the specific managed guidance
 being modified and its related tests. Do not treat distributed instructions as
 repository-level instructions for unrelated `repo-seed` work.
 
+The skill wrappers under `pack/files/.claude/skills/` and
+`pack/files/.agents/skills/` are distributed templates, not active skills for
+`repo-seed` itself. Because coding agents discover nested `.claude/skills/`
+directories, `.claude/settings.json` turns these wrappers off so they do not
+govern `repo-seed` work; `code-review` is left enabled there because its name
+collides with the bundled review skill. Treat any `pack/files` skill that still
+loads as a template to edit, not as guidance to follow.
+
 ## Repository Scope
 
 This repository maintains a reusable documentation and coding-agent guidance pack.

@@ -50,6 +50,66 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
+      "path": ".agents/skills/code-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/bug-fix/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/refactor/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/dependency-upgrade/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/technical-design/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/documentation-bootstrap/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/code-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/bug-fix/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/refactor/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/dependency-upgrade/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/technical-design/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/documentation-bootstrap/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
       "path": ".agents/conventions/csharp.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],

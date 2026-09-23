@@ -62,7 +62,13 @@ affected documentation.
 
 ## Specialized Guidance
 
-Load only the guidance relevant to the task:
+Use native repository skills when the current agent supports them for
+specialized repeatable workflows such as code review, bug fixing, refactoring,
+dependency upgrades, technical design, and existing-project documentation
+bootstrap. Skills supplement these repository instructions; they do not replace
+project-specific rules or the canonical guidance below.
+
+Load only the additional guidance relevant to the task:
 
 - language or script work: `.agents/conventions/`
 - Git, branches, commits, pull requests, or PR descriptions:
@@ -73,6 +79,10 @@ Load only the guidance relevant to the task:
   maintenance: `.agents/guidelines/documentation.md`
 - issue creation, labels, issue structure, or triage:
   `.agents/guidelines/issues.md`
+
+Do not scan skill directories or supporting guidance merely because they exist.
+Agents without native skill discovery should continue using these core rules and
+load the canonical guidance relevant to the requested operation.
 
 Repository-specific rules and nearby code take precedence over managed
 conventions. Do not create or materially alter workflows, permissions,

@@ -8,7 +8,7 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
-## 5.0.0 - 2026-09-22
+## 5.0.0 - 2026-09-23
 
 5.0 is a deliberate compatibility reset. The active repository fleet already
 uses the `.repo-seed-state.json` model, so pre-4.x legacy migration support
@@ -41,6 +41,11 @@ is no longer needed and has been removed, not merely deprecated.
 - Added on-demand optional-document scaffolding: `--scaffold <name>`
   (`architecture`, `fsd`, `gdd`, `user-guide`), which refuses to overwrite an
   existing document.
+- Carried forward the native Codex and Claude Code engineering-workflow
+  skills introduced in 4.2.0 (code review, bug fixing, refactoring,
+  dependency upgrades, technical design, existing-project documentation
+  bootstrap), rescoped from the removed `full` profile to `minimal`,
+  `library`, `app`, and `game`.
 
 ### Changed
 
@@ -104,6 +109,27 @@ is no longer needed and has been removed, not merely deprecated.
   `--conventions <list>` sync to convert to the current `schema_version: 2`
   state; omitting it fails clearly and writes nothing. See
   `docs/project/upgrading-to-5.md`.
+
+## 4.2.0 - 2026-08-26
+
+### Added
+
+- Added native Codex and Claude Code skills for code review, bug fixing,
+  refactoring, dependency upgrades, technical design, and existing-project
+  documentation bootstrap.
+- Added parity and portable-structure validation for mirrored native skill
+  definitions.
+- Added profile-aware skill distribution so the minimal profile carries the
+  core engineering workflows, which load conventions only when a target
+  provides them, while library and up also receive technical-design and
+  documentation-bootstrap.
+
+### Changed
+
+- Kept Git, CI/CD, documentation, and language guidance as conditionally loaded
+  cross-cutting rules instead of wrapping those files in trivial skills.
+- Kept skill bodies focused on repeatable investigation, execution, and
+  validation workflows that benefit from on-demand loading.
 
 ## 4.1.0 - 2026-08-26
 

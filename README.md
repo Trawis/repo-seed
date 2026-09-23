@@ -9,6 +9,9 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 ## What It Provides
 
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
+- native Codex and Claude Code skills for focused engineering workflows such as
+  code review, bug fixing, refactoring, dependency upgrades, technical design,
+  and documentation bootstrap;
 - focused documentation, Git, and CI/CD guidance, independently selectable
   from language/tool conventions;
 - a canonical shared label catalog and lightweight issue/decision structure,
@@ -108,6 +111,13 @@ All profiles receive the same core agent instructions, documentation, Git,
 CI/CD, and issue guidance. A profile only changes which optional reference
 templates are available; it says nothing about programming language and
 never installs a language convention by itself.
+
+All profiles also receive the core engineering-workflow skills for native
+Codex and Claude Code agents (code review, bug fixing, refactoring, and
+dependency upgrades); those skills load whatever language conventions a
+target provides and work without them, so `minimal` ships them even though
+it carries no conventions. `library`, `app`, and `game` additionally receive
+the technical-design and documentation-bootstrap skills.
 
 The first sync requires an explicit project profile when no reusable profile
 is recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or
@@ -242,6 +252,11 @@ pack/
     AGENTS.md
     CLAUDE.md
     .agents/
+      guidelines/
+      conventions/
+      skills/                # native Codex workflow skills
+    .claude/
+      skills/                # native Claude Code workflow skills
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # live documentation about repo-seed
@@ -249,6 +264,10 @@ scripts/                     # repository tooling, including the optional
                               # sync-github-labels.py hosted-label tool
 tests/                       # pack and tooling tests
 ```
+
+Native skills package repeatable workflows that are too specialized to keep in
+the always-loaded agent instructions. Cross-cutting policy and language rules
+remain under `.agents/guidelines/` and `.agents/conventions/`.
 
 Root files describe `repo-seed` itself and are never target sync sources.
 
