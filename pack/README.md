@@ -10,37 +10,40 @@ From the directory containing the extracted `pack/` folder:
 python pack/files/scripts/sync-docs.py \
   --target /path/to/project \
   --profile app \
+  --conventions csharp \
   --dry-run
 ```
 
-Choose `minimal`, `library`, `app`, or `game`. The `full` profile synchronizes
-the complete reference catalog but cannot scaffold project files.
+Choose `minimal`, `library`, `app`, or `game`. Select any language/tool
+conventions your project actually uses (`csharp`, `python`, `scripts`,
+`shell`, `unity`) with `--conventions`; a fresh sync installs none if
+omitted.
 
 Every profile installs native Codex and Claude Code skills for code review, bug
-fixing, refactoring, and dependency upgrades. Library, application, game, and
-full profiles also install technical-design and documentation-bootstrap skills.
+fixing, refactoring, and dependency upgrades. Library, application, and game
+profiles also install technical-design and documentation-bootstrap skills.
 Cross-cutting Git, CI/CD, documentation, and language rules remain in the
 conditionally loaded `.agents/` guidance.
 
 Add only the scaffolding you need:
 
 ```text
---scaffold-project-files
---scaffold-github-templates
---scaffold-editorconfig
+--scaffold-project-files          # baseline README/CHANGELOG
+--scaffold-github-templates       # bug/feature issue templates
+--scaffold-editorconfig           # .editorconfig
+--scaffold <name>                 # one on-demand document: architecture, fsd, gdd, user-guide
 ```
 
 Review the dry-run output, commit or back up the target repository, then rerun
-without `--dry-run`. Unchanged legacy-managed files with recorded hashes may be
-removed, managed guidance is updated when different, and modified or unverified
-project files are preserved.
+without `--dry-run`. Managed guidance is updated only when different, and
+modified or unverified project files are preserved.
 
 The `.github/workflows/` tree is always project-owned and cannot be managed,
-scaffolded, retired, or deleted by this pack.
+scaffolded, or deleted by this pack.
 
 Commit the generated `.repo-seed-state.json`. It records managed ownership so a
-smaller profile can remove unchanged stale assets while retaining modified files
-as tombstones for review.
+smaller profile or a changed convention selection can remove unchanged stale
+assets while retaining modified files as tombstones for review.
 
 ## Update an Existing Project
 
@@ -53,20 +56,24 @@ python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-A recorded `minimal`, `library`, `app`, or `game` profile is reused when
-`--profile` is omitted. The `full` catalog must always be selected explicitly.
-The copied target script remains available for compatible packs, but it cannot
+A recorded `minimal`, `library`, `app`, or `game` profile and its convention
+selection are reused when `--profile` / `--conventions` are omitted. The
+copied target script remains available for compatible packs, but it cannot
 cross manifest-schema changes and may not contain the newest preflight fixes.
 
-## Upgrade from Version 3
+## Upgrading a Pre-5.0 Target
 
-Version 3 scripts cannot read the version 4 manifest. Run the new pack's script
-for the first version 4 sync:
+Version 5 is a compatibility reset. Its manifest schema (`schema_version: 3`)
+is intentionally incompatible with older pack scripts. Its managed-state
+schema has exactly one supported transition: a `.repo-seed-state.json`
+written before explicit conventions existed (schema 1) requires one
+explicit `--conventions <list>` sync to convert to the current schema 2:
 
 ```bash
 python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --target . \
   --profile app \
+  --conventions csharp \
   --dry-run
 ```
 

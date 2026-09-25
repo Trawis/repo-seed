@@ -10,34 +10,32 @@ unchanged scaffold may be upgraded
 name: Bug report
 about: Report a reproducible problem
 title: ""
-labels: bug
+labels: ["type: bug"]
 assignees: ""
 ---
 
-# Bug Report
-
 ## Summary
 
-Describe the problem clearly.
+Describe the problem.
 
-## Steps to Reproduce
+## Reproduction
 
 1.
+2.
+3.
 
-## Expected Behavior
+## Expected behavior
 
-Describe what should happen.
+What should happen?
 
-## Actual Behavior
+## Actual behavior
 
-Describe what happens instead.
+What happens instead?
 
 ## Environment
 
-- Version or commit:
-- Operating system:
-- Runtime or SDK:
+Relevant version/platform/environment information.
 
-## Additional Context
+## Additional context
 
-Add relevant logs or screenshots without including secrets.
+Optional.

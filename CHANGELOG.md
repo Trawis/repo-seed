@@ -8,6 +8,108 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.0.0 - 2026-09-23
+
+5.0 is a deliberate compatibility reset. The active repository fleet already
+uses the `.repo-seed-state.json` model, so pre-4.x legacy migration support
+is no longer needed and has been removed, not merely deprecated.
+
+### Added
+
+- Added a canonical shared label catalog and lightweight issue/decision
+  structure in `.agents/guidelines/issues.md`: `type:*` and optional
+  `priority:*` labels, an idea/decision/feature lifecycle, and a
+  Summary/Goal/Suggested-approach/Done-when issue shape. Contributors keep
+  exactly two Markdown templates (Bug Report, Feature Request); the
+  remaining types are maintainer classifications applied through a blank
+  issue.
+- Added `pack/github-labels.json` as the canonical machine-readable label
+  catalog, and the repo-seed-only, explicitly invoked
+  `scripts/sync-github-labels.py --check` / `--apply` tool to reconcile it
+  against a GitHub repository's hosted labels (via the GitHub CLI). Neither
+  is synced into a target repository; normal `sync-docs.py` synchronization
+  never requires the GitHub CLI or network access.
+- Added `--audit` to `scripts/sync-docs.py`: a local, read-only diagnostic
+  reporting pack version, profile, convention, and managed-file drift, an
+  informational note for a missing (optional) `.agents/project.md`, legacy
+  `bug`/`enhancement` labels in scaffolded issue templates, an unused
+  installed convention, and an outdated-but-safely-upgradable scaffold. It
+  never writes anything.
+- Added explicit `--conventions` selection (`csharp`, `python`, `scripts`,
+  `shell`, `unity`), independent of profile and persisted in
+  `.repo-seed-state.json`.
+- Added on-demand optional-document scaffolding: `--scaffold <name>`
+  (`architecture`, `fsd`, `gdd`, `user-guide`), which refuses to overwrite an
+  existing document.
+- Carried forward the native Codex and Claude Code engineering-workflow
+  skills introduced in 4.2.0 (code review, bug fixing, refactoring,
+  dependency upgrades, technical design, existing-project documentation
+  bootstrap), rescoped from the removed `full` profile to `minimal`,
+  `library`, `app`, and `game`.
+
+### Changed
+
+- Reduced the generated `CLAUDE.md` to a minimal `@AGENTS.md` import with an
+  ownership comment; `AGENTS.md` remains the sole canonical, cross-agent
+  instruction source and `CLAUDE.md` stays a compatibility wrapper, not a
+  second policy file.
+- Decoupled language/tool conventions from project-shape profiles. A profile
+  no longer implies any programming language. A fresh sync installs none by
+  default.
+- `--scaffold-project-files` now only creates the baseline README and
+  CHANGELOG; `architecture`, `fsd`, `gdd`, and `user-guide` moved to the
+  on-demand `--scaffold <name>` path above.
+- Replaced the `bug` and `enhancement` labels in the scaffolded and
+  repo-seed's own bug-report/feature-request templates with the canonical
+  `type: bug` / `type: feature` labels and the lightweight shared issue
+  structure.
+- Added a maintainer principle to `AGENTS.md`: a new persistent distributed
+  agent rule should solve a recurring, cross-project problem, not a
+  hypothetical one, and a stale rule should be removed rather than
+  accumulated indefinitely.
+
+### Removed
+
+- Removed the `full` profile. It was not a real project type, offered no
+  benefit over the release archive (which already contains every asset) or
+  testing the manifest/catalog directly, and caused special-cased behavior
+  around conventions and scaffolding.
+- Removed pre-4.x legacy migration support entirely: the
+  `.agent-guidelines-manifest.json` / `.agent-guidelines-version` /
+  `.agent-guidelines-conflicts` mechanisms, retired-path and retired-asset
+  migration, ancient scaffold-upgrade tables, and the corresponding
+  `pack/manifest.json` `migration` section. A target without
+  `.repo-seed-state.json` is now simply a fresh install.
+- Removed automatic convention inference (filesystem detection of
+  `.sln`/`.csproj`, `pyproject.toml`, Unity project markers) and the
+  migration action that used it. Explicit `--conventions` is required
+  instead; see Breaking below.
+- Removed legacy scaffold provenance support (the old
+  `<!-- repo-seed-template id="..." sha256="..." -->` marker format,
+  ancient-scaffold detection, and its upgrade branch). Only the current
+  `Scaffolded from` / `Scaffolded content SHA-256` markers are recognized;
+  an older, unmarked project-owned scaffold is treated as ordinary
+  project-owned content, never as a migration target.
+- Removed `previous_hashes` from the asset/manifest model. The managed state
+  file is the source of truth for which hash to expect; historical hash
+  arrays are no longer needed once every active target has a state file.
+- Removed obsolete `docs/project/upgrading-to-3.md` and
+  `docs/project/upgrading-to-4.md`; replaced with a single, short
+  `docs/project/upgrading-to-5.md`.
+
+### Breaking
+
+- The manifest schema moved from `schema_version: 2` to `schema_version: 3`.
+  Older sync scripts cannot read a 5.0 manifest, and 5.0's `sync-docs.py`
+  cannot read an old manifest.
+- A target with no `.repo-seed-state.json` at all is treated as a fresh
+  install; ancient pre-3.x installations are not auto-detected or migrated.
+- A target with a `.repo-seed-state.json` written before explicit
+  conventions existed (`schema_version: 1`) requires one explicit
+  `--conventions <list>` sync to convert to the current `schema_version: 2`
+  state; omitting it fails clearly and writes nothing. See
+  `docs/project/upgrading-to-5.md`.
+
 ## 4.2.0 - 2026-08-26
 
 ### Added

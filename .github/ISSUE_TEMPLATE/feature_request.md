@@ -2,7 +2,7 @@
 name: Feature Request
 about: Propose a new guideline, convention, template, sync option, or tooling improvement.
 title: ''
-labels: enhancement
+labels: ["type: feature"]
 assignees: ''
 ---
 
@@ -10,20 +10,16 @@ assignees: ''
 
 ## Summary
 
-<!-- One or two sentences describing the proposed addition or change. -->
+<!-- Describe the requested change. -->
 
-## Motivation
+## Goal
 
-<!-- Why is this needed? What problem does it solve or what gap does it fill? -->
+<!-- What problem should this solve? -->
 
-## Proposed Change
+## Suggested approach
 
-<!-- Describe the change in concrete terms. For new convention files, outline the key rules. For new sync options, describe the flag and behavior. -->
+<!-- Optional. Include useful implementation direction when known. -->
 
-## Alternatives Considered
+## Done when
 
-<!-- Other approaches you considered and why you prefer this one. -->
-
-## Additional Context
-
-<!-- Links, references, examples from other projects, or anything else that helps evaluate the request. -->
+- <!-- Concrete expected outcome. -->

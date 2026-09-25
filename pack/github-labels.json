@@ -1,0 +1,54 @@
+{
+  "labels": [
+    {
+      "name": "type: bug",
+      "description": "Existing behavior is incorrect.",
+      "color": "d73a4a"
+    },
+    {
+      "name": "type: feature",
+      "description": "Implementation-ready new behavior or capability.",
+      "color": "0e8a16"
+    },
+    {
+      "name": "type: tech-debt",
+      "description": "Refactoring, internal cleanup, or architecture improvement.",
+      "color": "fbca04"
+    },
+    {
+      "name": "type: chore",
+      "description": "Tooling, dependencies, CI, or repository maintenance.",
+      "color": "c5def5"
+    },
+    {
+      "name": "type: decision",
+      "description": "A concrete choice must be resolved before implementation.",
+      "color": "5319e7"
+    },
+    {
+      "name": "type: idea",
+      "description": "Worth recording but not yet implementation-ready.",
+      "color": "bfdadc"
+    },
+    {
+      "name": "priority: critical",
+      "description": "Optional. Requires urgent attention.",
+      "color": "b60205"
+    },
+    {
+      "name": "priority: high",
+      "description": "Optional. Should be addressed soon.",
+      "color": "d93f0b"
+    },
+    {
+      "name": "priority: medium",
+      "description": "Optional. Normal priority.",
+      "color": "fef2c0"
+    },
+    {
+      "name": "priority: low",
+      "description": "Optional. Can wait.",
+      "color": "c2e0c6"
+    }
+  ]
+}

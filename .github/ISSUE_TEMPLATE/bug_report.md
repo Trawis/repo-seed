@@ -2,13 +2,13 @@
 name: Bug Report
 about: Report a reproducible problem with the guideline pack, sync script, templates, or convention docs.
 title: ''
-labels: bug
+labels: ["type: bug"]
 assignees: ''
 ---
 
 <!-- Document role: Repo-seed-only issue template. Sync behavior: Never copied into targets. -->
 
-## Description
+## Summary
 
 <!-- A clear, concise description of the bug. -->
 
