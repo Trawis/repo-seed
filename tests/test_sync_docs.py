@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -1845,6 +1847,24 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertTrue(any(line.endswith("no drift detected") for line in report))
             self.assertIn("profile: minimal", report)
 
+    def test_audit_reports_a_managed_symlink_even_when_content_matches(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            managed = target / "AGENTS.md"
+            copy = target / "agents-copy.md"
+            managed.rename(copy)
+            try:
+                managed.symlink_to(copy)
+            except OSError as ex:
+                self.skipTest(f"Symbolic links are unavailable: {ex}")
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+
+            self.assertTrue(any(line.startswith("drift:") and "symbolic link" in line for line in report))
+            self.assertFalse(any(line.endswith("no drift detected") for line in report))
+            self.assertTrue(managed.is_symlink())
+
     def test_audit_reports_an_existing_tombstone_as_a_finding(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
@@ -2264,6 +2284,34 @@ class GitHubLabelToolTests(unittest.TestCase):
             path.write_text(json.dumps({"labels": [{"name": "type: bug"}]}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "description"):
                 github_labels.load_catalog(path)
+
+    def test_catalog_rejects_a_non_object_root(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "labels.json"
+            for content in ([], "invalid"):
+                path.write_text(json.dumps(content), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "JSON object"):
+                    github_labels.load_catalog(path)
+
+    def test_label_mutation_failures_raise_a_clear_error(self):
+        failed = subprocess.CompletedProcess(["gh"], 1, stdout="", stderr="HTTP 403")
+        label = {"name": "type: bug", "description": "x", "color": "d73a4a"}
+        for function, operation in ((github_labels.create_label, "create"), (github_labels.update_label, "edit")):
+            with mock.patch.object(subprocess, "run", return_value=failed):
+                with self.assertRaisesRegex(RuntimeError, f"gh label {operation} failed for 'type: bug': HTTP 403"):
+                    function("gh", None, label)
+
+    def test_main_reports_a_failed_apply_mutation_without_a_traceback(self):
+        hosted = subprocess.CompletedProcess(["gh"], 0, stdout="[]", stderr="")
+        failed = subprocess.CompletedProcess(["gh"], 1, stdout="", stderr="HTTP 403")
+        stderr = io.StringIO()
+        with mock.patch.object(shutil, "which", return_value="gh"), mock.patch.object(
+            subprocess, "run", side_effect=[hosted, failed]
+        ), contextlib.redirect_stderr(stderr):
+            result = github_labels.main(["--apply", "--catalog", str(GITHUB_LABELS_CATALOG)])
+        self.assertEqual(result, 2)
+        self.assertIn("error: gh label create failed for", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
 
     def test_audit_reports_missing_drift_and_legacy_labels(self):
         catalog = [

@@ -31,6 +31,8 @@ LEGACY_LABELS = {
 
 def load_catalog(path: Path) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Label catalog must be a JSON object")
     labels = data.get("labels")
     if not isinstance(labels, list) or not labels:
         raise ValueError("Label catalog must define a non-empty 'labels' array")
@@ -70,13 +72,19 @@ def fetch_hosted_labels(gh: str, repo: str | None) -> list[dict]:
     return json.loads(result.stdout)
 
 
+def run_label_mutation(command: list[str], operation: str, name: str) -> None:
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"gh label {operation} failed for '{name}': {result.stderr.strip()}")
+
+
 def create_label(gh: str, repo: str | None, label: dict) -> None:
     command = [gh, "label", "create", label["name"], "--description", label.get("description", "")]
     if label.get("color"):
         command.extend(["--color", label["color"]])
     if repo:
         command.extend(["--repo", repo])
-    subprocess.run(command, check=True)
+    run_label_mutation(command, "create", label["name"])
 
 
 def update_label(gh: str, repo: str | None, label: dict) -> None:
@@ -85,7 +93,7 @@ def update_label(gh: str, repo: str | None, label: dict) -> None:
         command.extend(["--color", label["color"]])
     if repo:
         command.extend(["--repo", repo])
-    subprocess.run(command, check=True)
+    run_label_mutation(command, "edit", label["name"])
 
 
 def label_differs(label: dict, existing: dict) -> bool:
@@ -157,21 +165,22 @@ def main(argv: list[str] | None = None) -> int:
         catalog = load_catalog(Path(args.catalog).expanduser().resolve())
         gh = require_gh()
         hosted = fetch_hosted_labels(gh, args.repo)
+
+        if args.check:
+            findings = audit(catalog, hosted)
+            for finding in findings:
+                print(finding)
+            if not findings:
+                print("no drift detected")
+                return 0
+            return 1
+
+        for line in apply_catalog(gh, args.repo, catalog, hosted):
+            print(line)
     except (OSError, ValueError, RuntimeError) as ex:
         print(f"error: {ex}", file=sys.stderr)
         return 2
 
-    if args.check:
-        findings = audit(catalog, hosted)
-        for finding in findings:
-            print(finding)
-        if not findings:
-            print("no drift detected")
-            return 0
-        return 1
-
-    for line in apply_catalog(gh, args.repo, catalog, hosted):
-        print(line)
     return 0
 
 

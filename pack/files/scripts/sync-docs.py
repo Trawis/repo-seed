@@ -796,6 +796,11 @@ def audit_target(
     for asset in selected:
         target = safe_child(target_root, asset.path, "asset target")
         source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+        try:
+            validate_managed_destination(target_root, asset)
+        except ValueError as ex:
+            lines.append(f"drift: {ex}")
+            continue
         if not target.is_file():
             lines.append(f"missing: {asset.path} (expected managed file for profile '{active_profile}')")
         elif managed_file_hash(target) != managed_file_hash(source):
