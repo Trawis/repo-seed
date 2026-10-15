@@ -10,6 +10,7 @@
     "issue-implementation": "off",
     "test-driven-development": "off",
     "architecture-review": "off",
-    "repository-audit": "off"
+    "repository-audit": "off",
+    "repository-bootstrap": "off"
   }
 }

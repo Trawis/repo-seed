@@ -8,6 +8,25 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.11.0 - 2026-10-15
+
+### Added
+
+- Added the `repository-bootstrap` skill for Codex (`.agents/skills/`) and
+  Claude Code (`.claude/skills/`), distributed to every profile. It guides
+  applying repo-seed to a new or existing repository with the pack's own
+  `sync-docs.py` as the only mechanism: it inspects the target first, chooses
+  only a supported profile (asking when evidence is ambiguous), only the
+  conventions the project uses (none by default), and opt-in scaffolds; warns
+  that existing `AGENTS.md` and `CLAUDE.md` are managed and replaced, and moves
+  project content to `.agents/project.md` first with the user's agreement;
+  requires a dry run before the first mutating sync; and verifies the recorded
+  state, the installed guidance, preserved project-owned files, and a clean
+  follow-up dry run. It does not invent project facts, hands project
+  documentation to `documentation-bootstrap`, and adds no Git or hosted write
+  permission. It is original to repo-seed, so it has no upstream provenance
+  entry.
+
 ## 5.10.0 - 2026-10-15
 
 ### Added
