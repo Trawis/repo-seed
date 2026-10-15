@@ -8,6 +8,22 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.4.0 - 2026-10-15
+
+### Added
+
+- Added the `issue-authoring` skill for Codex (`.agents/skills/`) and Claude
+  Code (`.claude/skills/`), distributed to every profile. It drafts
+  repository-grounded issues: it inspects current implementation and tracker
+  state, searches open and closed issues and pull requests for duplicates and
+  already-implemented behavior, routes suspected vulnerabilities to
+  `SECURITY.md`, takes issue types and structure from
+  `.agents/guidelines/issues.md` instead of duplicating them, requires
+  testable `Done when` conditions for implementation-ready work, and treats
+  hosted issue creation as explicitly permission-gated. Ideas from Matt
+  Pocock's `triage` skill (redundancy and claim checks, durable acceptance
+  criteria) are restated in repo-seed wording; no upstream text was copied.
+
 ## 5.3.0 - 2026-10-15
 
 ### Changed
