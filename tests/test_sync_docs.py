@@ -201,12 +201,16 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".agents/skills/issue-authoring/SKILL.md": all_profiles,
             ".agents/skills/issue-implementation/SKILL.md": all_profiles,
+            ".agents/skills/test-driven-development/SKILL.md": all_profiles,
+            ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
             ".claude/skills/bug-fix/SKILL.md": all_profiles,
             ".claude/skills/refactor/SKILL.md": all_profiles,
             ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".claude/skills/issue-authoring/SKILL.md": all_profiles,
             ".claude/skills/issue-implementation/SKILL.md": all_profiles,
+            ".claude/skills/test-driven-development/SKILL.md": all_profiles,
+            ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
             ".claude/skills/technical-design/SKILL.md": library_profiles,
@@ -624,6 +628,40 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                     self.assertIn(phrase, review)
             self.assertLess(review.index("## Workflow"), review.index("## Acceptance Review"))
             self.assertLess(review.index("## Acceptance Review"), review.index("## Findings"))
+
+    def test_test_driven_development_skill_is_explicit_only_portable_and_attributed(self):
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        self.assertEqual([entry["name"] for entry in registry["skills"]], ["test-driven-development"])
+        for root in (".agents/skills", ".claude/skills"):
+            directory = PACK_ROOT / "files" / root / "test-driven-development"
+            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
+            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
+            for phrase in (
+                "explicitly asks for TDD",
+                "Do not apply it to every implementation",
+                "Normal implementation work stays free to choose",
+                "authoritative",
+                "Refactor only while everything is green",
+                "fails for the expected reason",
+                "public interface",
+                "independently",
+                "only at system boundaries",
+                "mutation",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+            for phrase in ("superpowers:", "GLOSSARY", "Skill tool", "sub-agent", "gh pr", "git commit "):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase, content)
+            for phrase in (
+                "Copyright (c) 2026 Matt Pocock",
+                "49dd158d1076134a641b33efb035946536778336",
+                "Permission is hereby granted",
+                "Jesse Vincent",
+            ):
+                with self.subTest(root=root, notice=phrase):
+                    self.assertIn(phrase, notice)
 
     def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
         for root in (".agents/skills", ".claude/skills"):
@@ -2289,6 +2327,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "dependency-upgrade",
                     "issue-authoring",
                     "issue-implementation",
+                    "test-driven-development",
                 }
                 extended_skills = {"technical-design", "documentation-bootstrap"}
                 expected_skills = core_skills
