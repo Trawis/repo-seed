@@ -7,7 +7,7 @@ unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
 ---
-name: Bug report
+name: Bug Report
 about: Report a reproducible problem
 title: ""
 labels: ["type: bug"]
@@ -18,24 +18,26 @@ assignees: ""
 
 Describe the problem.
 
-## Reproduction
+## Steps to Reproduce
 
 1.
 2.
 3.
 
-## Expected behavior
+## Expected Behavior
 
-What should happen?
+Describe what should happen.
 
-## Actual behavior
+## Actual Behavior
 
-What happens instead?
+Describe what happens instead.
 
 ## Environment
 
-Relevant version/platform/environment information.
+- Version or commit:
+- Operating system:
+- Runtime or SDK:
 
-## Additional context
+## Additional Context
 
-Optional.
+Include relevant logs or screenshots without exposing secrets.
