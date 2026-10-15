@@ -22,7 +22,7 @@ omitted.
 Every profile installs native Codex and Claude Code skills for code review, bug
 fixing, refactoring, dependency upgrades, issue authoring, issue
 implementation, test-driven development, code simplification, repository
-audit, and repository bootstrap. Library, application, and game profiles also
+audit, repository bootstrap, and repository upgrade. Library, application, and game profiles also
 install technical-design, documentation-bootstrap, and architecture-review
 skills.
 Cross-cutting Git, CI/CD, documentation, and language rules remain in the

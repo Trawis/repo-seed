@@ -11,6 +11,7 @@
     "test-driven-development": "off",
     "architecture-review": "off",
     "repository-audit": "off",
-    "repository-bootstrap": "off"
+    "repository-bootstrap": "off",
+    "repository-upgrade": "off"
   }
 }

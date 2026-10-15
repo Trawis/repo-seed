@@ -205,6 +205,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/issue-implementation/SKILL.md": all_profiles,
             ".agents/skills/repository-audit/SKILL.md": all_profiles,
             ".agents/skills/repository-bootstrap/SKILL.md": all_profiles,
+            ".agents/skills/repository-upgrade/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
@@ -217,6 +218,7 @@ class ManifestTests(unittest.TestCase):
             ".claude/skills/issue-implementation/SKILL.md": all_profiles,
             ".claude/skills/repository-audit/SKILL.md": all_profiles,
             ".claude/skills/repository-bootstrap/SKILL.md": all_profiles,
+            ".claude/skills/repository-upgrade/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
@@ -883,6 +885,36 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertNotIn("would overwrite", follow_up.stdout)
             self.assertNotIn("would create", follow_up.stdout)
             self.assertNotIn("would remove", follow_up.stdout)
+
+    def test_repository_upgrade_skill_orchestrates_the_newer_pack_and_owns_no_migration_rules(self):
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        self.assertNotIn("repository-upgrade", [entry["name"] for entry in registry["skills"]])
+        for root in (".agents/skills", ".claude/skills"):
+            content = " ".join(
+                (PACK_ROOT / "files" / root / "repository-upgrade" / "SKILL.md").read_text(encoding="utf-8").split()
+            )
+            for phrase in (
+                "use `repository-bootstrap` instead",
+                "belong to the newer pack's manifest and `sync-docs.py`",
+                "Do not download one without permission",
+                "Inspect the installed state before changing anything",
+                "not the older copy in the target",
+                "omit them for a normal upgrade",
+                "do not choose for the user",
+                "`--dry-run` first",
+                "preserved and tombstoned for review, not overwritten or deleted",
+                "only after the dry run is acceptable",
+                "removals happened only for unchanged files repo-seed owned",
+                "repeat `--dry-run` is clean or every remaining line is explained",
+                "`--audit`",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+            # No parallel migration table or version-specific rule lives in the skill.
+            for phrase in ("schema_version: 1", "4.1.0", "legacy_targets", "previous_hashes"):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase, content)
 
     def test_repository_disables_every_distributed_skill_wrapper_except_code_review(self):
         overrides = json.loads((REPOSITORY_ROOT / ".claude/settings.json").read_text(encoding="utf-8"))[
@@ -2559,6 +2591,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "dependency-upgrade",
                     "repository-audit",
                     "repository-bootstrap",
+                    "repository-upgrade",
                     "issue-authoring",
                     "issue-implementation",
                     "test-driven-development",
@@ -2830,6 +2863,161 @@ class GitHubLabelToolTests(unittest.TestCase):
                 actions = sync.synchronize(PACK_ROOT, target, "minimal")
             self.assertTrue(any(action.action == "copy" for action in actions))
             self.assertTrue((target / "AGENTS.md").is_file())
+
+
+class RepositoryUpgradeScenarioTests(unittest.TestCase):
+    """Representative upgrades, run the way the repository-upgrade skill directs.
+
+    The newer pack's own sync script runs with no --profile or --conventions
+    (recorded selections are reused), first as --dry-run, then for real, then
+    as a repeat --dry-run.
+    """
+
+    @staticmethod
+    def newer_pack(
+        root: Path,
+        remove: tuple[str, ...] = (),
+        edit: dict[str, str] | None = None,
+        reprofile: dict[str, list[str]] | None = None,
+    ) -> Path:
+        pack = root / "newer-pack"
+        shutil.copytree(PACK_ROOT, pack, ignore=shutil.ignore_patterns("__pycache__"))
+        manifest = json.loads((pack / "manifest.json").read_text(encoding="utf-8"))
+        manifest["pack_version"] = "9.0.0"
+        manifest["assets"] = [a for a in manifest["assets"] if a["path"] not in remove]
+        for asset in manifest["assets"]:
+            if asset["path"] in (reprofile or {}):
+                asset["profiles"] = reprofile[asset["path"]]
+        (pack / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        for path in remove:
+            (pack / "files" / path).unlink()
+        for path, text in (edit or {}).items():
+            (pack / "files" / path).write_text(text, encoding="utf-8")
+        return pack
+
+    @staticmethod
+    def run_sync(pack: Path, target: Path, *extra: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(pack / "files/scripts/sync-docs.py"), "--source", str(pack), "--target", str(target), *extra],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    @staticmethod
+    def snapshot(target: Path) -> dict[Path, bytes]:
+        return {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
+
+    def installed(self, root: Path, profile: str = "app", conventions: str = "python") -> Path:
+        target = root / "target"
+        target.mkdir()
+        sync.synchronize(PACK_ROOT, target, profile, conventions=frozenset(conventions.split(",")))
+        return target
+
+    def test_current_schema_upgrade_to_the_same_pack_is_a_no_op(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            before = self.snapshot(target)
+
+            dry_run = self.run_sync(PACK_ROOT, target, "--dry-run")
+            applied = self.run_sync(PACK_ROOT, target)
+
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertRegex(dry_run.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
+            self.assertEqual(before, self.snapshot(target))
+
+    def test_changed_managed_content_upgrades_and_keeps_recorded_selections(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root, profile="app", conventions="python")
+            newer = self.newer_pack(root, edit={".agents/guidelines/git.md": "newer git guidance\n"})
+            project_file = target / "docs/project/notes.md"
+            project_file.parent.mkdir(parents=True, exist_ok=True)
+            project_file.write_text("project notes\n", encoding="utf-8")
+            before = self.snapshot(target)
+
+            dry_run = self.run_sync(newer, target, "--dry-run")
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertIn(".agents/guidelines/git.md (would overwrite managed copy)", dry_run.stdout)
+            self.assertEqual(before, self.snapshot(target))
+
+            applied = self.run_sync(newer, target)
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertEqual((target / ".agents/guidelines/git.md").read_text(encoding="utf-8"), "newer git guidance\n")
+            self.assertEqual(project_file.read_text(encoding="utf-8"), "project notes\n")
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["pack_version"], "9.0.0")
+            self.assertEqual(state["profile"], "app")
+            self.assertEqual(state["conventions"], ["python"])
+
+            repeat = self.run_sync(newer, target, "--dry-run")
+            self.assertRegex(repeat.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
+            audit = self.run_sync(newer, target, "--audit")
+            self.assertIn("no drift detected", audit.stdout)
+
+    def test_older_state_schema_requires_an_explicit_selection_and_writes_nothing_until_given(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / "target"
+            target.mkdir()
+            (target / ".repo-seed-state.json").write_text(json.dumps(schema_1_state(profile="library")), encoding="utf-8")
+            before = self.snapshot(target)
+
+            refused = self.run_sync(PACK_ROOT, target, "--dry-run")
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertIn("--conventions", refused.stderr)
+            self.assertEqual(before, self.snapshot(target))
+
+            chosen = self.run_sync(PACK_ROOT, target, "--conventions", "python")
+            self.assertEqual(chosen.returncode, 0, chosen.stderr)
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["schema_version"], 2)
+            self.assertEqual(state["profile"], "library")
+            self.assertEqual(state["conventions"], ["python"])
+            repeat = self.run_sync(PACK_ROOT, target, "--dry-run")
+            self.assertRegex(repeat.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
+
+    def test_assets_the_newer_pack_no_longer_selects_follow_the_ownership_rules(self):
+        deselected_unchanged = "docs/templates/tsd.template.md"
+        deselected_modified = "docs/templates/architecture.template.md"
+        dropped_from_manifest = "docs/templates/user-guide.template.md"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root, profile="app", conventions="python")
+            (target / deselected_modified).write_text("local architecture template edits\n", encoding="utf-8")
+            project_readme = target / "README.md"
+            project_readme.write_text("project readme\n", encoding="utf-8")
+            newer = self.newer_pack(
+                root,
+                remove=(dropped_from_manifest,),
+                reprofile={deselected_unchanged: ["game"], deselected_modified: ["game"]},
+            )
+
+            dry_run = self.run_sync(newer, target, "--dry-run")
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertIn(f"remove         {deselected_unchanged}", dry_run.stdout)
+            self.assertTrue((target / deselected_unchanged).is_file())
+
+            applied = self.run_sync(newer, target)
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertFalse((target / deselected_unchanged).exists())
+            self.assertEqual(
+                (target / deselected_modified).read_text(encoding="utf-8"), "local architecture template edits\n"
+            )
+            self.assertTrue((target / dropped_from_manifest).is_file())
+            self.assertEqual(project_readme.read_text(encoding="utf-8"), "project readme\n")
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertIn(deselected_modified, state["tombstones"])
+            self.assertIn(dropped_from_manifest, state["tombstones"])
+            self.assertNotIn(deselected_unchanged, state["tombstones"])
+            self.assertEqual(state["profile"], "app")
+            self.assertEqual(state["conventions"], ["python"])
+
+            audit = self.run_sync(newer, target, "--audit")
+            self.assertIn(f"tombstone: {deselected_modified}", audit.stdout)
+            self.assertIn(f"tombstone: {dropped_from_manifest}", audit.stdout)
 
 
 if __name__ == "__main__":
