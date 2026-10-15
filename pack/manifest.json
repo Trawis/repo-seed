@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.8.0",
+  "pack_version": "5.9.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -101,6 +101,16 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
+      "path": ".agents/skills/architecture-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/architecture-review/NOTICE.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
       "path": ".agents/skills/technical-design/SKILL.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
@@ -159,6 +169,16 @@
       "path": ".claude/skills/test-driven-development/NOTICE.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/architecture-review/SKILL.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/architecture-review/NOTICE.md",
+      "type": "managed",
+      "profiles": ["library", "app", "game"]
     },
     {
       "path": ".claude/skills/technical-design/SKILL.md",
