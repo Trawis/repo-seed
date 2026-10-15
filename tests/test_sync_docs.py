@@ -200,11 +200,13 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/refactor/SKILL.md": all_profiles,
             ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".agents/skills/issue-authoring/SKILL.md": all_profiles,
+            ".agents/skills/issue-implementation/SKILL.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
             ".claude/skills/bug-fix/SKILL.md": all_profiles,
             ".claude/skills/refactor/SKILL.md": all_profiles,
             ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".claude/skills/issue-authoring/SKILL.md": all_profiles,
+            ".claude/skills/issue-implementation/SKILL.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
             ".claude/skills/technical-design/SKILL.md": library_profiles,
@@ -611,6 +613,33 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 with self.subTest(root=root, label=label):
                     self.assertNotIn(label, content)
             for phrase in ("git push", "git commit", "gh issue create", "gh pr"):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase, content)
+
+    def test_issue_implementation_skill_verifies_delegates_and_gates_permissions(self):
+        for root in (".agents/skills", ".claude/skills"):
+            content = " ".join(
+                (PACK_ROOT / "files" / root / "issue-implementation" / "SKILL.md")
+                .read_text(encoding="utf-8")
+                .split()
+            )
+            for phrase in (
+                ".agents/guidelines/issues.md",
+                "no open pull request",
+                "already exist",
+                "blocking decisions",
+                "bug-fix",
+                "refactor",
+                "dependency-upgrade",
+                "technical-design",
+                "satisfied, unsatisfied, or not verifiable",
+                "authorizes the working-tree edits",
+                "commit, push, open or update pull requests, merge",
+                "does not close the governing issue",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+            for phrase in ("superpowers:", "/implement", "worktree", "sub-agent", "subagent"):
                 with self.subTest(root=root, forbidden=phrase):
                     self.assertNotIn(phrase, content)
 
@@ -2225,6 +2254,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "refactor",
                     "dependency-upgrade",
                     "issue-authoring",
+                    "issue-implementation",
                 }
                 extended_skills = {"technical-design", "documentation-bootstrap"}
                 expected_skills = core_skills

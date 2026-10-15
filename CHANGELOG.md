@@ -8,6 +8,23 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.5.0 - 2026-10-15
+
+### Added
+
+- Added the `issue-implementation` skill for Codex (`.agents/skills/`) and
+  Claude Code (`.claude/skills/`), distributed to every profile. It reads the
+  governing issue, verifies it against current repository and tracker state
+  before editing (still open, not already implemented, no overlapping pull
+  request or issue, blockers resolved, assumptions current), delegates to
+  `bug-fix`, `refactor`, `dependency-upgrade`, or `technical-design` instead of
+  duplicating them, keeps issue scope distinct from repository truth, checks
+  every acceptance condition explicitly, and treats branch, commit, push, pull
+  request, merge, and issue-write actions as separately authorized. Ideas from
+  Matt Pocock's `implement` skill (state the ticket first, narrow checks while
+  working, review the finished work) are restated in repo-seed wording; no
+  upstream text was copied.
+
 ## 5.4.0 - 2026-10-15
 
 ### Added
