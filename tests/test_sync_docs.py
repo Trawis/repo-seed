@@ -217,8 +217,12 @@ class ManifestTests(unittest.TestCase):
             ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
+            ".agents/skills/architecture-review/SKILL.md": library_profiles,
+            ".agents/skills/architecture-review/NOTICE.md": library_profiles,
             ".claude/skills/technical-design/SKILL.md": library_profiles,
             ".claude/skills/documentation-bootstrap/SKILL.md": library_profiles,
+            ".claude/skills/architecture-review/SKILL.md": library_profiles,
+            ".claude/skills/architecture-review/NOTICE.md": library_profiles,
         }
         actual = {
             asset.path: set(asset.profiles)
@@ -696,6 +700,40 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 with self.subTest(root=root, forbidden=phrase):
                     self.assertNotIn(phrase, content)
             for phrase in ("Copyright (c) 2025 Addy Osmani", entry["source_revision"], "Permission is hereby granted"):
+                with self.subTest(root=root, notice=phrase):
+                    self.assertIn(phrase, notice)
+
+    def test_architecture_review_skill_is_read_only_evidence_based_and_attributed(self):
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        entry = next(e for e in registry["skills"] if e["name"] == "architecture-review")
+        self.assertEqual(entry["license"], "MIT")
+        manifest = sync.load_manifest(PACK_ROOT)
+        for asset in manifest.assets:
+            if "/architecture-review/" in asset.path:
+                self.assertEqual(set(asset.profiles), {"library", "app", "game"}, asset.path)
+        for root in (".agents/skills", ".claude/skills"):
+            directory = PACK_ROOT / "files" / root / "architecture-review"
+            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
+            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
+            for phrase in (
+                "evaluates the system as it is",
+                "It is read-only",
+                "It does not design a replacement",
+                "`technical-design`",
+                "Do not re-raise a settled decision",
+                "deletion test",
+                "Separate what you verified",
+                "Do not turn a preference",
+                "small set of high-leverage findings",
+                "not as a file or a generated report",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+            for phrase in ("mermaid", "tailwind", "GLOSSARY", "ADR", "Skill tool", "sub-agent", "grilling", "cdn"):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase.lower(), content.lower())
+            for phrase in ("Copyright (c) 2026 Matt Pocock", entry["source_revision"], "Permission is hereby granted"):
                 with self.subTest(root=root, notice=phrase):
                     self.assertIn(phrase, notice)
 
@@ -2376,7 +2414,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "issue-implementation",
                     "test-driven-development",
                 }
-                extended_skills = {"technical-design", "documentation-bootstrap"}
+                extended_skills = {"technical-design", "documentation-bootstrap", "architecture-review"}
                 expected_skills = core_skills
                 if profile != "minimal":
                     expected_skills |= extended_skills

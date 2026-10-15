@@ -30,6 +30,21 @@
         "SKILL.md",
         "NOTICE.md"
       ]
+    },
+    {
+      "name": "architecture-review",
+      "upstream_repository": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/improve-codebase-architecture",
+      "source_revision": "49dd158d1076134a641b33efb035946536778336",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "adaptation": "adapted",
+      "reviewed": "2026-10-15",
+      "security_review": "Read improve-codebase-architecture SKILL.md and HTML-REPORT.md, and the codebase-design SKILL.md, DEEPENING.md, and DESIGN-IT-TWICE.md it depends on. Only SKILL.md and NOTICE.md are distributed, both Markdown written for repo-seed. The HTML report template (Tailwind and Mermaid CDN scripts, temp-file writing, and opening a browser), glossary and ADR file creation, grilling loop, dependent skill calls, and parallel sub-agent pattern were not imported. No scripts, network access, telemetry, credential access, or Git and hosted write behavior is distributed.",
+      "distributed_files": [
+        "SKILL.md",
+        "NOTICE.md"
+      ]
     }
   ]
 }

@@ -8,6 +8,28 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.9.0 - 2026-10-15
+
+### Added
+
+- Added the `architecture-review` skill for Codex (`.agents/skills/`) and
+  Claude Code (`.claude/skills/`), distributed to the `library`, `app`, and
+  `game` profiles. It evaluates an existing codebase's architecture and reports
+  a small ranked set of evidence-backed friction points, such as callers
+  carrying complexity, wrong-way dependencies, pass-through abstractions
+  (checked with the deletion test), duplicated ownership, missing test seams,
+  and structure that makes routine changes spread. It reads existing
+  architecture documents and accepted decisions first, separates verified
+  friction from possible improvements, does not turn preferences or speculative
+  scale into defects, reports in the response rather than a generated file, and
+  hands substantial proposals to `technical-design`. It is read-only and adds
+  no Git or hosted write permission.
+- It is adapted from Matt Pocock's `improve-codebase-architecture` (MIT) with
+  vocabulary from `codebase-design`. Provenance is in
+  `pack/skill-sources.json`, and each surface ships a `NOTICE.md` with the MIT
+  notice. The HTML report, glossary and decision-record conventions, grilling
+  loop, dependent skills, and sub-agent pattern were not imported.
+
 ## 5.8.0 - 2026-10-15
 
 ### Added

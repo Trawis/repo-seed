@@ -86,5 +86,17 @@ rule, per-change commits, and any pull-request assumptions. Distinct from
 `refactor` by explicitly excluding behavior, compatibility, and structural
 change.
 
+The `architecture-review` skill adapts `improve-codebase-architecture` in
+`mattpocock/skills` (`49dd158d1076134a641b33efb035946536778336`, MIT, read with
+`codebase-design`, `DEEPENING.md`, and `DESIGN-IT-TWICE.md`) and has a
+`pack/skill-sources.json` entry. Adopted: scoping by named direction or
+recently changed areas, reading existing decisions first, the friction
+questions, the deletion test, seam discipline (one implementation means
+indirection, not a seam), and ranking by strength. Not adopted: the generated
+HTML report with CDN scripts and temp-file writing, mandatory glossary and ADR
+files, the grilling loop and dependent skills, the parallel design-it-twice
+sub-agents, and proposing interfaces. It stays read-only and distinct from
+`technical-design`, which designs a specific proposed change.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.

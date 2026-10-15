@@ -8,6 +8,7 @@
     "code-simplification": "off",
     "issue-authoring": "off",
     "issue-implementation": "off",
-    "test-driven-development": "off"
+    "test-driven-development": "off",
+    "architecture-review": "off"
   }
 }
