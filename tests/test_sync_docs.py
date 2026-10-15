@@ -700,29 +700,25 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertIsNone(bare_field_pattern.search(body))
 
-    def test_markdown_source_marker_preserves_github_frontmatter(self):
-        asset = next(
-            asset
-            for asset in sync.load_manifest(PACK_ROOT).assets
-            if asset.path.endswith("bug-report.template.md")
-        )
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            action = sync.scaffold_asset(PACK_ROOT, target, asset, dry_run=False)
-            content = (target / asset.scaffold_target).read_text(encoding="utf-8")
-            self.assertEqual(action.action, "scaffold")
-            self.assertTrue(content.startswith("---\n"))
-            self.assertIn(f"<!-- Scaffolded from: {asset.path} -->", content)
-            self.assertRegex(content, r"<!-- Scaffolded content SHA-256: [0-9a-f]{64} -->")
-            self.assertLess(content.index("\n---", 4), content.index("<!-- Scaffolded from:"))
+    def test_issue_forms_scaffold_verbatim_without_markdown_provenance(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        for suffix in ("bug-report.template.yml", "feature-request.template.yml"):
+            asset = next(a for a in manifest.assets if a.path.endswith(suffix))
+            with self.subTest(form=suffix), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                action = sync.scaffold_asset(PACK_ROOT, target, asset, dry_run=False)
+                content = (target / asset.scaffold_target).read_text(encoding="utf-8")
+                self.assertEqual(action.action, "scaffold")
+                self.assertEqual(content, sync.template_body(PACK_ROOT / "files" / asset.path))
+                self.assertNotIn("<!--", content)
 
     def test_scaffolded_issue_templates_use_canonical_type_labels(self):
         manifest = sync.load_manifest(PACK_ROOT)
         bug_asset = next(
-            asset for asset in manifest.assets if asset.path.endswith("bug-report.template.md")
+            asset for asset in manifest.assets if asset.path.endswith("bug-report.template.yml")
         )
         feature_asset = next(
-            asset for asset in manifest.assets if asset.path.endswith("feature-request.template.md")
+            asset for asset in manifest.assets if asset.path.endswith("feature-request.template.yml")
         )
         bug_rendered = sync.render_scaffold(PACK_ROOT, bug_asset)
         feature_rendered = sync.render_scaffold(PACK_ROOT, feature_asset)
@@ -750,7 +746,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "Feature Request",
             "Blank issue -> assign type manually",
             "blank_issues_enabled: false",
-            "do not add GitHub Issue Forms",
+            "GitHub Issue Forms",
+            "can bypass them",
             "Do not replace `type:*` labels with GitHub's native issue types",
         ):
             self.assertIn(required, guidance)
@@ -802,7 +799,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("may be created once as a missing-only scaffold", content)
         self.assertNotIn(".editorconfig` is also project-owned; it is never touched", content)
 
-    def test_manifest_has_exactly_two_contributor_issue_templates(self):
+    def test_manifest_has_exactly_two_contributor_issue_forms(self):
         github_scaffolds = {
             asset.scaffold_target
             for asset in sync.load_manifest(PACK_ROOT).assets
@@ -811,29 +808,66 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertEqual(
             github_scaffolds,
             {
-                ".github/ISSUE_TEMPLATE/bug_report.md",
-                ".github/ISSUE_TEMPLATE/feature_request.md",
+                ".github/ISSUE_TEMPLATE/bug_report.yml",
+                ".github/ISSUE_TEMPLATE/feature_request.yml",
                 ".github/ISSUE_TEMPLATE/config.yml",
             },
         )
 
-    def test_scaffolded_templates_have_no_forced_title_or_assignee(self):
-        manifest = sync.load_manifest(PACK_ROOT)
-        for suffix in ("bug-report.template.md", "feature-request.template.md"):
-            asset = next(asset for asset in manifest.assets if asset.path.endswith(suffix))
-            rendered = sync.render_scaffold(PACK_ROOT, asset)
-            self.assertIn('title: ""', rendered)
-            self.assertIn('assignees: ""', rendered)
-            self.assertNotIn("[BUG]", rendered)
+    @staticmethod
+    def _form_fields(content):
+        """Map each form element's label to whether it is required (stdlib-only parse)."""
+        fields = {}
+        for chunk in re.split(r"^  - type: ", content, flags=re.MULTILINE)[1:]:
+            label = re.search(r"^      label: (.+)$", chunk, re.MULTILINE)
+            if label:
+                fields[label.group(1).strip()] = "      required: true" in chunk
+        return fields
 
-    def test_root_issue_chooser_has_two_valid_markdown_templates(self):
+    def test_issue_forms_require_the_minimum_contract_and_nothing_more(self):
+        expected = {
+            "bug-report.template.yml": {
+                "Summary": True,
+                "Steps to Reproduce": True,
+                "Expected Behavior": True,
+                "Actual Behavior": True,
+                "Environment": True,
+                "Additional Context": False,
+            },
+            "feature-request.template.yml": {
+                "Summary": True,
+                "Goal": True,
+                "Suggested approach": False,
+                "Done when": True,
+            },
+        }
+        manifest = sync.load_manifest(PACK_ROOT)
+        for suffix, fields in expected.items():
+            asset = next(a for a in manifest.assets if a.path.endswith(suffix))
+            rendered = sync.render_scaffold(PACK_ROOT, asset)
+            with self.subTest(form=suffix):
+                self.assertEqual(self._form_fields(rendered), fields)
+                self.assertNotIn("title:", rendered)
+                self.assertNotIn("assignees:", rendered)
+                self.assertNotIn("[BUG]", rendered)
+                self.assertNotRegex(rendered, r"(?i)priority")
+                self.assertNotIn("repo-seed-template", rendered)
+                self.assertNotIn("Scaffolded from", rendered)
+            repo_form = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE" / asset.scaffold_target.rsplit("/", 1)[1]
+            self.assertEqual(self._form_fields(repo_form.read_text(encoding="utf-8")), fields)
+
+    def test_root_issue_chooser_has_two_issue_forms(self):
         issue_root = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE"
-        for name in ("bug_report.md", "feature_request.md"):
+        self.assertEqual(
+            sorted(path.name for path in issue_root.iterdir()),
+            ["bug_report.yml", "config.yml", "feature_request.yml"],
+        )
+        for name, label in (("bug_report.yml", "type: bug"), ("feature_request.yml", "type: feature")):
             content = (issue_root / name).read_text(encoding="utf-8")
-            self.assertTrue(content.startswith("---\n"), name)
-            frontmatter = content.split("---", 2)[1]
-            self.assertIn("name:", frontmatter, name)
-            self.assertIn("about:", frontmatter, name)
+            self.assertRegex(content, r"(?m)^name: .+$", name)
+            self.assertRegex(content, r"(?m)^description: .+$", name)
+            self.assertIn(f'labels: ["{label}"]', content, name)
+            self.assertRegex(content, r"(?m)^body:$", name)
         self.assertEqual(
             (issue_root / "config.yml").read_text(encoding="utf-8").strip(),
             "blank_issues_enabled: false",
@@ -1574,7 +1608,7 @@ class SyncBehaviorTests(unittest.TestCase):
                 "README.md": "project readme\n",
                 ".editorconfig": "root = false\n",
                 ".gitignore": "project-specific-output/\n",
-                ".github/ISSUE_TEMPLATE/bug_report.md": "project bug form\n",
+                ".github/ISSUE_TEMPLATE/bug_report.yml": "project bug form\n",
                 "docs/project/features.md": "project capability index\n",
                 "docs/project/tsd.md": "existing project technical document\n",
             }
@@ -1604,6 +1638,19 @@ class SyncBehaviorTests(unittest.TestCase):
             )
             self.assertFalse(any(action.path == ".gitignore" for action in repeat))
 
+    def test_customized_issue_forms_and_legacy_markdown_templates_are_preserved(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            issue_root = target / ".github/ISSUE_TEMPLATE"
+            issue_root.mkdir(parents=True)
+            (issue_root / "bug_report.yml").write_text("name: Our bug form\n", encoding="utf-8")
+            (issue_root / "feature_request.md").write_text("our legacy template\n", encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            self.assertEqual((issue_root / "bug_report.yml").read_text(encoding="utf-8"), "name: Our bug form\n")
+            self.assertEqual((issue_root / "feature_request.md").read_text(encoding="utf-8"), "our legacy template\n")
+            self.assertTrue((issue_root / "feature_request.yml").is_file())
+
     def test_github_scaffolding_is_explicit_and_complete(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
@@ -1611,7 +1658,7 @@ class SyncBehaviorTests(unittest.TestCase):
             issue_root = target / ".github/ISSUE_TEMPLATE"
             self.assertFalse(issue_root.exists())
             sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
-            for name in ("bug_report.md", "feature_request.md", "config.yml"):
+            for name in ("bug_report.yml", "feature_request.yml", "config.yml"):
                 self.assertTrue((issue_root / name).is_file(), name)
             self.assertEqual(
                 (issue_root / "config.yml").read_text(encoding="utf-8").strip(),
@@ -1927,11 +1974,10 @@ class SyncBehaviorTests(unittest.TestCase):
     def test_audit_reports_missing_guidance_drift_and_legacy_labels(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
-            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
-            bug_report = target / ".github/ISSUE_TEMPLATE/bug_report.md"
-            content = sync.SCAFFOLD_HASH_PATTERN.sub("", bug_report.read_text(encoding="utf-8"), count=1)
-            content = re.sub(r'labels: \["type: bug"\]', "labels: bug", content, count=1)
-            bug_report.write_text(content, encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_project_files=True)
+            readme = target / "README.md"
+            content = sync.SCAFFOLD_HASH_PATTERN.sub("", readme.read_text(encoding="utf-8"), count=1)
+            readme.write_text(content + "\nlabels: bug\n", encoding="utf-8")
             (target / "AGENTS.md").write_text("local edit\n", encoding="utf-8")
 
             report = sync.audit_target(PACK_ROOT, target, "minimal")
@@ -1939,7 +1985,7 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertTrue(any(line == "info: .agents/project.md not present" for line in report))
             self.assertFalse(any(line.startswith("missing: .agents/project.md") for line in report))
             self.assertTrue(any(line.startswith("drift: AGENTS.md") for line in report))
-            self.assertTrue(any("legacy label" in line and "bug_report.md" in line for line in report))
+            self.assertTrue(any("legacy label" in line and "README.md" in line for line in report))
 
     def test_audit_missing_project_md_is_informational_and_allows_no_drift(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1957,42 +2003,42 @@ class SyncBehaviorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             manifest = sync.load_manifest(PACK_ROOT)
-            bug_asset = next(a for a in manifest.assets if a.path.endswith("bug-report.template.md"))
-            source_body = sync.template_body(PACK_ROOT / "files" / bug_asset.path)
+            readme_asset = next(a for a in manifest.assets if a.path.endswith("readme.template.md"))
+            source_body = sync.template_body(PACK_ROOT / "files" / readme_asset.path)
 
             # Verified current scaffold: exactly what the sync path would produce.
-            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_project_files=True)
             current_report = sync.audit_target(PACK_ROOT, target, "minimal")
             self.assertFalse(any(line.startswith("outdated scaffold:") for line in current_report))
-            self.assertFalse(any(line.startswith("info:") and "bug_report.md" in line for line in current_report))
+            self.assertFalse(any(line.startswith("info:") and "README.md" in line for line in current_report))
 
             # Locally customized scaffold (provenance present but content has since
             # changed) must never be reported as "outdated"; at most informational.
-            bug_report = target / bug_asset.scaffold_target
-            bug_report.write_text(
-                sync.add_source_marker(source_body, bug_asset.path) + "\nSome locally added section.\n",
+            readme = target / readme_asset.scaffold_target
+            readme.write_text(
+                sync.add_source_marker(source_body, readme_asset.path) + "\nSome locally added section.\n",
                 encoding="utf-8",
             )
             customized_report = sync.audit_target(PACK_ROOT, target, "minimal")
             self.assertFalse(any(line.startswith("outdated scaffold:") for line in customized_report))
             self.assertTrue(
                 any(
-                    line.startswith("info:") and "bug_report.md" in line and "customized" in line
+                    line.startswith("info:") and "README.md" in line and "customized" in line
                     for line in customized_report
                 )
             )
-            self.assertFalse(any("bug_report.md" in line for line in customized_report if line.startswith("drift:")))
+            self.assertFalse(any("README.md" in line for line in customized_report if line.startswith("drift:")))
 
             # Fully customized/hand-written scaffold with no repo-seed markers at all:
             # no provenance to evaluate, so no warning of any kind.
-            bug_report.write_text("# Our own bug report form\n", encoding="utf-8")
+            readme.write_text("# Our own readme\n", encoding="utf-8")
             no_provenance_report = sync.audit_target(PACK_ROOT, target, "minimal")
-            self.assertFalse(any("bug_report.md" in line for line in no_provenance_report))
+            self.assertFalse(any("README.md" in line for line in no_provenance_report))
 
             # Invalid/mismatched provenance: source marker points at the wrong template.
-            other_asset = next(a for a in manifest.assets if a.path.endswith("feature-request.template.md"))
+            other_asset = next(a for a in manifest.assets if a.path.endswith("changelog.template.md"))
             mismatched = sync.add_source_marker(source_body, other_asset.path)
-            bug_report.write_text(mismatched, encoding="utf-8")
+            readme.write_text(mismatched, encoding="utf-8")
             mismatched_report = sync.audit_target(PACK_ROOT, target, "minimal")
             self.assertFalse(any(line.startswith("outdated scaffold:") for line in mismatched_report))
 
@@ -2133,7 +2179,7 @@ class BundleAndCliTests(unittest.TestCase):
                     }
                     self.assertEqual(actual_skills, expected_skills, f"{profile}: {root}")
                 self.assertTrue((target / ".editorconfig").is_file())
-                self.assertTrue((target / ".github/ISSUE_TEMPLATE/feature_request.md").is_file())
+                self.assertTrue((target / ".github/ISSUE_TEMPLATE/feature_request.yml").is_file())
                 self.assertIn(
                     "<!-- Scaffolded from: docs/templates/readme.template.md -->",
                     (target / "README.md").read_text(encoding="utf-8"),

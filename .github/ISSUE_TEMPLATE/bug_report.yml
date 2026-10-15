@@ -1,0 +1,53 @@
+# Document role: Repo-seed-only issue form. Sync behavior: Never copied into targets.
+
+name: Bug Report
+description: Report a reproducible problem with the guidance pack, sync script, or templates
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Describe what should happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: Describe what happens instead.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - Pack version (`pack/manifest.json`):
+        - Sync script version (`SCRIPT_VERSION` in `pack/files/scripts/sync-docs.py`):
+        - Python version (if applicable):
+        - Operating system:
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Include relevant command output, manifests, or logs without exposing secrets.
