@@ -8,6 +8,25 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.7.0 - 2026-10-15
+
+### Added
+
+- Added the `test-driven-development` skill for Codex (`.agents/skills/`) and
+  Claude Code (`.claude/skills/`), distributed to every profile. It applies
+  only when the user explicitly asks for TDD, test-first development, or
+  red-green-refactor, or when another workflow deliberately calls for it; it
+  does not make TDD mandatory. It runs vertical red-green slices over named
+  public seams, requires seeing each new test fail for the right reason,
+  refactors only while green, keeps tests on observable behavior with
+  independently derived expected values and test doubles only at system
+  boundaries, ends with a mutation check, and defers to the repository's own
+  test commands and conventions. It adds no Git or hosted write permission.
+- It is the first upstream-derived skill: adapted from Matt Pocock's `tdd`
+  (MIT) with ideas from Superpowers' `test-driven-development` (MIT).
+  Provenance is recorded in `pack/skill-sources.json`, and each surface ships
+  a `NOTICE.md` carrying the required MIT notice.
+
 ## 5.6.0 - 2026-10-15
 
 ### Changed

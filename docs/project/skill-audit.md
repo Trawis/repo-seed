@@ -58,5 +58,20 @@ on bug fixes, and treat an intentional design change differently from an
 unexplained violation. Not adopted: parallel sub-agents, tracker setup files,
 framework-specific design documents and commands, and posting review actions.
 
+The `test-driven-development` skill is the first upstream-derived skill and has
+a `pack/skill-sources.json` entry. It adapts `tdd` in `mattpocock/skills`
+(`49dd158d1076134a641b33efb035946536778336`, MIT) after comparison with
+`test-driven-development` and `writing-good-tests.md` in `obra/superpowers`
+(`bb92a77741419a4ab5f06e711a283343f1ada0c3`, MIT). From the baseline: named
+seams, vertical slices rather than all tests first, behavior over
+implementation detail, tautological-test warnings, and mocking only at system
+boundaries. From Superpowers: verify the red failure is the expected one, run
+the wider suite before finishing, refactor only while green, name the break a
+test catches, and a closing mutation check. Not adopted: the iron law and
+delete-the-code rule, rationalization tables, applying TDD to every change,
+excluding refactoring from the loop, requiring user confirmation of every
+seam, calls to other skills by tool name, automatic commits, and the extra
+`tests.md` and `mocking.md` files.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.

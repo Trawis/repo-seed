@@ -21,7 +21,7 @@ omitted.
 
 Every profile installs native Codex and Claude Code skills for code review, bug
 fixing, refactoring, dependency upgrades, issue authoring, and issue
-implementation. Library, application, and game profiles also install
+implementation, and test-driven development. Library, application, and game profiles also install
 technical-design and documentation-bootstrap skills.
 Cross-cutting Git, CI/CD, documentation, and language rules remain in the
 conditionally loaded `.agents/` guidance.

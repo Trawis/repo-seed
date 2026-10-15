@@ -1,4 +1,20 @@
 {
   "schema_version": 1,
-  "skills": []
+  "skills": [
+    {
+      "name": "test-driven-development",
+      "upstream_repository": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/tdd",
+      "source_revision": "49dd158d1076134a641b33efb035946536778336",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "adaptation": "adapted",
+      "reviewed": "2026-10-15",
+      "security_review": "Read upstream SKILL.md, tests.md, mocking.md, and agents/openai.yaml, plus the obra/superpowers test-driven-development SKILL.md and writing-good-tests.md at bb92a77741419a4ab5f06e711a283343f1ada0c3. Only SKILL.md and NOTICE.md are distributed, both Markdown written for repo-seed. No scripts, hooks, plugin or tool configuration, network access, telemetry, credential access, or Git and hosted write behavior were imported; upstream commit, ticket, skill-namespace, and sub-agent assumptions were removed.",
+      "distributed_files": [
+        "SKILL.md",
+        "NOTICE.md"
+      ]
+    }
+  ]
 }
