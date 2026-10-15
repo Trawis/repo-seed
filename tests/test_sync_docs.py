@@ -204,6 +204,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/issue-authoring/SKILL.md": all_profiles,
             ".agents/skills/issue-implementation/SKILL.md": all_profiles,
             ".agents/skills/repository-audit/SKILL.md": all_profiles,
+            ".agents/skills/repository-bootstrap/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
@@ -215,6 +216,7 @@ class ManifestTests(unittest.TestCase):
             ".claude/skills/issue-authoring/SKILL.md": all_profiles,
             ".claude/skills/issue-implementation/SKILL.md": all_profiles,
             ".claude/skills/repository-audit/SKILL.md": all_profiles,
+            ".claude/skills/repository-bootstrap/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
@@ -801,6 +803,86 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn("drift: AGENTS.md", audit.stdout)
             after = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
             self.assertEqual(before, after)
+
+    def test_repository_bootstrap_skill_delegates_to_sync_and_keeps_scaffolding_opt_in(self):
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        self.assertNotIn("repository-bootstrap", [entry["name"] for entry in registry["skills"]])
+        for root in (".agents/skills", ".claude/skills"):
+            content = " ".join(
+                (PACK_ROOT / "files" / root / "repository-bootstrap" / "SKILL.md")
+                .read_text(encoding="utf-8")
+                .split()
+            )
+            for phrase in (
+                "`documentation-bootstrap`",
+                "only mechanism",
+                "Do not download one without permission",
+                "Only those values are valid",
+                "Inspect the target before choosing any argument",
+                "stop and ask rather than assuming",
+                "Install none by default and never all of them",
+                "Choose scaffolds as opt-in",
+                "`AGENTS.md` and `CLAUDE.md` are managed",
+                "`.agents/project.md` first",
+                "`.github/workflows/`",
+                "`--dry-run`",
+                "only after the dry run is acceptable",
+                "`.repo-seed-state.json` records the intended profile",
+                "follow-up run with `--dry-run` is clean",
+                "Do not invent project facts",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+
+    def test_repository_bootstrap_first_sync_matches_the_documented_verification(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "target"
+            (target / ".github/workflows").mkdir(parents=True)
+            (target / ".github/workflows/ci.yml").write_text("name: project ci\n", encoding="utf-8")
+            (target / "README.md").write_text("project readme\n", encoding="utf-8")
+            (target / "AGENTS.md").write_text("project instructions\n", encoding="utf-8")
+            script = PACK_ROOT / "files/scripts/sync-docs.py"
+            args = [
+                sys.executable,
+                str(script),
+                "--source",
+                str(PACK_ROOT),
+                "--target",
+                str(target),
+                "--profile",
+                "library",
+                "--conventions",
+                "python",
+                "--scaffold-project-files",
+            ]
+            before = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
+            dry_run = subprocess.run(args + ["--dry-run"], capture_output=True, text=True, check=False)
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertIn("AGENTS.md (would overwrite managed copy)", dry_run.stdout)
+            self.assertEqual(before, {p: p.read_bytes() for p in target.rglob("*") if p.is_file()})
+
+            applied = subprocess.run(args, capture_output=True, text=True, check=False)
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["profile"], "library")
+            self.assertEqual(state["conventions"], ["python"])
+            for surface in (".agents", ".claude"):
+                self.assertTrue((target / surface / "skills/repository-bootstrap/SKILL.md").is_file())
+            self.assertTrue((target / ".agents/conventions/python.md").is_file())
+            self.assertFalse((target / ".agents/conventions/csharp.md").exists())
+            # Project-owned files survive, including a customized README and the workflows tree.
+            self.assertEqual((target / "README.md").read_text(encoding="utf-8"), "project readme\n")
+            self.assertEqual(
+                (target / ".github/workflows/ci.yml").read_text(encoding="utf-8"), "name: project ci\n"
+            )
+            self.assertNotEqual((target / "AGENTS.md").read_text(encoding="utf-8"), "project instructions\n")
+
+            follow_up = subprocess.run(args + ["--dry-run"], capture_output=True, text=True, check=False)
+            self.assertEqual(follow_up.returncode, 0, follow_up.stderr)
+            self.assertNotIn("would overwrite", follow_up.stdout)
+            self.assertNotIn("would create", follow_up.stdout)
+            self.assertNotIn("would remove", follow_up.stdout)
 
     def test_repository_disables_every_distributed_skill_wrapper_except_code_review(self):
         overrides = json.loads((REPOSITORY_ROOT / ".claude/settings.json").read_text(encoding="utf-8"))[
@@ -2476,6 +2558,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "refactor",
                     "dependency-upgrade",
                     "repository-audit",
+                    "repository-bootstrap",
                     "issue-authoring",
                     "issue-implementation",
                     "test-driven-development",
