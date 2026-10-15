@@ -8,6 +8,24 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.12.0 - 2026-10-15
+
+### Added
+
+- Added the `repository-upgrade` skill for Codex (`.agents/skills/`) and Claude
+  Code (`.claude/skills/`), distributed to every profile. It upgrades a
+  repository that already has a repo-seed install: it inspects
+  `.repo-seed-state.json` and the working tree, uses the newer pack's own
+  `sync-docs.py` rather than the older copy in the target, reuses recorded
+  profile and conventions, stops and asks when the script requires an explicit
+  selection for an older state schema, requires a dry run first, and verifies
+  the state schema, selections, managed set, preserved and tombstoned files, a
+  clean repeat dry run, and `--audit`. Migration, ownership, and tombstone
+  rules stay in the manifest and sync script, and a test asserts the skill
+  holds no version-specific migration rule. It is separate from
+  `repository-bootstrap`, adds no Git or hosted write permission, and is
+  original to repo-seed, so it has no upstream provenance entry.
+
 ## 5.11.0 - 2026-10-15
 
 ### Added
