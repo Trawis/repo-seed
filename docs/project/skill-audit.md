@@ -73,5 +73,18 @@ excluding refactoring from the loop, requiring user confirmation of every
 seam, calls to other skills by tool name, automatic commits, and the extra
 `tests.md` and `mocking.md` files.
 
+The `code-simplification` skill adapts `code-simplification` in
+`addyosmani/agent-skills` (`aeac41d4d005999432bb7312f7ff06383a91d59d`, MIT) and
+has a `pack/skill-sources.json` entry. Adopted: the behavior-preservation test
+before every change, project-convention matching, clarity over cleverness, the
+over-simplification traps, scoping to what changed, understanding the code
+before changing it, one change at a time with tests after each, and the rule
+that tests needing modification signal a behavior change. Not adopted: the
+`simplify-ignore` shell hook and its settings, the slash-command definitions,
+the plugin manifest, evals, language-specific examples, the 500-line codemod
+rule, per-change commits, and any pull-request assumptions. Distinct from
+`refactor` by explicitly excluding behavior, compatibility, and structural
+change.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.

@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.7.0",
+  "pack_version": "5.8.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -61,6 +61,16 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
+      "path": ".agents/skills/code-simplification/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".agents/skills/code-simplification/NOTICE.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
       "path": ".agents/skills/refactor/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
@@ -107,6 +117,16 @@
     },
     {
       "path": ".claude/skills/bug-fix/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/code-simplification/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/code-simplification/NOTICE.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },

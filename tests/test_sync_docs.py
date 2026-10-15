@@ -197,6 +197,8 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/issues.md": all_profiles,
             ".agents/skills/code-review/SKILL.md": all_profiles,
             ".agents/skills/bug-fix/SKILL.md": all_profiles,
+            ".agents/skills/code-simplification/SKILL.md": all_profiles,
+            ".agents/skills/code-simplification/NOTICE.md": all_profiles,
             ".agents/skills/refactor/SKILL.md": all_profiles,
             ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".agents/skills/issue-authoring/SKILL.md": all_profiles,
@@ -205,6 +207,8 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
             ".claude/skills/bug-fix/SKILL.md": all_profiles,
+            ".claude/skills/code-simplification/SKILL.md": all_profiles,
+            ".claude/skills/code-simplification/NOTICE.md": all_profiles,
             ".claude/skills/refactor/SKILL.md": all_profiles,
             ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".claude/skills/issue-authoring/SKILL.md": all_profiles,
@@ -631,7 +635,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
 
     def test_test_driven_development_skill_is_explicit_only_portable_and_attributed(self):
         registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        self.assertEqual([entry["name"] for entry in registry["skills"]], ["test-driven-development"])
+        self.assertIn("test-driven-development", [entry["name"] for entry in registry["skills"]])
         for root in (".agents/skills", ".claude/skills"):
             directory = PACK_ROOT / "files" / root / "test-driven-development"
             content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
@@ -662,6 +666,48 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ):
                 with self.subTest(root=root, notice=phrase):
                     self.assertIn(phrase, notice)
+
+    def test_code_simplification_skill_is_behavior_preserving_distinct_and_attributed(self):
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        entry = next(e for e in registry["skills"] if e["name"] == "code-simplification")
+        self.assertEqual(entry["license"], "MIT")
+        self.assertEqual(entry["adaptation"], "adapted")
+        for root in (".agents/skills", ".claude/skills"):
+            directory = PACK_ROOT / "files" / root / "code-simplification"
+            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
+            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
+            for phrase in (
+                "Behavior stays identical",
+                "differs from `refactor`",
+                "use `refactor`",
+                "not fewer lines",
+                "Understand before touching",
+                "conventions",
+                "one simplification at a time",
+                "Existing tests should pass unmodified",
+                "Simplifying code you do not fully understand",
+                "replacing one abstraction with another",
+                "Speculative cleanup",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase.lower(), content.lower())
+            for phrase in ("superpowers:", "simplify-ignore", "CLAUDE.md", "Skill tool", "sub-agent", "gh pr"):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase, content)
+            for phrase in ("Copyright (c) 2025 Addy Osmani", entry["source_revision"], "Permission is hereby granted"):
+                with self.subTest(root=root, notice=phrase):
+                    self.assertIn(phrase, notice)
+
+    def test_repository_disables_every_distributed_skill_wrapper_except_code_review(self):
+        overrides = json.loads((REPOSITORY_ROOT / ".claude/settings.json").read_text(encoding="utf-8"))[
+            "skillOverrides"
+        ]
+        distributed = {
+            path.parent.name for path in (PACK_ROOT / "files/.claude/skills").glob("*/SKILL.md")
+        }
+        self.assertEqual(set(overrides), distributed - {"code-review"})
+        self.assertEqual(set(overrides.values()), {"off"})
 
     def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
         for root in (".agents/skills", ".claude/skills"):
@@ -2323,6 +2369,7 @@ class BundleAndCliTests(unittest.TestCase):
                 core_skills = {
                     "code-review",
                     "bug-fix",
+                    "code-simplification",
                     "refactor",
                     "dependency-upgrade",
                     "issue-authoring",
