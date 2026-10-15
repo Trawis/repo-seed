@@ -9,6 +9,7 @@
     "issue-authoring": "off",
     "issue-implementation": "off",
     "test-driven-development": "off",
-    "architecture-review": "off"
+    "architecture-review": "off",
+    "repository-audit": "off"
   }
 }

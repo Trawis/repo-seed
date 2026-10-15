@@ -203,6 +203,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".agents/skills/issue-authoring/SKILL.md": all_profiles,
             ".agents/skills/issue-implementation/SKILL.md": all_profiles,
+            ".agents/skills/repository-audit/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
@@ -213,6 +214,7 @@ class ManifestTests(unittest.TestCase):
             ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
             ".claude/skills/issue-authoring/SKILL.md": all_profiles,
             ".claude/skills/issue-implementation/SKILL.md": all_profiles,
+            ".claude/skills/repository-audit/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/SKILL.md": all_profiles,
             ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
@@ -736,6 +738,69 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             for phrase in ("Copyright (c) 2026 Matt Pocock", entry["source_revision"], "Permission is hereby granted"):
                 with self.subTest(root=root, notice=phrase):
                     self.assertIn(phrase, notice)
+
+    def test_repository_audit_skill_reuses_sync_machinery_and_stays_read_only(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        profiles = {
+            asset.path: set(asset.profiles) for asset in manifest.assets if "/repository-audit/" in asset.path
+        }
+        self.assertEqual(
+            profiles,
+            {
+                ".agents/skills/repository-audit/SKILL.md": {"minimal", "library", "app", "game"},
+                ".claude/skills/repository-audit/SKILL.md": {"minimal", "library", "app", "game"},
+            },
+        )
+        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
+        self.assertNotIn("repository-audit", [entry["name"] for entry in registry["skills"]])
+        for root in (".agents/skills", ".claude/skills"):
+            content = " ".join(
+                (PACK_ROOT / "files" / root / "repository-audit" / "SKILL.md").read_text(encoding="utf-8").split()
+            )
+            for phrase in (
+                "The audit is read-only",
+                ".repo-seed-state.json",
+                "Do not download one without permission",
+                "instead of reimplementing its logic",
+                "scripts/sync-docs.py --source <pack> --audit",
+                "`--dry-run`",
+                "Never run without `--audit` or `--dry-run`",
+                "**Managed drift**",
+                "**Stale artifacts**",
+                "**Selection inconsistencies**",
+                "**Competing guidance**",
+                "**Intentional project-owned differences**",
+                "**Unverifiable**",
+                "do not recommend overwriting them",
+                "overwrites the edit",
+                "Never claim a comparison was made when it was not",
+                "Do not create branches, commit, push, or change hosted state",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+
+    def test_repository_audit_commands_named_by_the_skill_exist_and_write_nothing(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "target"
+            target.mkdir()
+            sync.synchronize(PACK_ROOT, target, "minimal", conventions=frozenset())
+            (target / "AGENTS.md").write_text("local edit\n", encoding="utf-8")
+            before = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
+            base = [
+                sys.executable,
+                str(target / "scripts/sync-docs.py"),
+                "--source",
+                str(PACK_ROOT),
+                "--target",
+                str(target),
+            ]
+            audit = subprocess.run(base + ["--audit"], capture_output=True, text=True, check=False)
+            dry_run = subprocess.run(base + ["--dry-run"], capture_output=True, text=True, check=False)
+            self.assertEqual(audit.returncode, 0, audit.stderr)
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertIn("drift: AGENTS.md", audit.stdout)
+            after = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
+            self.assertEqual(before, after)
 
     def test_repository_disables_every_distributed_skill_wrapper_except_code_review(self):
         overrides = json.loads((REPOSITORY_ROOT / ".claude/settings.json").read_text(encoding="utf-8"))[
@@ -2410,6 +2475,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "code-simplification",
                     "refactor",
                     "dependency-upgrade",
+                    "repository-audit",
                     "issue-authoring",
                     "issue-implementation",
                     "test-driven-development",
