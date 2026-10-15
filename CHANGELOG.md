@@ -8,6 +8,27 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.3.0 - 2026-10-15
+
+### Changed
+
+- Audited the six distributed skills against `mattpocock/skills`
+  (`diagnosing-bugs`, `code-review`, `codebase-design`, `to-spec`,
+  `domain-modeling`) and `obra/superpowers` (`systematic-debugging`,
+  `requesting-code-review`, `writing-plans`). Decisions are recorded in
+  `docs/project/skill-audit.md`.
+- `bug-fix` now starts from a trustworthy, minimized feedback loop, requires
+  falsifiable hypotheses tested one variable at a time, uses a greppable marker
+  for temporary debug output, checks that a regression-test seam is real,
+  stops after two failed fixes to re-examine assumptions, and redacts secrets.
+- `code-review` now pins and validates the comparison base, cites documented
+  repository rules for standards findings, labels design-smell observations as
+  judgement calls, and reports standards findings separately from correctness.
+  Acceptance-criteria alignment remains separate work.
+- `refactor`, `dependency-upgrade`, `technical-design`, and
+  `documentation-bootstrap` are unchanged. The wording is repo-seed's own, so
+  no upstream-derived registry entries were needed.
+
 ## 5.2.0 - 2026-10-15
 
 ### Added

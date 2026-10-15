@@ -14,7 +14,9 @@ Do not modify files unless the user also asks for fixes.
 ## Workflow
 
 1. Establish the review scope: changed files, diff or comparison base, requested
-   behavior, and any acceptance criteria.
+   behavior, and any acceptance criteria. When reviewing a branch or range,
+   compare against the merge-base with a fixed reference, and confirm the
+   reference resolves and the diff is non-empty before reviewing.
 2. Inspect the changed implementation together with relevant callers, callees,
    tests, configuration, schemas, and public contracts. Do not review a diff in
    isolation when surrounding behavior determines correctness.
@@ -23,6 +25,10 @@ Do not modify files unless the user also asks for fixes.
    unsafe error handling, and meaningful performance risks.
 4. Distinguish actionable defects from preferences. Do not report style nits
    already handled by automated formatting or unsupported hypothetical risks.
+   Where the repository documents coding standards (`AGENTS.md`,
+   `CONTRIBUTING.md`, conventions), cite the rule for any violation, and label
+   design-smell observations as judgement calls rather than defects; a
+   documented repository rule always overrides a general smell.
 5. Check whether tests exercise the changed behavior and important failure or
    boundary paths. Report missing coverage only when it creates a concrete
    regression risk.
@@ -31,7 +37,9 @@ Do not modify files unless the user also asks for fixes.
 
 ## Findings
 
-Report findings before general commentary, ordered by severity.
+Report findings before general commentary, ordered by severity. Keep
+conformance to documented standards separate from correctness and requirement
+findings so one cannot mask the other.
 
 For each finding include:
 
