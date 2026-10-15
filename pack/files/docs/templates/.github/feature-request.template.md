@@ -7,7 +7,7 @@ unchanged scaffold may be upgraded
 <!-- repo-seed-template:end -->
 
 ---
-name: Feature request
+name: Feature Request
 about: Propose an implementation-ready capability
 title: ""
 labels: ["type: feature"]
@@ -24,6 +24,10 @@ Describe the requested capability.
 
 What problem should this solve?
 
+## Suggested approach
+
+<!-- Optional: Provide useful implementation direction when known. -->
+
 ## Done when
 
-- Describe the expected outcome.
+- Describe a concrete, observable outcome.
