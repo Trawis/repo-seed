@@ -248,6 +248,7 @@ pack/
   README.md                  # package-only quick start
   LICENSE                    # package-only license
   github-labels.json         # canonical hosted-label catalog
+  skill-sources.json         # provenance registry for upstream-derived skills
   files/                     # mirrors target repository paths
     AGENTS.md
     CLAUDE.md
@@ -261,7 +262,8 @@ pack/
     scripts/sync-docs.py
 docs/project/                # live documentation about repo-seed
 scripts/                     # repository tooling, including the optional
-                              # sync-github-labels.py hosted-label tool
+                              # sync-github-labels.py hosted-label tool and
+                              # validate-skill-sources.py provenance check
 tests/                       # pack and tooling tests
 ```
 
@@ -279,7 +281,8 @@ python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py
+python scripts/validate-skill-sources.py
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py
 git diff --check
 ```
 
@@ -288,6 +291,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 ## Project and Community
 
 - [Document ownership](docs/project/document-ownership.md)
+- [Upstream-derived skills](docs/project/upstream-skills.md)
 - [Issue guidance](pack/files/.agents/guidelines/issues.md)
 - [Upgrading to Version 5](docs/project/upgrading-to-5.md)
 - [Contributing](CONTRIBUTING.md)

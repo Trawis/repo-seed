@@ -112,7 +112,7 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(self.manifest.pack_version, PACK_VERSION)
         self.assertEqual(self.manifest.state_file, ".repo-seed-state.json")
         self.assertEqual(self.manifest.profiles, ("minimal", "library", "app", "game"))
-        self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE", "github-labels.json"))
+        self.assertEqual(self.manifest.package_files, ("README.md", "LICENSE", "github-labels.json", "skill-sources.json"))
         for package_file in self.manifest.package_files:
             self.assertTrue((PACK_ROOT / package_file).is_file(), package_file)
         for asset in self.manifest.assets:
@@ -1773,7 +1773,7 @@ class SyncBehaviorTests(unittest.TestCase):
             future_pack = root / "future-pack"
             target.mkdir()
             shutil.copytree(PACK_ROOT / "files", future_pack / "files")
-            for package_file in ("README.md", "LICENSE", "github-labels.json"):
+            for package_file in ("README.md", "LICENSE", "github-labels.json", "skill-sources.json"):
                 shutil.copy2(PACK_ROOT / package_file, future_pack / package_file)
 
             sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))

@@ -8,6 +8,22 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.2.0 - 2026-10-15
+
+### Added
+
+- Added a provenance and licensing model for skills derived from upstream
+  repositories: the `pack/skill-sources.json` registry (shipped in the
+  archive as a package file, never synced into targets), a per-skill
+  `NOTICE.md` convention, and the repo-seed-only
+  `scripts/validate-skill-sources.py` check. It rejects unpinned revisions,
+  disallowed or missing licenses, unregistered or undeclared files, hooks and
+  plugin configuration, unreviewed non-Markdown files, network fetch
+  commands, and divergence between `.agents/skills/` and `.claude/skills/`.
+  The registry is empty: no upstream-derived skill is distributed yet.
+  Target synchronization stays offline and never reads the registry. The
+  maintainer workflow is in `docs/project/upstream-skills.md`.
+
 ## 5.1.0 - 2026-10-15
 
 ### Changed

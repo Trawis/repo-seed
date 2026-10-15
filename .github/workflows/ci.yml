@@ -28,9 +28,10 @@ jobs:
         run: |
           python pack/files/scripts/sync-docs.py --help
           python scripts/build-release-bundle.py --help
+          python scripts/validate-skill-sources.py
 
       - name: Compile Python files
-        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py tests/test_sync_docs.py
+        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/validate-skill-sources.py tests/test_sync_docs.py
 
       - name: Build universal archive
         run: python scripts/build-release-bundle.py
