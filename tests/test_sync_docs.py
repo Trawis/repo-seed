@@ -557,6 +557,36 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 self.assertLessEqual(len(description), 1024)
                 self.assertTrue(body)
 
+    def test_audited_skills_keep_adopted_workflow_ideas_and_permission_boundaries(self):
+        expected = {
+            "bug-fix": (
+                "Build a feedback loop before theorizing",
+                "falsifiable hypotheses",
+                "unique greppable marker",
+                "If two fix attempts fail",
+                "Redact secrets",
+                "Do not add temporary production instrumentation without permission",
+            ),
+            "code-review": (
+                "merge-base",
+                "diff is non-empty",
+                "cite the rule",
+                "judgement calls",
+            ),
+        }
+        forbidden = ("git push", "git commit", "gh pr", "gh issue", "sub-agent", "subagent")
+        for root in (".agents/skills", ".claude/skills"):
+            for skill, phrases in expected.items():
+                content = " ".join(
+                    (PACK_ROOT / "files" / root / skill / "SKILL.md").read_text(encoding="utf-8").split()
+                )
+                for phrase in phrases:
+                    with self.subTest(root=root, skill=skill, phrase=phrase):
+                        self.assertIn(phrase, content)
+                for phrase in forbidden:
+                    with self.subTest(root=root, skill=skill, forbidden=phrase):
+                        self.assertNotIn(phrase, content)
+
     def test_skills_define_substantive_workflows(self):
         for root in (".agents/skills", ".claude/skills"):
             for skill in sorted((PACK_ROOT / "files" / root).glob("*/SKILL.md")):

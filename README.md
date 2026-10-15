@@ -292,6 +292,7 @@ The build creates `dist/repo-seed-pack-<version>.zip` from the inventory declare
 
 - [Document ownership](docs/project/document-ownership.md)
 - [Upstream-derived skills](docs/project/upstream-skills.md)
+- [Skill audit](docs/project/skill-audit.md)
 - [Issue guidance](pack/files/.agents/guidelines/issues.md)
 - [Upgrading to Version 5](docs/project/upgrading-to-5.md)
 - [Contributing](CONTRIBUTING.md)
