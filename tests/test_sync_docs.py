@@ -199,10 +199,12 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/bug-fix/SKILL.md": all_profiles,
             ".agents/skills/refactor/SKILL.md": all_profiles,
             ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
+            ".agents/skills/issue-authoring/SKILL.md": all_profiles,
             ".claude/skills/code-review/SKILL.md": all_profiles,
             ".claude/skills/bug-fix/SKILL.md": all_profiles,
             ".claude/skills/refactor/SKILL.md": all_profiles,
             ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
+            ".claude/skills/issue-authoring/SKILL.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
             ".claude/skills/technical-design/SKILL.md": library_profiles,
@@ -586,6 +588,31 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 for phrase in forbidden:
                     with self.subTest(root=root, skill=skill, forbidden=phrase):
                         self.assertNotIn(phrase, content)
+
+    def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
+        for root in (".agents/skills", ".claude/skills"):
+            content = " ".join(
+                (PACK_ROOT / "files" / root / "issue-authoring" / "SKILL.md").read_text(encoding="utf-8").split()
+            )
+            for phrase in (
+                ".agents/guidelines/issues.md",
+                "open and closed issues",
+                "open and closed pull requests",
+                "already exist",
+                "SECURITY.md",
+                "Done when",
+                "explicit authorization",
+                "does not imply it",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, content)
+            # The taxonomy lives only in the canonical guidance.
+            for label in ("type: bug", "type: feature", "priority: high"):
+                with self.subTest(root=root, label=label):
+                    self.assertNotIn(label, content)
+            for phrase in ("git push", "git commit", "gh issue create", "gh pr"):
+                with self.subTest(root=root, forbidden=phrase):
+                    self.assertNotIn(phrase, content)
 
     def test_skills_define_substantive_workflows(self):
         for root in (".agents/skills", ".claude/skills"):
@@ -2197,6 +2224,7 @@ class BundleAndCliTests(unittest.TestCase):
                     "bug-fix",
                     "refactor",
                     "dependency-upgrade",
+                    "issue-authoring",
                 }
                 extended_skills = {"technical-design", "documentation-bootstrap"}
                 expected_skills = core_skills

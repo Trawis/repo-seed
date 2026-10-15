@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.3.0",
+  "pack_version": "5.4.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -71,6 +71,11 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
+      "path": ".agents/skills/issue-authoring/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
       "path": ".agents/skills/technical-design/SKILL.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
@@ -97,6 +102,11 @@
     },
     {
       "path": ".claude/skills/dependency-upgrade/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/issue-authoring/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },

@@ -20,8 +20,9 @@ conventions your project actually uses (`csharp`, `python`, `scripts`,
 omitted.
 
 Every profile installs native Codex and Claude Code skills for code review, bug
-fixing, refactoring, and dependency upgrades. Library, application, and game
-profiles also install technical-design and documentation-bootstrap skills.
+fixing, refactoring, dependency upgrades, and issue authoring. Library,
+application, and game profiles also install technical-design and
+documentation-bootstrap skills.
 Cross-cutting Git, CI/CD, documentation, and language rules remain in the
 conditionally loaded `.agents/` guidance.
 

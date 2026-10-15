@@ -32,5 +32,14 @@ was reviewed for tool-specific assumptions.
 | `technical-design` | Keep | `to-spec` and `writing-plans` publish to an issue tracker or write implementation plans under their own paths, with a larger framework. repo-seed's skill keeps its document ownership (`docs/project/designs/`, the TSD template) and no-invented-decisions rule. |
 | `documentation-bootstrap` | Keep | `domain-modeling` builds a glossary and ADRs interactively. It does not replace evidence-only documentation of an existing repository, which repo-seed's no-invented-intent rule requires. |
 
+The `issue-authoring` skill added afterwards was written from `triage`
+(`49dd158d1076134a641b33efb035946536778336`) and its `AGENT-BRIEF.md`. Adopted
+ideas: concept-level redundancy search, claim verification before drafting,
+behavioral and durable acceptance criteria, and a prior-rejection check
+(restated as the already-implemented, removed-on-purpose, and already-tracked
+cases). Not adopted: the tracker state machine and role labels, setup files,
+the AI-disclaimer policy, `.out-of-scope/` writes, and automatic hosted
+writes.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.
