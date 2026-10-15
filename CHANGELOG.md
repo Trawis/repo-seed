@@ -8,6 +8,31 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.8.0 - 2026-10-15
+
+### Added
+
+- Added the `code-simplification` skill for Codex (`.agents/skills/`) and
+  Claude Code (`.claude/skills/`), distributed to every profile. It simplifies
+  working code for clarity while keeping behavior identical, and is distinct
+  from `refactor`: it never changes behavior, removes compatibility, or
+  redesigns structure, and it hands such work to `refactor`. It requires
+  understanding callers, edge cases, tests, and project conventions first;
+  applies one simplification at a time with tests after each; expects existing
+  tests to pass unmodified; and discourages line-count optimization, abstraction
+  churn, and speculative cleanup. It adds no Git or hosted write permission.
+- It is adapted from Addy Osmani's `code-simplification` (MIT). Provenance is
+  in `pack/skill-sources.json`, and each surface ships a `NOTICE.md` with the
+  MIT notice. The upstream hook, command, plugin, and language-example
+  material was not imported.
+
+### Fixed
+
+- Repo-seed's own `.claude/settings.json` now also turns off the distributed
+  `issue-authoring`, `issue-implementation`, and `test-driven-development`
+  wrappers added in 5.4.0 through 5.7.0, which were missing from it. A test now
+  checks that every distributed skill except `code-review` is off.
+
 ## 5.7.0 - 2026-10-15
 
 ### Added

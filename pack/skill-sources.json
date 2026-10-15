@@ -15,6 +15,21 @@
         "SKILL.md",
         "NOTICE.md"
       ]
+    },
+    {
+      "name": "code-simplification",
+      "upstream_repository": "https://github.com/addyosmani/agent-skills",
+      "source_path": "skills/code-simplification",
+      "source_revision": "aeac41d4d005999432bb7312f7ff06383a91d59d",
+      "license": "MIT",
+      "license_evidence": "LICENSE",
+      "adaptation": "adapted",
+      "reviewed": "2026-10-15",
+      "security_review": "Read the upstream SKILL.md in full, plus its simplify-ignore hook and documentation, the code-simplify command definitions, and the eval case. Only SKILL.md and NOTICE.md are distributed, both Markdown written for repo-seed. The simplify-ignore shell hook, hook settings, slash-command definitions, plugin manifest, evals, language-specific examples, and commit and pull-request assumptions were not imported. No scripts, network access, telemetry, credential access, or hosted write behavior is distributed.",
+      "distributed_files": [
+        "SKILL.md",
+        "NOTICE.md"
+      ]
     }
   ]
 }

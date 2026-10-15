@@ -4,6 +4,10 @@
     "refactor": "off",
     "dependency-upgrade": "off",
     "technical-design": "off",
-    "documentation-bootstrap": "off"
+    "documentation-bootstrap": "off",
+    "code-simplification": "off",
+    "issue-authoring": "off",
+    "issue-implementation": "off",
+    "test-driven-development": "off"
   }
 }

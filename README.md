@@ -11,7 +11,8 @@ Reusable coding-agent guidance and project-document templates with a small, pred
 - portable `AGENTS.md` guidance with a `CLAUDE.md` compatibility wrapper;
 - native Codex and Claude Code skills for focused engineering workflows such as
   code review, bug fixing, refactoring, dependency upgrades, issue authoring
-  and implementation, test-driven development, technical design, and documentation bootstrap;
+  and implementation, test-driven development, code simplification, technical
+  design, and documentation bootstrap;
 - focused documentation, Git, and CI/CD guidance, independently selectable
   from language/tool conventions;
 - a canonical shared label catalog and lightweight issue/decision structure,
@@ -114,10 +115,11 @@ never installs a language convention by itself.
 
 All profiles also receive the core engineering-workflow skills for native
 Codex and Claude Code agents (code review, bug fixing, refactoring,
-dependency upgrades, issue authoring, issue implementation, and
-test-driven development); those skills load whatever language conventions a target provides and work without them, so
-`minimal` ships them even though it carries no conventions. `library`, `app`, and `game` additionally receive
-the technical-design and documentation-bootstrap skills.
+dependency upgrades, issue authoring, issue implementation, test-driven
+development, and code simplification); those skills load whatever language
+conventions a target provides and work without them, so `minimal` ships them
+even though it carries no conventions. `library`, `app`, and `game`
+additionally receive the technical-design and documentation-bootstrap skills.
 
 The first sync requires an explicit project profile when no reusable profile
 is recorded. Later syncs reuse a recorded `minimal`, `library`, `app`, or
