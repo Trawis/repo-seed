@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.1.0",
+  "pack_version": "5.2.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -11,7 +11,8 @@
   "package_files": [
     "README.md",
     "LICENSE",
-    "github-labels.json"
+    "github-labels.json",
+    "skill-sources.json"
   ],
   "assets": [
     {

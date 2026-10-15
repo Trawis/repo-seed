@@ -36,6 +36,13 @@ belongs in `upgrading-to-5.md`.
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
+## Upstream-Derived Skills
+
+`pack/skill-sources.json` and `scripts/validate-skill-sources.py` are
+repo-seed-side provenance tooling, never synced into a target. Derived
+skills ship only through `pack/manifest.json` like any other managed skill,
+together with a `NOTICE.md`. See [Upstream-derived skills](upstream-skills.md).
+
 ## Profiles, Conventions, and Scaffolds
 
 These are three independent concepts and should not be conflated:

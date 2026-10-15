@@ -93,7 +93,8 @@ python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py
+python scripts/validate-skill-sources.py
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py
 git diff --check
 ```
 
