@@ -1,16 +1,16 @@
 ---
 name: Bug Report
-about: Report a reproducible problem with the guideline pack, sync script, templates, or convention docs.
-title: ''
+about: Report a reproducible problem with the guidance pack, sync script, or templates
+title: ""
 labels: ["type: bug"]
-assignees: ''
+assignees: ""
 ---
 
 <!-- Document role: Repo-seed-only issue template. Sync behavior: Never copied into targets. -->
 
 ## Summary
 
-<!-- A clear, concise description of the bug. -->
+Describe the problem.
 
 ## Steps to Reproduce
 
@@ -20,19 +20,19 @@ assignees: ''
 
 ## Expected Behavior
 
-<!-- What should happen. -->
+Describe what should happen.
 
 ## Actual Behavior
 
-<!-- What actually happens. Include error output, stack traces, or wrong file content where relevant. -->
+Describe what happens instead.
 
 ## Environment
 
 - Pack version (`pack/manifest.json`):
-- Sync script version (check `SCRIPT_VERSION` in `pack/files/scripts/sync-docs.py`):
-- Python version (for sync script issues):
-- OS:
+- Sync script version (`SCRIPT_VERSION` in `pack/files/scripts/sync-docs.py`):
+- Python version (if applicable):
+- Operating system:
 
 ## Additional Context
 
-<!-- Attach relevant manifest content, command output, or generated file content if applicable. -->
+Include relevant command output, manifests, or logs without exposing secrets.
