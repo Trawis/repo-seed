@@ -591,6 +591,40 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                     with self.subTest(root=root, skill=skill, forbidden=phrase):
                         self.assertNotIn(phrase, content)
 
+    def test_code_review_acceptance_review_is_conditional_read_only_and_aligned_with_implementation(self):
+        implementation_terms = "satisfied, unsatisfied, or not verifiable"
+        for root in (".agents/skills", ".claude/skills"):
+            review = " ".join(
+                (PACK_ROOT / "files" / root / "code-review" / "SKILL.md").read_text(encoding="utf-8").split()
+            )
+            implementation = " ".join(
+                (PACK_ROOT / "files" / root / "issue-implementation" / "SKILL.md")
+                .read_text(encoding="utf-8")
+                .split()
+            )
+            self.assertIn(implementation_terms, implementation)
+            for phrase in (
+                "## Acceptance Review",
+                "only when the change is issue-driven",
+                "do not go looking for an issue",
+                "complete issue and relevant discussion",
+                "`Done when`",
+                implementation_terms,
+                "not-verifiable condition is a validation gap, not a defect",
+                "concrete implementation gap",
+                "scope divergence",
+                "material unrelated behavior",
+                "contradicts its assumptions",
+                "acceptance coverage",
+                "Acceptance coverage supplements real defect findings",
+                "regression test that failed before the change",
+                "issue or pull request state, labels, comments, or other hosted resources",
+            ):
+                with self.subTest(root=root, phrase=phrase):
+                    self.assertIn(phrase, review)
+            self.assertLess(review.index("## Workflow"), review.index("## Acceptance Review"))
+            self.assertLess(review.index("## Acceptance Review"), review.index("## Findings"))
+
     def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
         for root in (".agents/skills", ".claude/skills"):
             content = " ".join(
