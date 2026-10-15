@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.9.0",
+  "pack_version": "5.10.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -91,6 +91,11 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
+      "path": ".agents/skills/repository-audit/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
       "path": ".agents/skills/test-driven-development/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
@@ -157,6 +162,11 @@
     },
     {
       "path": ".claude/skills/issue-implementation/SKILL.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"]
+    },
+    {
+      "path": ".claude/skills/repository-audit/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },

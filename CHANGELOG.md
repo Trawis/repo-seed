@@ -8,6 +8,23 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.10.0 - 2026-10-15
+
+### Added
+
+- Added the `repository-audit` skill for Codex (`.agents/skills/`) and Claude
+  Code (`.claude/skills/`), distributed to every profile. It audits a
+  repository that uses repo-seed for drift without modifying it: it reads
+  `.repo-seed-state.json`, compares against a named source pack by running the
+  repository's own `scripts/sync-docs.py` with `--audit` and `--dry-run`
+  instead of reimplementing sync logic, adds checks for competing agent
+  guidance the script does not judge, and reports managed drift, stale
+  artifacts, selection inconsistencies, competing guidance, intentional
+  project-owned differences (which are not drift), and unverifiable items. It
+  does not download a pack without permission and adds no Git or hosted write
+  permission. It is original to repo-seed, so it has no upstream provenance
+  entry.
+
 ## 5.9.0 - 2026-10-15
 
 ### Added
