@@ -8,6 +8,24 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.6.0 - 2026-10-15
+
+### Changed
+
+- `code-review` gained an issue-driven acceptance review. When a governing
+  issue or explicit acceptance criteria exist, it reads the complete issue and
+  discussion, classifies each `Done when` condition as satisfied, unsatisfied,
+  or not verifiable (the same terms as `issue-implementation`), reports scope
+  omissions and material unrelated additions, reports issue assumptions the
+  repository contradicts, and lists acceptance coverage after the severity-
+  ordered findings without replacing them. An unsatisfied condition is a
+  finding only for a concrete implementation gap, and an unverifiable one is a
+  validation gap. Reviews with no governing issue are unchanged, and review
+  stays read-only for files and hosted state. It also now looks for
+  regression-test evidence on bug fixes. Ideas from Matt Pocock's two-axis
+  `code-review` and GitHub Spec Kit's `code-review` are restated in repo-seed
+  wording; no upstream text was copied.
+
 ## 5.5.0 - 2026-10-15
 
 ### Added

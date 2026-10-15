@@ -48,5 +48,15 @@ review the finished work. Not adopted: integration branches, per-ticket
 worktrees, implementer and merger sub-agents, `tdd` and `code-review` calls by
 tool name, automatic commits, draft pull requests, and ticket closing.
 
+The `code-review` acceptance review was added afterwards from `code-review` in
+`mattpocock/skills` (same revision) and `code-review` in `github/spec-kit`
+(`f6e72bc8523de8ec8368129cbdea78d45f27cef8`, MIT). Adopted ideas: evaluate the
+change against the originating spec separately from standards, quote the
+requirement behind each finding, flag omitted work and unrequested additions,
+require positive and negative test coverage, look for regression-test evidence
+on bug fixes, and treat an intentional design change differently from an
+unexplained violation. Not adopted: parallel sub-agents, tracker setup files,
+framework-specific design documents and commands, and posting review actions.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.
