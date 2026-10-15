@@ -41,5 +41,12 @@ cases). Not adopted: the tracker state machine and role labels, setup files,
 the AI-disclaimer policy, `.out-of-scope/` writes, and automatic hosted
 writes.
 
+The `issue-implementation` skill was written from `implement` and
+`implement-spec` (same revision). Adopted ideas: state the ticket before
+starting, run narrow checks while working and the full suite at the end, and
+review the finished work. Not adopted: integration branches, per-ticket
+worktrees, implementer and merger sub-agents, `tdd` and `code-review` calls by
+tool name, automatic commits, draft pull requests, and ticket closing.
+
 No skill was split or retired. Both skill surfaces were updated together and
 remain identical.
