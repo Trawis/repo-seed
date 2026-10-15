@@ -29,7 +29,7 @@ Add only the scaffolding you need:
 
 ```text
 --scaffold-project-files          # baseline README/CHANGELOG
---scaffold-github-templates       # bug/feature issue templates
+--scaffold-github-templates       # bug/feature Issue Forms
 --scaffold-editorconfig           # .editorconfig
 --scaffold <name>                 # one on-demand document: architecture, fsd, gdd, user-guide
 ```

@@ -4,25 +4,38 @@
 **Sync destination**: `.agents/guidelines/issues.md`
 
 This file is the single canonical source for issue creation, labels, issue
-structure, and triage. Issue templates and other guidance agree with it
+structure, and triage. Issue forms and other guidance agree with it
 instead of defining a competing list. It does not cover Git, branches,
 commits, or pull requests; see `.agents/guidelines/git.md` for those.
 
 ## Issue Entry Points
 
-Contributors get exactly two Markdown issue templates:
+Contributors get exactly two GitHub Issue Forms
+(`.github/ISSUE_TEMPLATE/*.yml`):
 
-- Bug Report
-- Feature Request
+- Bug Report (`bug_report.yml`, applies `type: bug`)
+- Feature Request (`feature_request.yml`, applies `type: feature`)
 
-There is no dedicated template per type label, and no template for tech
-debt, chores, decisions, ideas, documentation, or questions/support; those
-are maintainer classifications created as a blank issue with the applicable
-`type:*` label applied manually. `blank_issues_enabled: false` in
+Required form fields enforce the minimum issue contract in the GitHub
+issue-creation UI:
+
+- Bug Report requires Summary, Steps to Reproduce, Expected Behavior, Actual
+  Behavior, and Environment; Additional Context is optional.
+- Feature Request requires Summary, Goal, and Done when; Suggested approach
+  is optional.
+
+Forms do not add Priority, Area, Dependencies, Risks, or implementation-note
+fields. Forms only apply in the web UI: issues created through the API, the
+GitHub CLI, or by maintainers can bypass them, so required fields are not a
+guarantee and the structures below still apply.
+
+There is no dedicated form per type label, and none for tech debt, chores,
+decisions, ideas, documentation, or questions/support; those are maintainer
+classifications created as a blank issue with the applicable `type:*` label
+applied manually. `blank_issues_enabled: false` in
 `.github/ISSUE_TEMPLATE/config.yml` only disables the blank-issue option for
 contributors; maintainers with write access can still open one. Do not
-change it to `true`, and do not add GitHub Issue Forms in place of the
-Markdown templates.
+change it to `true`.
 
 ```text
 Contributor:
@@ -49,7 +62,7 @@ Every issue gets exactly one type label:
   implementation.
 - `type: idea` - worth recording but not yet defined enough to implement.
 
-Templates do not need a one-to-one relationship with types. Bug and Feature
+Forms do not need a one-to-one relationship with types. Bug and Feature
 are contributor entry points; the remaining types are mainly maintainer
 classifications applied through a blank issue, for example:
 
@@ -67,7 +80,7 @@ without requiring an organization-only feature.
 ## Priority Labels
 
 Priority is optional. Do not require every issue to carry one, and do not
-add a priority field or question to issue templates or bodies; priority
+add a priority field or question to issue forms or bodies; priority
 belongs only in the corresponding `priority:*` label.
 
 - `priority: critical`
@@ -91,7 +104,7 @@ An idea may remain incomplete indefinitely; not every idea needs a decision
 step. Promote it to `type: decision` only when a choice blocks
 implementation, and to `type: feature`, `type: tech-debt`, or `type: chore`
 once it is implementation-ready. Do not create dedicated Idea or Decision
-templates; maintainers create these from a blank issue using the lightweight
+forms; maintainers create these from a blank issue using the lightweight
 structures below.
 
 ## Issue Structure
@@ -142,7 +155,7 @@ Relevant constraints or alternatives.
 
 Bug reports keep a dedicated diagnostic structure with reproduction,
 expected, actual, and environment fields; see
-`.github/ISSUE_TEMPLATE/bug_report.md`.
+`.github/ISSUE_TEMPLATE/bug_report.yml`.
 
 ## GitHub-Hosted Labels
 

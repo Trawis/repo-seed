@@ -1,0 +1,37 @@
+# Document role: Repo-seed-only issue form. Sync behavior: Never copied into targets.
+
+name: Feature Request
+description: Propose a guideline, convention, template, sync option, or tooling improvement
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: "Not implementation-ready yet? Ask a maintainer to record it as `type: idea` instead."
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the requested change.
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested approach
+      description: Optional. Provide useful implementation direction when known.
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: List concrete, observable acceptance conditions.
+      placeholder: |
+        - Concrete, observable outcome.
+    validations:
+      required: true

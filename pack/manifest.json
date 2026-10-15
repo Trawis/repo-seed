@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.0.0",
+  "pack_version": "5.1.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -194,18 +194,18 @@
       "scaffold_target": "docs/project/gdd.md"
     },
     {
-      "path": "docs/templates/.github/bug-report.template.md",
+      "path": "docs/templates/.github/bug-report.template.yml",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game"],
       "scaffold_group": "github",
-      "scaffold_target": ".github/ISSUE_TEMPLATE/bug_report.md"
+      "scaffold_target": ".github/ISSUE_TEMPLATE/bug_report.yml"
     },
     {
-      "path": "docs/templates/.github/feature-request.template.md",
+      "path": "docs/templates/.github/feature-request.template.yml",
       "type": "template",
       "profiles": ["minimal", "library", "app", "game"],
       "scaffold_group": "github",
-      "scaffold_target": ".github/ISSUE_TEMPLATE/feature_request.md"
+      "scaffold_target": ".github/ISSUE_TEMPLATE/feature_request.yml"
     },
     {
       "path": "docs/templates/.github/config.template.yml",

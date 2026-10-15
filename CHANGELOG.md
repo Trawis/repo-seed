@@ -8,6 +8,24 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.1.0 - 2026-10-15
+
+### Changed
+
+- Replaced the distributed Bug Report and Feature Request Markdown issue
+  templates with GitHub Issue Forms (`bug_report.yml`,
+  `feature_request.yml`). Required fields enforce the minimum issue contract
+  in the GitHub UI: Summary, Steps to Reproduce, Expected Behavior, Actual
+  Behavior, and Environment for bugs; Summary, Goal, and Done when for
+  features. Suggested approach stays optional, and no Priority, Area, or
+  other universal fields were added. `.agents/guidelines/issues.md` now
+  documents Issue Forms and that API- or maintainer-created issues can bypass
+  them. `repo-seed` itself uses the same forms.
+- Issue forms are scaffolded as new, missing-only, project-owned files.
+  Existing `.md` templates are not migrated or removed; repositories that
+  adopt the forms should delete their old `bug_report.md` and
+  `feature_request.md` after reviewing them, otherwise GitHub lists both.
+
 ## 5.0.0 - 2026-09-23
 
 5.0 is a deliberate compatibility reset. The active repository fleet already
