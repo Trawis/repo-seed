@@ -19,7 +19,8 @@ contacts an upstream repository.
   `AGENTS.md` and must not grant itself automatic commit, push, pull request,
   or issue-write permission.
 - Both skill surfaces, `.agents/skills/` and `.claude/skills/`, carry
-  byte-identical content for every skill.
+  byte-identical content for every skill. Edit only `.agents/skills/`, then run
+  `python scripts/mirror-skills.py --apply` to regenerate `.claude/skills/`.
 - Updates are deliberate maintainer actions. Nothing is refreshed from
   upstream during target sync.
 

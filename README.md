@@ -235,7 +235,8 @@ python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
 python scripts/validate-skill-sources.py
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py
+python scripts/mirror-skills.py --check
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py
 git diff --check
 ```
 

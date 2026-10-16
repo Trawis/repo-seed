@@ -18,7 +18,9 @@ repository-level instructions for unrelated `repo-seed` work.
 
 The skill wrappers under `pack/files/.claude/skills/` and
 `pack/files/.agents/skills/` are distributed templates, not active skills for
-`repo-seed` itself. Because coding agents discover nested `.claude/skills/`
+`repo-seed` itself. Edit skills only under `pack/files/.agents/skills/`, then run
+`python scripts/mirror-skills.py --apply`; `pack/files/.claude/skills/` is
+generated from it. Because coding agents discover nested `.claude/skills/`
 directories, `.claude/settings.json` turns these wrappers off so they do not
 govern `repo-seed` work; `code-review` is left enabled there because its name
 collides with the bundled review skill. Treat any `pack/files` skill that still
@@ -94,7 +96,8 @@ python pack/files/scripts/sync-docs.py --help
 python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
 python scripts/validate-skill-sources.py
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py
+python scripts/mirror-skills.py --check
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py
 git diff --check
 ```
 

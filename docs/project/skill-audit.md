@@ -41,5 +41,5 @@ stays read-only and separate from `technical-design`, and `code-simplification`
 stays separate from `refactor` by excluding behavior, compatibility, and
 structural change.
 
-No skill was split or retired. Both skill surfaces are updated together and stay
-identical.
+No skill was split or retired. Skills are edited under `.agents/skills/` and mirrored to
+`.claude/skills/` with `scripts/mirror-skills.py`, so both surfaces stay identical.

@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.13.1 - 2026-10-16
+
+Added `scripts/mirror-skills.py`, repo-seed-only tooling that generates
+`pack/files/.claude/skills/` from `pack/files/.agents/skills/`. Skills are now
+edited in one place and CI checks that the copy matches. No distributed skill
+content changed.
+
 ## 5.13.0 - 2026-10-16
 
 Removed the `type: decision` and `type: idea` labels from the issue convention,
