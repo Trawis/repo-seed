@@ -80,13 +80,12 @@ schemas; and the supported Python and operating systems.
   Python or OS version; ending an upgrade path.
 - **Minor**: a backward-compatible addition. Examples: a new skill, template,
   flag, or optional workflow.
-- **Patch**: fixes and wording, and tooling, CI, or test changes that alter
-  nothing an adopter receives or runs.
+- **Patch**: a fix or wording change in what adopters receive or run.
 
 Every merge to `main` that changes `pack_version` publishes a release, and the
-top `CHANGELOG.md` heading must match it. Do not bump for changes that do not
-reach adopters (repo-only docs and tests). Published releases are immutable and
-are never renumbered.
+top `CHANGELOG.md` heading must match it. Do not bump for repo-only changes that
+adopters never receive: this repository's docs, tests, CI, and tooling. Published
+releases are immutable and are never renumbered.
 
 ## GitHub Flow
 
