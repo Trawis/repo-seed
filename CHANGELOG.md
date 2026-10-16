@@ -9,6 +9,15 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.16.0 - 2026-10-16
+
+Added `--diff` to `sync-docs.py`. It behaves like `--dry-run` and also prints,
+for each managed file whose local edits a sync would discard, a diff from the
+pack's version to the local file. Sync output now says when an overwrite
+discards local changes (`and discard local changes`, past tense after a real
+sync) or has no recorded baseline (`; no recorded baseline`, as on a first sync
+over an existing file). Overwrite behavior itself is unchanged.
+
 ## 5.15.1 - 2026-10-16
 
 CI now also runs the test suite and command checks on macOS and Windows with

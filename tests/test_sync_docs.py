@@ -830,7 +830,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             before = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
             dry_run = subprocess.run(args + ["--dry-run"], capture_output=True, text=True, check=False)
             self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
-            self.assertIn("AGENTS.md (would overwrite managed copy)", dry_run.stdout)
+            self.assertIn("AGENTS.md (would overwrite managed copy; no recorded baseline)", dry_run.stdout)
             self.assertEqual(before, {p: p.read_bytes() for p in target.rglob("*") if p.is_file()})
 
             applied = subprocess.run(args, capture_output=True, text=True, check=False)
@@ -2822,6 +2822,55 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             self.assertEqual(applied.returncode, 0, applied.stderr)
             self.assertRegex(dry_run.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
             self.assertEqual(before, self.snapshot(target))
+
+    def edited_target_and_newer_pack(self, root: Path) -> tuple[Path, Path]:
+        """A synced target whose AGENTS.md has a local edit, and a pack that changes only git.md."""
+        target = self.installed(root, profile="app", conventions="python")
+        with (target / "AGENTS.md").open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write("local note that the pack does not have\n")
+        newer = self.newer_pack(root, edit={".agents/guidelines/git.md": "newer git guidance\n"})
+        return target, newer
+
+    def test_dry_run_labels_overwrites_that_discard_local_changes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target, newer = self.edited_target_and_newer_pack(root)
+            before = self.snapshot(target)
+
+            dry_run = self.run_sync(newer, target, "--dry-run")
+
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertIn("AGENTS.md (would overwrite managed copy and discard local changes)", dry_run.stdout)
+            self.assertIn(".agents/guidelines/git.md (would overwrite managed copy)", dry_run.stdout)
+            self.assertNotIn("--- pack/", dry_run.stdout)
+            self.assertEqual(before, self.snapshot(target))
+
+    def test_diff_shows_only_the_discarded_local_changes_and_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target, newer = self.edited_target_and_newer_pack(root)
+            before = self.snapshot(target)
+
+            result = self.run_sync(newer, target, "--diff")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Dry run complete.", result.stdout)
+            self.assertIn("--- pack/AGENTS.md", result.stdout)
+            self.assertIn("+++ local/AGENTS.md", result.stdout)
+            self.assertIn("+local note that the pack does not have", result.stdout)
+            self.assertNotIn("pack/.agents/guidelines/git.md", result.stdout)
+            self.assertEqual(before, self.snapshot(target))
+
+    def test_a_real_sync_reports_the_local_changes_it_discarded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target, newer = self.edited_target_and_newer_pack(root)
+
+            applied = self.run_sync(newer, target)
+
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertIn("AGENTS.md (overwrote managed copy and discarded local changes)", applied.stdout)
+            self.assertNotIn("local note", (target / "AGENTS.md").read_text(encoding="utf-8"))
 
     def test_changed_managed_content_upgrades_and_keeps_recorded_selections(self):
         with tempfile.TemporaryDirectory() as temp:

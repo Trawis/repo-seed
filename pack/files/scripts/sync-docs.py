@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
 import re
@@ -77,6 +78,7 @@ class SyncAction:
     action: str
     path: str
     detail: str
+    diff: str = ""
 
 
 @dataclass(frozen=True)
@@ -502,20 +504,47 @@ def target_resolves_within_root(target_root: Path, target: Path) -> bool:
     return True
 
 
-def copy_asset(source_root: Path, target_root: Path, asset: Asset, dry_run: bool) -> SyncAction:
+def local_changes_diff(source: Path, target: Path, path: str) -> str:
+    """Unified diff from the pack's file to the local one. '+' lines exist only locally."""
+    pack_lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
+    local_lines = target.read_text(encoding="utf-8").splitlines(keepends=True)
+    return "".join(difflib.unified_diff(pack_lines, local_lines, fromfile=f"pack/{path}", tofile=f"local/{path}"))
+
+
+def copy_asset(
+    source_root: Path,
+    target_root: Path,
+    asset: Asset,
+    dry_run: bool,
+    recorded_hash: str | None = None,
+    include_diff: bool = False,
+) -> SyncAction:
     source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
     target = safe_child(target_root, asset.path, "asset target")
     existed = target.is_file()
     if existed and managed_file_hash(source) == managed_file_hash(target):
         return SyncAction("unchanged", asset.path, "managed copy already matches")
+
+    # Compare with the hash recorded at the last sync: a different local file means
+    # the overwrite discards local edits. With no recorded hash there is no baseline.
+    note = ""
+    local_edits = False
+    if existed:
+        if recorded_hash is None:
+            note = "; no recorded baseline"
+        elif managed_file_hash(target) != recorded_hash:
+            local_edits = True
+            note = " and discard local changes" if dry_run else " and discarded local changes"
+    diff = local_changes_diff(source, target, asset.path) if include_diff and local_edits else ""
+
     if dry_run:
-        detail = "would overwrite managed copy" if existed else "would create managed copy"
-        return SyncAction("copy", asset.path, detail)
+        detail = f"would overwrite managed copy{note}" if existed else "would create managed copy"
+        return SyncAction("copy", asset.path, detail, diff)
 
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
-    detail = "overwrote managed copy" if existed else "created managed copy"
-    return SyncAction("copy", asset.path, detail)
+    detail = f"overwrote managed copy{note}" if existed else "created managed copy"
+    return SyncAction("copy", asset.path, detail, diff)
 
 
 def prune_stale_assets(
@@ -927,6 +956,7 @@ def synchronize(
     scaffold_editorconfig: bool = False,
     scaffold_names: tuple[str, ...] = (),
     dry_run: bool = False,
+    show_diff: bool = False,
 ) -> list[SyncAction]:
     source_root = source_root.expanduser().resolve()
     target_root = target_root.expanduser().resolve()
@@ -985,7 +1015,17 @@ def synchronize(
 
     prune_actions, tombstones = prune_stale_assets(target_root, manifest, selected, managed_state, dry_run)
     actions: list[SyncAction] = list(prune_actions)
-    actions.extend(copy_asset(source_root, target_root, asset, dry_run) for asset in selected)
+    actions.extend(
+        copy_asset(
+            source_root,
+            target_root,
+            asset,
+            dry_run,
+            recorded_hash=managed_state.managed_files.get(asset.path),
+            include_diff=show_diff,
+        )
+        for asset in selected
+    )
     for asset in scaffold_assets:
         upgrade_action = upgrade_scaffold_asset(source_root, target_root, asset, dry_run)
         actions.append(
@@ -1055,6 +1095,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--dry-run", action="store_true", help="Validate and show operations without writing files.")
     parser.add_argument(
+        "--diff",
+        action="store_true",
+        help=(
+            "Like --dry-run, and also print a diff for each managed file whose local changes would be "
+            "discarded. '+' lines exist only in the local file; '-' lines come from the pack."
+        ),
+    )
+    parser.add_argument(
         "--version",
         action="store_true",
         help="Show the detected pack version and exit.",
@@ -1070,6 +1118,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    dry_run = args.dry_run or args.diff
     try:
         if args.version:
             print(f"{parser.prog} {resolve_cli_version(args.source, args.target)}")
@@ -1116,7 +1165,8 @@ def main(argv: list[str] | None = None) -> int:
             scaffold_github_templates=args.scaffold_github_templates,
             scaffold_editorconfig=args.scaffold_editorconfig,
             scaffold_names=tuple(args.scaffold_names or ()),
-            dry_run=args.dry_run,
+            dry_run=dry_run,
+            show_diff=args.diff,
         )
     except (OSError, ValueError) as ex:
         print(f"error: {ex}", file=sys.stderr)
@@ -1127,6 +1177,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"profile        {profile}")
     for action in actions:
         print(f"{action.action:<14} {action.path} ({action.detail})")
+        if action.diff:
+            print(action.diff, end="" if action.diff.endswith("\n") else "\n")
 
     copies = sum(action.action == "copy" for action in actions)
     removals = sum(action.action == "remove" for action in actions)
@@ -1135,7 +1187,7 @@ def main(argv: list[str] | None = None) -> int:
     state_updates = sum(action.action == "state" for action in actions)
     unchanged = sum(action.action == "unchanged" for action in actions)
     preserved = sum(action.action in {"preserve", "skip"} for action in actions)
-    mode = "Dry run" if args.dry_run else "Sync"
+    mode = "Dry run" if dry_run else "Sync"
     print(
         f"{mode} complete. Removals: {removals}. Upgrades: {upgrades}. "
         f"Managed copies: {copies}. Scaffolds: {scaffolds}. "
