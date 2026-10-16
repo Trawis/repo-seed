@@ -9,6 +9,14 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.15.0 - 2026-10-16
+
+Raised the supported Python version from 3.10 to 3.11. Python 3.10 reached
+end of life on 2026-10-01 (PEP 619). CI now runs Python 3.11 and 3.14, and the
+release workflow uses 3.11. The README states the new minimum. The scripts are
+not made to refuse older interpreters, but they are no longer tested on them, so
+adopters on 3.10 should move to 3.11 or newer before running a later pack.
+
 ## 5.14.4 - 2026-10-16
 
 Fixes from an independent review of the 5.13.0 to 5.14.3 changes. The
