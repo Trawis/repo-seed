@@ -202,7 +202,7 @@ Review the output, then rerun without `--dry-run`.
 Optional scaffolding is separated by ownership:
 
 - `--scaffold-project-files` creates the missing baseline README/CHANGELOG, or upgrades verified unchanged Markdown;
-- `--scaffold-github-templates` creates missing Bug Report and Feature Request Issue Forms (`.yml`) and the chooser config; existing files, including legacy `.md` templates, are preserved;
+- `--scaffold-github-templates` creates missing Bug Report and Feature Request Issue Forms (`.yml`), the chooser config, and `.github/pull_request_template.md`; existing files, including legacy `.md` templates, are preserved;
 - `--scaffold-editorconfig` creates `.editorconfig` only when missing;
 - `--scaffold <name>` creates one on-demand document (`architecture`, `fsd`, `gdd`, `user-guide`) available for the selected profile; repeat the flag for more than one.
 

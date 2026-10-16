@@ -8,6 +8,18 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.13.0 - 2026-10-16
+
+### Added
+
+- Added a short pull request template to the `--scaffold-github-templates`
+  group (`docs/templates/.github/pull-request.template.md` scaffolding to
+  `.github/pull_request_template.md`). It asks for a summary, validation run,
+  linked issue or requirements, and risks, and does not repeat rules already in
+  `AGENTS.md` and `git.md`. Like the Issue Forms it is created only when
+  missing and is project-owned afterwards, so existing PR templates are
+  preserved.
+
 ## 5.12.1 - 2026-10-16
 
 ### Fixed
