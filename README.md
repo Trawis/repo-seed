@@ -168,6 +168,7 @@ Optional scaffolding:
 
 - `--scaffold-project-files`: missing README and CHANGELOG, or verified unchanged Markdown upgrades;
 - `--scaffold-github-templates`: missing Issue Forms, chooser config, and `.github/pull_request_template.md`; existing files, including legacy `.md` templates, are kept;
+- `--scaffold-workflows`: the optional drift-check workflow `.github/workflows/repo-seed-audit.yml`, only when missing (see Automatic Drift Check);
 - `--scaffold-editorconfig`: `.editorconfig`, only when missing;
 - `--scaffold <name>`: one on-demand document; repeat for more.
 
@@ -175,7 +176,8 @@ Existing project-owned files are kept unless an eligible Markdown scaffold is
 verified unchanged and can be upgraded safely. `.gitignore` is entirely
 project-owned and never touched. `.editorconfig` is project-owned too, but
 may be created once as a missing-only scaffold. The `.github/workflows/` tree is
-always project-owned.
+always project-owned and never managed. The only file the pack can create there
+is the optional drift check (`--scaffold-workflows`), once, and only when missing.
 
 ## Update an Existing Project
 
@@ -196,8 +198,9 @@ lack newer fixes. Pass `--profile` to change the profile.
 Optional. A target repository can find out on its own when a newer pack is
 released or its managed files drift, instead of waiting for someone to run the
 script. Add a workflow that calls the reusable audit workflow in this
-repository. The pack does not install it, because `.github/workflows/` is
-always project-owned:
+repository. Either run `sync-docs.py --scaffold-workflows`, which creates the
+file below once, pinned to the pack release that created it, and never changes
+an existing file, or write it yourself:
 
 ```yaml
 name: repo-seed audit

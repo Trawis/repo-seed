@@ -9,6 +9,18 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.18.0 - 2026-10-16
+
+Added `--scaffold-workflows` to `sync-docs.py`. It creates
+`.github/workflows/repo-seed-audit.yml`, a caller for the reusable drift-check
+workflow, once, only when the file is missing. The `uses:` tag is the pack
+version that created the file, so Dependabot can keep it current. Nothing is
+created without the flag, an existing file is never changed, and the rest of
+`.github/workflows` stays project-owned and unmanaged. This relaxes the rule
+that no manifest entry may target that tree, for this one scaffold group only:
+both the sync script and the release builder now accept a `workflows` group
+whose target is inside `.github/workflows`, and still reject every other group.
+
 ## 5.17.0 - 2026-10-16
 
 Added a reusable workflow, `.github/workflows/audit.yml`, that a target

@@ -16,10 +16,11 @@ from pathlib import Path, PurePosixPath
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 DEFAULT_STATE_FILE = ".repo-seed-state.json"
+VERSION_PLACEHOLDER = "__PACK_VERSION__"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 VALID_TYPES = {"managed", "template"}
-VALID_SCAFFOLD_GROUPS = {"project", "optional", "github", "editorconfig"}
+VALID_SCAFFOLD_GROUPS = {"project", "optional", "github", "editorconfig", "workflows"}
 PROJECT_OWNED_TREES = (".github/workflows",)
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -259,10 +260,16 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
                 if not isinstance(scaffold_target, str) or not scaffold_target:
                     raise ValueError(f"{context}.scaffold_target must be a non-empty string")
                 relative_path(scaffold_target, f"{context}.scaffold_target")
-                reject_project_owned_tree_path(
-                    scaffold_target,
-                    f"{context}.scaffold_target",
-                )
+                if scaffold_group == "workflows":
+                    # The only group that may create a file in a project-owned tree,
+                    # and only once, when missing. Everything else is still rejected.
+                    if not is_project_owned_tree_path(scaffold_target):
+                        raise ValueError(f"{context}.scaffold_target must be under .github/workflows")
+                else:
+                    reject_project_owned_tree_path(
+                        scaffold_target,
+                        f"{context}.scaffold_target",
+                    )
                 if scaffold_target in scaffold_targets:
                     raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
                 scaffold_targets.add(scaffold_target)
@@ -669,6 +676,8 @@ def render_scaffold(source_root: Path, asset: Asset) -> str:
     body = template_body(source)
     if asset.scaffold_target and Path(asset.scaffold_target).suffix.lower() == ".md":
         return add_source_marker(body, asset.path)
+    if VERSION_PLACEHOLDER in body:
+        body = body.replace(VERSION_PLACEHOLDER, load_manifest(source_root, validate_sources=False).pack_version)
     return body
 
 
@@ -954,6 +963,7 @@ def synchronize(
     scaffold_project_files: bool = False,
     scaffold_github_templates: bool = False,
     scaffold_editorconfig: bool = False,
+    scaffold_workflows: bool = False,
     scaffold_names: tuple[str, ...] = (),
     dry_run: bool = False,
     show_diff: bool = False,
@@ -986,6 +996,8 @@ def synchronize(
         requested_groups.add("github")
     if scaffold_editorconfig:
         requested_groups.add("editorconfig")
+    if scaffold_workflows:
+        requested_groups.add("workflows")
 
     group_scaffold_assets = [
         asset
@@ -1078,6 +1090,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Create missing GitHub files or upgrade verified unchanged Markdown.",
     )
     parser.add_argument(
+        "--scaffold-workflows",
+        action="store_true",
+        help=(
+            "Create the optional repo-seed drift-check workflow in .github/workflows when it is missing. "
+            "An existing file is never changed."
+        ),
+    )
+    parser.add_argument(
         "--scaffold-editorconfig",
         action="store_true",
         help="Create .editorconfig only when it is missing.",
@@ -1164,6 +1184,7 @@ def main(argv: list[str] | None = None) -> int:
             scaffold_project_files=args.scaffold_project_files,
             scaffold_github_templates=args.scaffold_github_templates,
             scaffold_editorconfig=args.scaffold_editorconfig,
+            scaffold_workflows=args.scaffold_workflows,
             scaffold_names=tuple(args.scaffold_names or ()),
             dry_run=dry_run,
             show_diff=args.diff,

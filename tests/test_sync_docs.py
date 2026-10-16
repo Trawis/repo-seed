@@ -450,6 +450,25 @@ class ManifestTests(unittest.TestCase):
         template["scaffold_target"] = ".github/workflows/ci.yml"
         assert_rejected(scaffolded)
 
+    def test_only_the_workflows_group_may_target_the_workflows_tree_and_only_inside_it(self):
+        raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        outside = json.loads(json.dumps(raw))
+        template = next(a for a in outside["assets"] if a.get("scaffold_group") == "workflows")
+        template["scaffold_target"] = ".github/other/repo-seed-audit.yml"
+        for manifest in (outside,):
+            with tempfile.TemporaryDirectory() as temp:
+                pack = Path(temp)
+                (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "must be under .github/workflows"):
+                    sync.load_manifest(pack, validate_sources=False)
+                with self.assertRaisesRegex(ValueError, "must be under .github/workflows"):
+                    bundle_builder.load_manifest(pack)
+        # The shipped manifest is valid for both loaders, with exactly one workflows scaffold.
+        sync.load_manifest(PACK_ROOT, validate_sources=False)
+        bundle_builder.load_manifest(PACK_ROOT)
+        workflow_scaffolds = [a for a in raw["assets"] if a.get("scaffold_group") == "workflows"]
+        self.assertEqual([a["scaffold_target"] for a in workflow_scaffolds], [".github/workflows/repo-seed-audit.yml"])
+
     def test_convention_field_only_applies_to_managed_assets(self):
         raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
         modified = json.loads(json.dumps(raw))
@@ -1886,6 +1905,44 @@ class SyncBehaviorTests(unittest.TestCase):
                 (issue_root / "config.yml").read_text(encoding="utf-8").strip(),
                 "blank_issues_enabled: false",
             )
+
+    def test_drift_workflow_scaffold_is_opt_in_pinned_to_the_pack_and_never_overwritten(self):
+        workflow = ".github/workflows/repo-seed-audit.yml"
+        for profile in ("minimal", "library", "app", "game"):
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                sync.synchronize(PACK_ROOT, target, profile, scaffold_github_templates=True, scaffold_project_files=True)
+                self.assertFalse((target / workflow).exists(), "created without the flag")
+
+                preview = sync.synchronize(PACK_ROOT, target, profile, scaffold_workflows=True, dry_run=True)
+                self.assertTrue(any(a.path == workflow and a.action == "scaffold" for a in preview))
+                self.assertFalse((target / workflow).exists(), "dry run wrote the file")
+
+                sync.synchronize(PACK_ROOT, target, profile, scaffold_workflows=True)
+                content = (target / workflow).read_text(encoding="utf-8")
+                self.assertIn(
+                    f"uses: Trawis/repo-seed/.github/workflows/audit.yml@v{PACK_VERSION}\n", content
+                )
+                self.assertNotIn("__PACK_VERSION__", content)
+                self.assertNotIn("repo-seed-template", content)
+                self.assertRegex(content, r"(?m)^      contents: read$")
+                self.assertRegex(content, r"(?m)^      issues: write$")
+
+                (target / workflow).write_text("name: mine\n", encoding="utf-8")
+                again = sync.synchronize(PACK_ROOT, target, profile, scaffold_workflows=True)
+                self.assertEqual((target / workflow).read_text(encoding="utf-8"), "name: mine\n")
+                self.assertTrue(any(a.path == workflow and a.action == "skip" for a in again))
+
+    def test_workflows_tree_is_still_never_managed_when_the_scaffold_is_requested(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            workflows = target / ".github/workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "ci.yml").write_text("name: project ci\n", encoding="utf-8")
+            actions = sync.synchronize(PACK_ROOT, target, "minimal", scaffold_workflows=True)
+            touched = {a.path for a in actions if a.path.startswith(".github/workflows/")}
+            self.assertEqual(touched, {".github/workflows/repo-seed-audit.yml"})
+            self.assertEqual((workflows / "ci.yml").read_text(encoding="utf-8"), "name: project ci\n")
 
     def test_preflight_rejects_directory_managed_target_before_copying(self):
         with tempfile.TemporaryDirectory() as temp:

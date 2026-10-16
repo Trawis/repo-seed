@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.17.0",
+  "pack_version": "5.18.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -345,6 +345,13 @@
       "profiles": ["minimal", "library", "app", "game"],
       "scaffold_group": "github",
       "scaffold_target": ".github/pull_request_template.md"
+    },
+    {
+      "path": "docs/templates/.github/repo-seed-audit.template.yml",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game"],
+      "scaffold_group": "workflows",
+      "scaffold_target": ".github/workflows/repo-seed-audit.yml"
     }
   ]
 }
