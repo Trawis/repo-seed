@@ -73,7 +73,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          python scripts/changelog-notes.py "${{ steps.ver.outputs.version }}" > "$RUNNER_TEMP/release-notes.md"
           gh release create "v${{ steps.ver.outputs.version }}" \
             --title "Repo Seed Pack ${{ steps.ver.outputs.version }}" \
-            --generate-notes \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
             dist/*

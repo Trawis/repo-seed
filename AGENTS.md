@@ -83,7 +83,7 @@ schemas; and the supported Python and operating systems.
 - **Patch**: a fix or wording change in what adopters receive or run.
 
 Every merge to `main` that changes `pack_version` publishes a release, and the
-top `CHANGELOG.md` heading must match it. Do not bump for repo-only changes that
+top `CHANGELOG.md` heading must match it; that entry becomes the release notes. Do not bump for repo-only changes that
 adopters never receive: this repository's docs, tests, CI, and tooling. Published
 releases are immutable and are never renumbered.
 
@@ -116,7 +116,7 @@ python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
 python scripts/validate-skill-sources.py
 python scripts/mirror-skills.py --check
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py tests/test_audit_workflow.py
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py scripts/changelog-notes.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py tests/test_audit_workflow.py tests/test_changelog_notes.py
 git diff --check
 ```
 
