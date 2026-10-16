@@ -230,15 +230,9 @@ Skills hold repeatable workflows. Policy and language rules stay in
 
 ```bash
 python scripts/build-release-bundle.py
-python -m unittest discover -s tests -v
-python pack/files/scripts/sync-docs.py --help
-python scripts/build-release-bundle.py --help
-python scripts/sync-github-labels.py --help
-python scripts/validate-skill-sources.py
-python scripts/mirror-skills.py --check
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py
-git diff --check
 ```
+
+The full validation list is in [`AGENTS.md`](AGENTS.md#repository-validation). CI runs the same commands.
 
 The build writes `dist/repo-seed-pack-<version>.zip` from `pack/manifest.json`.
 

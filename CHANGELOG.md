@@ -9,6 +9,18 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.13.2 - 2026-10-16
+
+Closed gaps in repo-seed's own CI and release workflows, with no change to
+distributed content. CI now runs every command in the `AGENTS.md` validation
+list, checks whitespace in pull request changes, builds the archive with its
+checksum, cancels superseded runs, and has a job timeout. The release workflow
+runs tests in a read-only job, grants `contents: write` only to the publishing
+job, serializes releases with a concurrency group, and reports when a version
+already has a release. A test now fails when the top `CHANGELOG.md` entry
+differs from `pack_version`. The README points to `AGENTS.md` for the
+validation list instead of repeating it.
+
 ## 5.13.1 - 2026-10-16
 
 Added `scripts/mirror-skills.py`, repo-seed-only tooling that generates

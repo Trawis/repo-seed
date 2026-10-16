@@ -6,9 +6,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       matrix:
@@ -16,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
 
       - uses: actions/setup-python@v6
         with:
@@ -28,11 +35,19 @@ jobs:
         run: |
           python pack/files/scripts/sync-docs.py --help
           python scripts/build-release-bundle.py --help
+          python scripts/sync-github-labels.py --help
           python scripts/validate-skill-sources.py
           python scripts/mirror-skills.py --check
 
       - name: Compile Python files
-        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/validate-skill-sources.py scripts/mirror-skills.py tests/test_sync_docs.py
+        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py
 
-      - name: Build universal archive
-        run: python scripts/build-release-bundle.py
+      - name: Check whitespace in the pull request changes
+        if: github.event_name == 'pull_request'
+        run: git diff --check HEAD^1 HEAD
+
+      - name: Build universal archive and checksum
+        run: |
+          python scripts/build-release-bundle.py
+          cd dist
+          sha256sum *.zip
