@@ -21,4 +21,4 @@ not apply. Name the changed items; do not explain reasoning or history.
 
 ## Version - YYYY-MM-DD
 
-Added this and that. Changed this. Fixed this and that. Removed this.
+Short sentences on what was added, changed, fixed, or removed, in that order.
