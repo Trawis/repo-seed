@@ -9,6 +9,22 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.14.4 - 2026-10-16
+
+Fixes from an independent review of the 5.13.0 to 5.14.3 changes. The
+`repository-upgrade` skill now reports an old-state-file error to the user and
+asks instead of following it, so it cannot download a pack without permission,
+and it again explains what `remove` and `preserve` lines in a dry run mean.
+`sync-docs.py --audit` now flags `type: decision` and `type: idea` in a
+target's existing issue forms. Existing forms are never overwritten, so a
+target's `feature_request.yml` may still mention the `type: idea` label and
+needs editing by hand. The `issue-authoring` description now names chore.
+Repo-only tooling: `mirror-skills.py` refuses a symlinked mirror root, reports
+and removes empty directories, and deletes stale files before copying; the
+changelog test now checks the top heading itself. Corrected the changelog entry
+for 5.14.2, the ownership doc's section layout, and the README's legacy label
+list.
+
 ## 5.14.3 - 2026-10-16
 
 Restored the original `issue-implementation` description. The 5.14.2 wording
@@ -22,8 +38,8 @@ Updated the `repository-upgrade` skill for the removed pre-5.0 state bridge: it
 no longer mentions converting an older state schema, tells the agent to follow
 the script's error for an old state file, and no longer restates tombstone
 rules that belong to the sync script. Added "use X instead" boundaries to the
-descriptions of `repository-upgrade`, `repository-audit`, `issue-implementation`,
-`refactor`, and `technical-design`, and changed `refactor` to preserve
+descriptions of `repository-upgrade`, `repository-audit`, `issue-implementation`
+(reverted in 5.14.3), `refactor`, and `technical-design`, and changed `refactor` to preserve
 "supported" behavior to match its body. Removed the pre-5.0 note from the
 `--conventions` help text. The upstream-derived skills are unchanged.
 

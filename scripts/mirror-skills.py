@@ -26,15 +26,17 @@ class Drift:
     missing: list[str] = field(default_factory=list)
     different: list[str] = field(default_factory=list)
     stale: list[str] = field(default_factory=list)
+    empty_dirs: list[str] = field(default_factory=list)
 
     def __bool__(self) -> bool:
-        return bool(self.missing or self.different or self.stale)
+        return bool(self.missing or self.different or self.stale or self.empty_dirs)
 
     def lines(self) -> list[str]:
         return (
             [f"missing: {path}" for path in self.missing]
             + [f"different: {path}" for path in self.different]
             + [f"stale: {path}" for path in self.stale]
+            + [f"empty directory: {path}" for path in self.empty_dirs]
         )
 
 
@@ -49,6 +51,26 @@ def tree_files(root: Path) -> dict[str, Path]:
     return files
 
 
+def reject_symlinked_root(pack_files: Path, mirror_root: Path) -> None:
+    """Refuse to write through a symlink at the mirror root or any parent below pack_files."""
+    current = mirror_root
+    while current != pack_files and current != current.parent:
+        if current.is_symlink():
+            raise ValueError(f"Mirror path cannot be a symbolic link: {current}")
+        current = current.parent
+
+
+def empty_directories(root: Path) -> list[str]:
+    """Directories under root that hold no files at any depth, as POSIX relative paths."""
+    if not root.is_dir():
+        return []
+    return sorted(
+        directory.relative_to(root).as_posix()
+        for directory in root.rglob("*")
+        if directory.is_dir() and not any(child.is_file() for child in directory.rglob("*"))
+    )
+
+
 def find_drift(source_root: Path, mirror_root: Path) -> Drift:
     if not source_root.is_dir():
         raise ValueError(f"Source skill tree not found: {source_root}")
@@ -61,20 +83,27 @@ def find_drift(source_root: Path, mirror_root: Path) -> Drift:
         elif path.read_bytes() != mirror[relative].read_bytes():
             drift.different.append(relative)
     drift.stale = sorted(set(mirror) - set(source))
+    drift.empty_dirs = empty_directories(mirror_root)
     return drift
 
 
+def remove_empty_directories(mirror_root: Path) -> None:
+    """Remove directories left empty, deepest first."""
+    for directory in sorted((p for p in mirror_root.rglob("*") if p.is_dir()), reverse=True):
+        if not any(directory.iterdir()):
+            directory.rmdir()
+
+
 def apply_mirror(source_root: Path, mirror_root: Path, drift: Drift) -> None:
+    # Delete before copying so a path that differs only by case on a
+    # case-insensitive filesystem is removed first and then recreated.
+    for relative in drift.stale:
+        (mirror_root / relative).unlink()
+    remove_empty_directories(mirror_root)
     for relative in drift.missing + drift.different:
         target = mirror_root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source_root / relative, target)
-    for relative in drift.stale:
-        (mirror_root / relative).unlink()
-    # Remove skill directories left empty by deleted files, deepest first.
-    for directory in sorted((p for p in mirror_root.rglob("*") if p.is_dir()), reverse=True):
-        if not any(directory.iterdir()):
-            directory.rmdir()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,6 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     mirror_root = pack_files / MIRROR_SURFACE
 
     try:
+        reject_symlinked_root(pack_files, mirror_root)
         drift = find_drift(source_root, mirror_root)
         for line in drift.lines():
             print(line)

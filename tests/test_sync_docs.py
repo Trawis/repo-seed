@@ -886,7 +886,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 "do not choose for the user",
                 "`--dry-run` first",
                 "Do not force a change to files the script preserves",
-                "follow the instructions in its error",
+                "report its error to the user and ask",
+                "do not download a pack without permission",
                 "only after the dry run is acceptable",
                 "removals happened only for unchanged files repo-seed owned",
                 "repeat `--dry-run` is clean or every remaining line is explained",
@@ -2254,6 +2255,8 @@ class SyncBehaviorTests(unittest.TestCase):
             "list_form.yaml": 'name: C\nlabels: [ "type: feature", \'enhancement\' ]\nbody: []\n',
             "block_form.yml": 'name: D\nlabels:\n  - "type: bug"\n  - bug  # old\nbody: []\n',
             "old_template.md": "---\nname: E\nabout: x\nlabels: bug\n---\n\nBody\n",
+            "retired_idea.yml": 'name: K\nlabels: ["type: idea"]\nbody: []\n',
+            "retired_decision.yml": "name: L\nlabels:\n  - 'type: decision'\nbody: []\n",
         }
         clean = {
             "canonical_form.yml": 'name: F\nlabels: ["type: bug"]\nbody: []\n',
