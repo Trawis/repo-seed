@@ -102,8 +102,7 @@ Documentation style:
 
 - Describe the current truth.
 - Use the shortest structure that makes the content clear.
-- Use bullets for lists, scope, requirements, constraints, tasks, and
-  changelogs.
+- Use bullets for lists, scope, requirements, constraints, and tasks.
 - Use short prose when explaining overview, intent, product direction, or
   design.
 - Do not require bullets everywhere.
@@ -113,7 +112,10 @@ Documentation style:
 - Do not write agent/process phrases such as "we decided", "this replaces",
   "the old system", "consolidated", "tighter redesign", or "because the
   previous version".
-- Keep changelogs factual: what changed, not the agent's reasoning.
+- Write changelog entries as short prose under a version heading, without
+  category headings or bullets. Order the sentences added, changed, fixed,
+  removed, skipping any that do not apply. Keep them factual: what changed,
+  not the agent's reasoning.
 - Keep decision rationale only in files explicitly meant for decisions or ADRs.
 
 - Be concise, factual, and example-driven.

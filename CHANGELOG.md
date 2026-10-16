@@ -16,6 +16,9 @@ Added a short pull request template to the `--scaffold-github-templates` group
 linked issue or requirements, and risks, without repeating rules already in
 `AGENTS.md` and `git.md`. Like the Issue Forms it is created only when missing
 and is project-owned afterwards, so existing PR templates are preserved.
+Changed the changelog guidance in `documentation.md` and the changelog template
+to short prose entries without category headings or bullets, ordered added,
+changed, fixed, removed.
 
 ## 5.12.1 - 2026-10-16
 
