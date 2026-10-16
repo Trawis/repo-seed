@@ -9,6 +9,16 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.17.0 - 2026-10-16
+
+Added a reusable workflow, `.github/workflows/audit.yml`, that a target
+repository can call on a schedule to detect drift. It downloads the latest
+release, verifies its checksum, runs `sync-docs.py --audit` against the
+caller, and keeps one issue open while the audit reports drift, closing it when
+clean. It is optional, installs nothing into targets, and is not part of the
+release archive. The README documents the caller workflow. Added a test for the
+workflow's permissions and trigger.
+
 ## 5.16.1 - 2026-10-16
 
 The `repository-upgrade` skill now tells the agent that a copy line marked
