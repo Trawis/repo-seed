@@ -208,28 +208,14 @@ class ManifestTests(unittest.TestCase):
             ".agents/skills/repository-upgrade/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/SKILL.md": all_profiles,
             ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
-            ".claude/skills/code-review/SKILL.md": all_profiles,
-            ".claude/skills/bug-fix/SKILL.md": all_profiles,
-            ".claude/skills/code-simplification/SKILL.md": all_profiles,
-            ".claude/skills/code-simplification/NOTICE.md": all_profiles,
-            ".claude/skills/refactor/SKILL.md": all_profiles,
-            ".claude/skills/dependency-upgrade/SKILL.md": all_profiles,
-            ".claude/skills/issue-authoring/SKILL.md": all_profiles,
-            ".claude/skills/issue-implementation/SKILL.md": all_profiles,
-            ".claude/skills/repository-audit/SKILL.md": all_profiles,
-            ".claude/skills/repository-bootstrap/SKILL.md": all_profiles,
-            ".claude/skills/repository-upgrade/SKILL.md": all_profiles,
-            ".claude/skills/test-driven-development/SKILL.md": all_profiles,
-            ".claude/skills/test-driven-development/NOTICE.md": all_profiles,
             ".agents/skills/technical-design/SKILL.md": library_profiles,
             ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
             ".agents/skills/architecture-review/SKILL.md": library_profiles,
             ".agents/skills/architecture-review/NOTICE.md": library_profiles,
-            ".claude/skills/technical-design/SKILL.md": library_profiles,
-            ".claude/skills/documentation-bootstrap/SKILL.md": library_profiles,
-            ".claude/skills/architecture-review/SKILL.md": library_profiles,
-            ".claude/skills/architecture-review/NOTICE.md": library_profiles,
         }
+        # Every skill is installed under both surfaces with the same profiles.
+        for path in [path for path in expected if path.startswith(".agents/skills/")]:
+            expected[path.replace(".agents/skills/", ".claude/skills/", 1)] = expected[path]
         actual = {
             asset.path: set(asset.profiles)
             for asset in self.manifest.assets
