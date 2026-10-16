@@ -11,9 +11,10 @@ Use newest entries first. Do not dump raw git commits here.
 
 ## 5.12.4 - 2026-10-16
 
-Added merge rules to `git.md`. Feature branches are squashed. Release and
-hotfix branches and merge-backs to `develop` use merge commits, never squash.
-Merged short-lived branches are deleted.
+Added merge rules, release and hotfix flow, and commit message format to
+`git.md`. Feature branches are squashed. Release and hotfix branches and
+merge-backs to `develop` use merge commits, never squash. Releases are tagged on
+`main`. Merged short-lived branches are deleted.
 
 ## 5.12.3 - 2026-10-16
 

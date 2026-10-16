@@ -45,7 +45,7 @@ the repository clearly uses `develop` or `dev`.
 ## Branches, Commits, and Pull Requests
 
 - Use the discovered branching model and naming conventions.
-- Keep commits focused and imperative.
+- Keep commits focused: one logical change each.
 - Keep PR titles and descriptions concise and use the repository template.
 - Never force-push a long-lived branch, bypass protection, auto-merge, or approve your own PR.
 - Do not include assistant, model, or tool names in repository history or release text.
@@ -69,6 +69,29 @@ Merge only when the task asks for it. Pick the method by branch type:
 - Resolve conflicts by merging the base branch into your branch. Do not rebase
   or force-push a shared branch.
 - If the repository documents a different merge method, follow it.
+
+## Commit Messages
+
+- Write an imperative subject of at most 72 characters, with no trailing period.
+- Add a blank line and a short body when the reason is not obvious.
+- Reference issues in the body or PR, such as `Closes #123`.
+- Follow the repository's existing prefix style. Do not add one it does not use.
+
+## Releases
+
+Create release branches, tags, and version bumps only when the task asks.
+
+- GitFlow release: branch `release/<version>` from `develop`. Allow only
+  fixes, the version bump, and the changelog. Open a PR to `main` and merge
+  with a merge commit. Tag the merge commit `v<version>`. Merge `main` back
+  into `develop` with a merge commit, then delete the release branch.
+- GitFlow hotfix: branch `hotfix/<short-kebab-description>` from `main`. Open a
+  PR to `main` and merge with a merge commit. Tag a patch version. Merge `main`
+  back into `develop`, or into the open `release/*` branch if one exists.
+- GitHub Flow: release from `main` by tagging it. Add a release branch only if
+  the repository already uses them.
+- Use semantic versions when the project has a versioned public interface.
+  Keep the version, changelog, and tag consistent.
 
 Before opening a PR, confirm the source and target branches still match the
 discovered model. A wrong branch family or wrong PR target is blocking.
