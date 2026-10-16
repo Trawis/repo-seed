@@ -1,0 +1,34 @@
+# Document role: Repo-seed-only issue form. Sync behavior: Never copied into targets.
+
+name: Tech Debt
+description: Refactor, simplify, or clean up the sync script, tests, or pack structure
+labels: ["type: tech-debt"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the structural problem in the code or architecture.
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true after this work is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested approach
+      description: Optional. Provide useful implementation direction when known.
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: List concrete, observable acceptance conditions.
+      placeholder: |
+        - Concrete, observable outcome.
+    validations:
+      required: true

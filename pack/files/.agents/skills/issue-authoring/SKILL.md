@@ -34,8 +34,8 @@ without the explicit authorization described under Hosted Writes.
    behavior or standards the repository does not establish. Keep repository
    evidence primary and cite sources.
 7. Classify with exactly one `type:*` label from the canonical guidance. If a
-   needed choice is unresolved or the work is not yet defined, use the idea
-   type; do not label it a feature to make it look executable.
+   needed choice is unresolved, state the alternatives under `Suggested
+   approach` rather than inventing an answer or hiding the gap.
 8. Draft using the canonical structure. For implementation-ready work, write
    `Done when` as concrete, observable or testable conditions so a later agent
    can tell when it is complete without inventing product decisions. Describe

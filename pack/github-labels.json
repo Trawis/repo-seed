@@ -21,11 +21,6 @@
       "color": "c5def5"
     },
     {
-      "name": "type: idea",
-      "description": "Not yet implementation-ready, including work blocked on an unresolved choice.",
-      "color": "bfdadc"
-    },
-    {
       "name": "priority: critical",
       "description": "Optional. Requires urgent attention.",
       "color": "b60205"
