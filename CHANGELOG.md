@@ -8,6 +8,20 @@ All meaningful user-facing and developer-facing changes should be documented in 
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.12.1 - 2026-10-16
+
+### Fixed
+
+- `sync-docs.py --audit` reports legacy `bug`/`enhancement` labels again.
+  The check only covered scaffold targets ending in `.md`, so after the issue
+  templates became Issue Forms it never ran on any distributed issue template.
+  It now reads every `.md`, `.yml`, and `.yaml` file in
+  `.github/ISSUE_TEMPLATE/`: Markdown front matter and a form's top-level
+  `labels` key, as an inline value, an inline list, or a block list. Nested
+  `labels` keys, body text, and canonical `type:*` labels produce no finding,
+  and unreadable, binary, or symlinked files are skipped without failing the
+  audit (#100).
+
 ## 5.12.0 - 2026-10-15
 
 ### Added

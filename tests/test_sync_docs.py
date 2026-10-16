@@ -2395,10 +2395,12 @@ class SyncBehaviorTests(unittest.TestCase):
     def test_audit_reports_missing_guidance_drift_and_legacy_labels(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
-            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_project_files=True)
-            readme = target / "README.md"
-            content = sync.SCAFFOLD_HASH_PATTERN.sub("", readme.read_text(encoding="utf-8"), count=1)
-            readme.write_text(content + "\nlabels: bug\n", encoding="utf-8")
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            bug_form = target / ".github/ISSUE_TEMPLATE/bug_report.yml"
+            bug_form.write_text(
+                bug_form.read_text(encoding="utf-8").replace('labels: ["type: bug"]', 'labels: ["bug"]'),
+                encoding="utf-8",
+            )
             (target / "AGENTS.md").write_text("local edit\n", encoding="utf-8")
 
             report = sync.audit_target(PACK_ROOT, target, "minimal")
@@ -2406,7 +2408,76 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertTrue(any(line == "info: .agents/project.md not present" for line in report))
             self.assertFalse(any(line.startswith("missing: .agents/project.md") for line in report))
             self.assertTrue(any(line.startswith("drift: AGENTS.md") for line in report))
-            self.assertTrue(any("legacy label" in line and "README.md" in line for line in report))
+            self.assertTrue(any("legacy label" in line and "bug_report.yml" in line for line in report))
+
+    def test_audit_flags_legacy_labels_in_forms_and_markdown_templates_but_not_canonical_ones(self):
+        legacy = {
+            "inline_form.yml": 'name: A\nlabels: ["bug"]\nbody: []\n',
+            "bare_form.yml": "name: B\nlabels: enhancement\nbody: []\n",
+            "list_form.yaml": 'name: C\nlabels: [ "type: feature", \'enhancement\' ]\nbody: []\n',
+            "block_form.yml": 'name: D\nlabels:\n  - "type: bug"\n  - bug  # old\nbody: []\n',
+            "old_template.md": "---\nname: E\nabout: x\nlabels: bug\n---\n\nBody\n",
+        }
+        clean = {
+            "canonical_form.yml": 'name: F\nlabels: ["type: bug"]\nbody: []\n',
+            "canonical_block.yml": "name: G\nlabels:\n  - 'type: feature'\nbody: []\n",
+            "canonical_template.md": '---\nname: H\nlabels: ["type: bug"]\n---\n',
+            "config.yml": "blank_issues_enabled: false\n",
+            # `labels` below the top level, or outside Markdown front matter, is not a template label.
+            "nested.yml": "name: I\nbody:\n  - type: dropdown\n    attributes:\n      labels: bug\n",
+            "body_text.md": "---\nname: J\n---\n\nlabels: bug\n",
+            "notes.txt": "labels: bug\n",
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            directory = target / ".github/ISSUE_TEMPLATE"
+            directory.mkdir(parents=True)
+            for name, text in {**legacy, **clean}.items():
+                (directory / name).write_text(text, encoding="utf-8")
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+
+            flagged = {
+                line.split(" uses ")[0].rsplit("/", 1)[1]
+                for line in report
+                if line.startswith("legacy label:")
+            }
+            self.assertEqual(flagged, set(legacy))
+            self.assertIn(
+                "legacy label: .github/ISSUE_TEMPLATE/bare_form.yml uses 'enhancement' "
+                "instead of a canonical type: label",
+                report,
+            )
+            self.assertFalse(any(line.endswith("no drift detected") for line in report))
+
+    def test_audit_is_clean_for_the_scaffolded_issue_forms_and_survives_unreadable_templates(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("legacy label:") for line in report))
+            self.assertTrue(any(line.endswith("no drift detected") for line in report))
+
+            directory = target / ".github/ISSUE_TEMPLATE"
+            (directory / "binary.yml").write_bytes(b"\xff\xfe\x00labels: bug\n")
+            outside = target / "outside.yml"
+            outside.write_text("labels: bug\n", encoding="utf-8")
+            try:
+                (directory / "link.yml").symlink_to(outside)
+            except OSError:
+                pass
+            (directory / "subdir.yml").mkdir()
+
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("legacy label:") for line in report))
+
+    def test_audit_without_an_issue_template_directory_reports_no_legacy_labels(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            report = sync.audit_target(PACK_ROOT, target, "minimal")
+            self.assertFalse(any(line.startswith("legacy label:") for line in report))
 
     def test_audit_missing_project_md_is_informational_and_allows_no_drift(self):
         with tempfile.TemporaryDirectory() as temp:
