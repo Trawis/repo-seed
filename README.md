@@ -42,8 +42,13 @@ When a profile or convention change unselects a managed file, repo-seed removes
 it only if it still matches the recorded hash. A modified file is kept and
 tombstoned for review.
 
-Run `--dry-run` first and commit or back up the target. Writes are not
-transactional. Each target keeps `.repo-seed-state.json` as committed ownership
+Run `--dry-run` first and commit or back up the target. The dry run marks a
+managed overwrite that would discard local edits with `and discard local
+changes`, and one with no recorded baseline (for example on a first sync over an
+existing file) with `no recorded baseline`. Add `--diff` to also print, for each
+file with local edits, a diff from the pack's version to the local file: `+`
+lines exist only locally and would be lost. `--diff` writes nothing, and a normal
+sync still overwrites managed files. Writes are not transactional. Each target keeps `.repo-seed-state.json` as committed ownership
 metadata.
 
 See [Document ownership](docs/project/document-ownership.md) for path
