@@ -27,12 +27,14 @@ It now checks every `.md`, `.yml`, and `.yaml` file in `.github/ISSUE_TEMPLATE/`
 
 Added the `repository-upgrade` skill. It upgrades a repo-seed install with the
 newer pack's own `sync-docs.py`, starting with a dry run and ending with an
-audit.
+audit. It stops and asks when an older state needs an explicit selection.
 
 ## 5.11.0 - 2026-10-15
 
 Added the `repository-bootstrap` skill. It applies repo-seed to a repository
-with `sync-docs.py`, after a dry run, and checks the result.
+with `sync-docs.py`, after a dry run, and checks the result. It warns that an
+existing `AGENTS.md` and `CLAUDE.md` are replaced, and moves project content to
+`.agents/project.md` first, with the user's agreement.
 
 ## 5.10.0 - 2026-10-15
 
@@ -49,14 +51,15 @@ problems. Adapted from Matt Pocock's `improve-codebase-architecture` (MIT).
 
 Added the `code-simplification` skill. It simplifies code without changing
 behavior and hands behavior changes to `refactor`. Adapted from Addy Osmani's
-`code-simplification` (MIT). Turned off the 5.4.0 to 5.7.0 skill wrappers in
-repo-seed's own `.claude/settings.json`.
+`code-simplification` (MIT). Turned off the `issue-authoring`,
+`issue-implementation`, and `test-driven-development` wrappers in repo-seed's
+own `.claude/settings.json`.
 
 ## 5.7.0 - 2026-10-15
 
 Added the `test-driven-development` skill. It applies only when TDD is
-requested. Adapted from Matt Pocock's `tdd` and Superpowers'
-`test-driven-development` (both MIT).
+requested. Adapted from Matt Pocock's `tdd` (MIT), with ideas from Superpowers'
+`test-driven-development`.
 
 ## 5.6.0 - 2026-10-15
 
@@ -85,9 +88,10 @@ in `docs/project/skill-audit.md`.
 ## 5.2.0 - 2026-10-15
 
 Added provenance tracking for skills derived from upstream repositories:
-`pack/skill-sources.json`, a per-skill `NOTICE.md`, and
-`scripts/validate-skill-sources.py`. The registry is empty for now. Syncing
-stays offline. Maintainer steps are in `docs/project/upstream-skills.md`.
+`pack/skill-sources.json` (shipped in the archive, never synced), a per-skill
+`NOTICE.md`, and `scripts/validate-skill-sources.py`. The registry is empty for
+now. Syncing stays offline. Maintainer steps are in
+`docs/project/upstream-skills.md`.
 
 ## 5.1.0 - 2026-10-15
 
@@ -99,16 +103,21 @@ lists both.
 ## 5.0.0 - 2026-09-23
 
 Breaking release. Added `--conventions` selection (`csharp`, `python`,
-`scripts`, `shell`, `unity`), independent of profile. Added `--audit`, a
-read-only drift report. Added `--scaffold <name>` for `architecture`, `fsd`,
-`gdd`, and `user-guide`. Added the label catalog `pack/github-labels.json` with
-`scripts/sync-github-labels.py`, and issue guidance in
-`.agents/guidelines/issues.md`. Changed manifest to `schema_version: 3`,
-`CLAUDE.md` to a plain `@AGENTS.md` import, and issue labels to `type: bug` and
-`type: feature`. Targets with a pre-explicit-conventions state need one sync
-with `--conventions <list>`. Removed the `full` profile, pre-4.x migration,
-convention auto-detection, legacy scaffold markers, and `previous_hashes`.
-Replaced the old upgrade guides with `docs/project/upgrading-to-5.md`.
+`scripts`, `shell`, `unity`), independent of profile; a fresh sync installs
+none. Added `--audit`, a read-only drift report. Added `--scaffold <name>` for
+`architecture`, `fsd`, `gdd`, and `user-guide`; `--scaffold-project-files` now
+creates only README and CHANGELOG. Added the label catalog
+`pack/github-labels.json` with `scripts/sync-github-labels.py` (`--check`,
+`--apply`, needs the GitHub CLI), and issue guidance in
+`.agents/guidelines/issues.md`. Changed the manifest to `schema_version: 3`,
+which older and newer scripts cannot read from each other. Changed `CLAUDE.md` to
+a plain `@AGENTS.md` import, issue labels to `type: bug` and `type: feature`,
+and skills to the `minimal`, `library`, `app`, and `game` profiles. A state file
+from before explicit conventions (schema 1) fails without `--conventions <list>`
+and converts to schema 2 with it; see `docs/project/upgrading-to-5.md`. Removed
+the `full` profile, pre-4.x migration (a target with no state file is a fresh
+install), convention auto-detection, legacy scaffold markers (older unmarked
+scaffolds are now project-owned), and `previous_hashes`.
 
 ## 4.2.0 - 2026-08-26
 
@@ -124,13 +133,13 @@ task, and check branch models only for Git and pull request work.
 
 ## 4.0.5 - 2026-07-08
 
-Added branch-model discovery before branch and pull request work, and code
-convention checks before completion.
+Clarified branch-model discovery before branch and pull request work. Added
+code convention checks before completion.
 
 ## 4.0.4 - 2026-07-07
 
-Fixed templates to describe current state only. Added guidance against
-decision-diary wording in documentation.
+Added guidance against decision-diary wording in documentation. Changed
+templates to describe current state only.
 
 ## 4.0.3 - 2026-07-07
 
@@ -146,32 +155,36 @@ instructions, and placeholder `Unreleased` headings.
 
 Fixed unknown pack paths in `.repo-seed-state.json` being accepted, and
 protected the whole `.github/workflows/` tree from management. Corrected the
-version 3 to 4 update command.
+version 3 to 4 update command to run the new pack's script.
 
 ## 4.0.0 - 2026-07-06
 
 Added existing-project bootstrap guidance for agents. Changed architecture to
 the current system overview and TSD to a reference template for substantial
-changes. Required an explicit profile on first sync, and moved the manifest to
-schema version 2. Removed the features template from normal profiles and the
-generic `docs/project/tsd.md` scaffold.
+changes. Required an explicit profile on first sync, reused on later syncs, and
+moved the manifest to schema version 2. `full` became a reference-only profile
+that rejects project scaffolding. Removed the features template from normal
+profiles and the generic `docs/project/tsd.md` scaffold.
 
 ## 3.4.1 - 2026-07-06
 
-Fixed existing `.gitignore` files not being reported as project-owned.
+Changed existing `.gitignore` files to be reported as project-owned.
 
 ## 3.4.0 - 2026-07-06
 
 Added a non-functional requirements section to the FSD template, a date column
 to the architecture decision log, and a release note to the changelog template.
-Removed the `.gitignore` scaffold. It is now fully project-owned.
+Removed the `.gitignore` scaffold; it is fully project-owned. Targets synced
+with 3.3.0 or later drop the retired `docs/templates/gitignore.template`
+automatically. Older ones can delete it by hand.
 
 ## 3.3.0 - 2026-07-06
 
-Added `.repo-seed-state.json` to track managed files and tombstones, with
-hash-safe removal of retired legacy paths. Protected `.editorconfig` and the
-pull request template as project-owned. Unchanged managed files are no longer
-rewritten.
+Added `.repo-seed-state.json` to track managed files and tombstones, and
+provenance hashes for Markdown scaffolds. Legacy files with local changes are
+kept and reported. Profile reductions remove only unchanged stale files.
+Protected `.editorconfig` and the pull request template as project-owned.
+Unchanged managed files are no longer rewritten.
 
 ## 3.2.3 - 2026-07-05
 
@@ -184,7 +197,8 @@ branches.
 
 ## 3.2.1 - 2026-07-05
 
-Added package instructions and the MIT license to the release archive.
+Added package instructions and the MIT license to the release archive, without
+syncing them into targets.
 
 ## 3.2.0 - 2026-07-05
 
@@ -193,35 +207,41 @@ purpose each. Fixed template review guidance to match stateless sync.
 
 ## 3.1.0 - 2026-07-05
 
-Added contribution, security, license, and install docs, a pull request CI job,
-release checksums, and `--scaffold-editorconfig`. Added a pre-copy check that
-fails when a managed path is a directory or symlink. Changed `library` to
-include general coding conventions, Git guidance to be branching-model neutral,
-and the release builder name to `scripts/build-release-bundle.py`. Removed the
-redundant features document.
+Added contribution, security, license, install, and 2.x migration docs, a pull
+request CI job, release checksums, and `--scaffold-editorconfig`. Added a
+pre-copy check that fails on directory or symlink paths, and hardening against
+unsafe source links and path collisions. Changed `library` to include general
+coding conventions, Git guidance to be branching-model neutral, and the release
+builder name to `scripts/build-release-bundle.py`. Removed the redundant
+features document.
 
 ## 3.0.0 - 2026-07-04
 
-Replaced stateful sync with plain managed-file copying and missing-only
-scaffolding. Moved all assets under `pack/`, renamed the sync tool to
-`scripts/sync-docs.py`, and shipped one universal archive. Added a generic
-GitHub issue config template. Removed managed-file hashes, conflict copies, and
-Git branch operations.
+Added a generic GitHub issue config template and made `.editorconfig` an
+optional missing-only scaffold. Replaced stateful sync with plain managed-file
+copying and missing-only scaffolding, moved all assets under `pack/`, renamed
+the sync tool to `scripts/sync-docs.py`, and shipped one universal archive.
+Removed managed-file hashes, target state, conflict copies, drift tracking,
+migration cleanup, and Git branch operations.
 
 ## 2.0.1 - 2026-07-04
 
-Changed the gitignore scaffold to cover only pack artifacts. Fixed Python and
-release ignore rules leaking into target repositories.
+Changed the gitignore scaffold to cover only pack artifacts, and moved deferred
+ideas into `docs/project/features.md`. Fixed Python and release ignore rules
+leaking into target repositories.
 
 ## 2.0.0 - 2026-07-04
 
 Added `pack-manifest.json` as the single inventory. Added focused guidance for
 documentation, Git, and CI/CD, explicit project-file and issue-template
 scaffolding, and a release builder with sync tests. Changed `AGENTS.md` to short
-core rules with task routing, and moved templates to `docs/templates/` and
-project docs to `docs/project/`. Fixed templates masquerading as live docs, and
-the pull request template assuming Git Flow. Removed the roadmap, forced project
-doc overwrite, and `.agents/base.md`. Deprecated `--include-project-docs` for
+core rules with task routing, moved guidance and conventions under `.agents/`,
+templates to `docs/templates/`, and project docs to `docs/project/`. Branch
+selection now prefers `develop`/`dev`, then `main`/`master`. Fixed templates
+masquerading as live docs, the pull request template assuming Git Flow, and
+unsafe paths or bad manifests not failing clearly. Removed the roadmap (future
+work is in `docs/project/features.md`), forced project doc overwrite, and
+`.agents/base.md`. Deprecated `--include-project-docs` for
 `--scaffold-project-files`.
 
 ## 1.31.0 - 2026-07-02
@@ -237,8 +257,8 @@ profiles.
 
 ## 1.29.0 - 2026-06-23
 
-Added a `--profile` flag with `minimal`, `library`, `app`, `game`, and `full`.
-Changed the default base branch to `main`.
+Added a `--profile` flag with `minimal`, `library`, `app`, `game`, and `full`
+(the default). Changed the default base branch from `develop` to `main`.
 
 ## 1.28.0 - 2026-06-23
 
@@ -266,7 +286,8 @@ Added guidance on useful comments and concise task and PR summaries.
 ## 1.23.0 - 2026-06-19
 
 Added pre-flight checks before creating branches or pull requests, to avoid
-duplicate work. Added generic-example guidance for templates.
+duplicate work, and generic-example guidance for templates. The sync script now
+fetches and prunes remotes during branch preparation unless skipped.
 
 ## 1.22.0 - 2026-06-19
 
@@ -276,7 +297,8 @@ Renamed the sync script to the stable path `scripts/sync-agent-guidelines.py`.
 
 Added `scripts/sync-agent-guidelines.py` with version and hash tracking and
 conflict copies, plus separate Python and shell conventions. Changed branching
-to strict Git Flow families `feature/*`, `release/*`, and `hotfix/*`.
+to strict Git Flow families `feature/*`, `release/*`, and `hotfix/*`, with
+`develop` as the default integration and PR target.
 
 ## 1.20.0
 
