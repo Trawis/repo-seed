@@ -9,6 +9,15 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.14.0 - 2026-10-16
+
+Removed the pre-5.0 state bridge from `sync-docs.py`. A `.repo-seed-state.json`
+with `schema_version: 1` is now refused with a message that points to the 5.13.2
+pack, the last one that converts it with a single `--conventions <list>` sync.
+Audit no longer has a pre-5.0 mode. Removed the unused `schema_version` field
+from the parsed state. Updated the README, pack README, and the Version 5
+upgrade notes. Tombstones and retired-convention handling are unchanged.
+
 ## 5.13.2 - 2026-10-16
 
 Closed gaps in repo-seed's own CI and release workflows, with no change to

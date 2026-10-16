@@ -24,7 +24,9 @@ hashes.
 1. Commit or back up the target repository.
 2. Decide which conventions the project uses (see
    [README](../../README.md#profiles-conventions-and-scaffolds)).
-3. Run the 5.0 `sync-docs.py` with the existing profile and `--conventions`:
+3. Run the 5.13.2 `sync-docs.py` (the last pack that converts schema 1; later
+   packs refuse a `schema_version: 1` state) with the existing profile and
+   `--conventions`:
 
    ```bash
    python pack/files/scripts/sync-docs.py \
@@ -35,12 +37,7 @@ hashes.
    ```
 
    Without `--conventions`, a `schema_version: 1` state fails and writes
-   nothing:
-
-   ```text
-   This repository uses a pre-5.0 repo-seed state without explicit conventions.
-   Rerun with --conventions <list>.
-   ```
+   nothing.
 4. Review the output, then rerun without `--dry-run`.
 
 Project-owned files (README, CHANGELOG, `docs/project/`, issue templates, the

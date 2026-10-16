@@ -62,7 +62,9 @@ manifest-schema changes and may lack newer fixes.
 
 Version 5 resets compatibility. The manifest (`schema_version: 3`) is
 incompatible with older scripts. A `.repo-seed-state.json` from before explicit
-conventions (schema 1) needs one `--conventions <list>` sync to reach schema 2:
+conventions (schema 1) is no longer converted by this pack. Run the
+[5.13.2 pack](https://github.com/Trawis/repo-seed/releases/tag/v5.13.2) once
+with `--conventions <list>` to reach schema 2, then use a current pack:
 
 ```bash
 python /path/to/extracted/pack/files/scripts/sync-docs.py \

@@ -36,8 +36,10 @@ LEGACY_LABEL_VALUES = {"bug", "enhancement"}
 ISSUE_TEMPLATE_DIRECTORY = ".github/ISSUE_TEMPLATE"
 ISSUE_TEMPLATE_SUFFIXES = {".md", ".yml", ".yaml"}
 PRE_5_0_STATE_ERROR = (
-    "This repository uses a pre-5.0 repo-seed state without explicit conventions.\n"
-    "Rerun with --conventions <list>."
+    "This repository uses a pre-5.0 repo-seed state (schema_version 1), which this version\n"
+    "no longer converts. Run the repo-seed 5.13.2 pack once with --conventions <list>:\n"
+    "https://github.com/Trawis/repo-seed/releases/tag/v5.13.2\n"
+    "Then use this version."
 )
 
 
@@ -79,7 +81,6 @@ class SyncAction:
 
 @dataclass(frozen=True)
 class ManagedState:
-    schema_version: int | None
     pack_version: str | None
     profile: str | None
     conventions: frozenset[str] | None
@@ -423,7 +424,6 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
         raise ValueError(f"Managed state cannot be a symbolic link: {manifest.state_file}")
     if not state_path.exists():
         return ManagedState(
-            schema_version=None,
             pack_version=None,
             profile=None,
             conventions=None,
@@ -438,9 +438,10 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
         raw = json.loads(state_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as ex:
         raise ValueError(f"Managed state is not valid JSON: {ex}") from ex
-    if not isinstance(raw, dict) or raw.get("schema_version") not in (1, 2):
-        raise ValueError("Managed state must use schema_version 1 or 2")
-    schema_version = raw["schema_version"]
+    if isinstance(raw, dict) and raw.get("schema_version") == 1:
+        raise ValueError(PRE_5_0_STATE_ERROR)
+    if not isinstance(raw, dict) or raw.get("schema_version") != 2:
+        raise ValueError("Managed state must use schema_version 2")
     if not isinstance(raw.get("pack_version"), str):
         raise ValueError("Managed state pack_version must be a string")
     version_key(raw["pack_version"], "managed state pack_version")
@@ -471,25 +472,19 @@ def read_managed_state(target_root: Path, manifest: PackManifest) -> ManagedStat
     if set(managed_files).intersection(tombstones):
         raise ValueError("Managed state paths cannot be both active and tombstoned")
 
-    # Schema 1 is the pre-5.0 bridge. It records no conventions, so
-    # `conventions` stays None and an explicit --conventions is required.
-    #
     # A persisted convention id may be missing from the current manifest.
     # synchronize() and audit_target() check for known ids; this parser
     # only validates shape.
-    conventions: frozenset[str] | None = None
-    if schema_version == 2:
-        raw_conventions = raw.get("conventions")
-        if not isinstance(raw_conventions, list) or not all(
-            isinstance(item, str) and item for item in raw_conventions
-        ):
-            raise ValueError("Managed state conventions must be a non-empty-string array")
-        if len(raw_conventions) != len(set(raw_conventions)):
-            raise ValueError("Managed state conventions contains duplicates")
-        conventions = frozenset(raw_conventions)
+    raw_conventions = raw.get("conventions")
+    if not isinstance(raw_conventions, list) or not all(
+        isinstance(item, str) and item for item in raw_conventions
+    ):
+        raise ValueError("Managed state conventions must be a non-empty-string array")
+    if len(raw_conventions) != len(set(raw_conventions)):
+        raise ValueError("Managed state conventions contains duplicates")
+    conventions = frozenset(raw_conventions)
 
     return ManagedState(
-        schema_version=schema_version,
         pack_version=raw["pack_version"],
         profile=raw["profile"],
         conventions=conventions,
@@ -820,14 +815,6 @@ def audit_target(
             unresolved_reason = "recorded convention no longer available"
         else:
             active_conventions = state.conventions
-    elif state.schema_version == 1:
-        lines.append(
-            "info: pre-5.0 state has no explicit convention selection; "
-            "pass --conventions to audit convention state"
-        )
-        active_conventions = frozenset()
-        conventions_resolved = False
-        unresolved_reason = "pre-5.0 state"
     else:
         active_conventions = frozenset()
     lines.append(
@@ -960,9 +947,6 @@ def synchronize(
         if unavailable:
             raise ValueError(format_unavailable_conventions_error(unavailable))
         resolved_conventions = managed_state.conventions
-    elif managed_state.exists:
-        # Schema 1 (pre-5.0): require an explicit choice, never infer one.
-        raise ValueError(PRE_5_0_STATE_ERROR)
     else:
         resolved_conventions = frozenset()
 
