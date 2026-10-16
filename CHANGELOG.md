@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.14.1 - 2026-10-16
+
+Fixed `sync-docs.py --audit` aborting when a tombstoned or historical managed
+path is a symbolic link that resolves outside the repository. The audit now
+reports that path as a `tombstone:` finding and continues. Removed a redundant
+deduplication set in the same audit loop. No other behavior changed.
+
 ## 5.14.0 - 2026-10-16
 
 Removed the pre-5.0 state bridge from `sync-docs.py`. A `.repo-seed-state.json`

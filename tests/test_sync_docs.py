@@ -2272,6 +2272,31 @@ class SyncBehaviorTests(unittest.TestCase):
             # something to report.
             self.assertEqual((target / ".repo-seed-state.json").read_bytes(), state_before)
 
+    def test_audit_reports_a_tombstone_that_resolves_outside_the_repository_and_keeps_going(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / "target"
+            target.mkdir()
+            sync.synchronize(PACK_ROOT, target, "app")
+            outside = root / "outside.txt"
+            outside.write_text("not part of the repository\n", encoding="utf-8")
+            link = target / "docs/old.md"
+            try:
+                link.symlink_to(outside)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are not available")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["tombstones"] = {"docs/old.md": "a" * 64}
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            state_before = state_path.read_bytes()
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            self.assertIn("tombstone: docs/old.md (resolves outside the repository; review manually)", report)
+            self.assertTrue(any("finding(s) reported above" in line for line in report))
+            self.assertEqual(state_path.read_bytes(), state_before)
+
     def test_audit_reports_a_historical_managed_path_not_yet_tombstoned(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
