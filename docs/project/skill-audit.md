@@ -4,99 +4,42 @@
 
 **Sync behavior**: Never copied into target repositories
 
-Record of the keep/adapt/replace/split/retire decision for each distributed
-skill, made by reading the complete upstream skills and their supporting files
-at the pinned revisions below. Both upstream projects are MIT-licensed. No
-upstream text was copied: adopted ideas are restated in repo-seed's own words,
-so no `pack/skill-sources.json` entry was required (see
-[Upstream-derived skills](upstream-skills.md)). Re-run the audit by comparing
-against the revisions here.
+Record of the keep/adapt decision for each distributed skill, made by reading
+the full upstream skills at the pinned revisions below. Both upstreams are
+MIT-licensed. Skills marked "ideas only" restate adopted ideas in repo-seed's
+own words and copy no text, so they need no `pack/skill-sources.json` entry
+(see [Upstream-derived skills](upstream-skills.md)).
 
 | Upstream | Revision inspected |
 |---|---|
 | `mattpocock/skills` | `49dd158d1076134a641b33efb035946536778336` |
 | `obra/superpowers` | `bb92a77741419a4ab5f06e711a283343f1ada0c3` |
+| `github/spec-kit` | `f6e72bc8523de8ec8368129cbdea78d45f27cef8` |
+| `addyosmani/agent-skills` | `aeac41d4d005999432bb7312f7ff06383a91d59d` |
 
-Upstream issue trackers were not checked (the GitHub API returned 403 from the
-audit environment), so known upstream defects were not reviewed; the decisions rest on the skill text, which
-was reviewed for tool-specific assumptions.
+Upstream issue trackers were not checked (the GitHub API returned 403), so known
+upstream defects were not reviewed.
 
 ## Decisions
 
-| Skill | Decision | Basis |
-|---|---|---|
-| `bug-fix` | Adapt | Compared with `diagnosing-bugs` and `systematic-debugging`. Adopted: build and tighten a red-capable feedback loop first, minimize the reproduction, falsifiable hypotheses, one variable at a time, greppable debug markers, regression test only at a real seam, stop after repeated failed fixes, secret redaction. Not adopted: the HITL shell script template, the mandatory phase gates and persuasion tables, the "show hypotheses to the user" checkpoint, the `superpowers:` skill namespace, and automatic commit or PR behavior. |
-| `code-review` | Adapt | Compared with `code-review`, `requesting-code-review`. Adopted: pin the comparison to a merge-base and fail early on a bad ref or empty diff, cite the documented rule, treat smells as judgement calls that repository rules override, keep standards findings separate. Not adopted: parallel sub-agents (tool-specific), the full smell catalog (overlaps the separately planned simplification skill), the issue-tracker fetch, and severity labels. Spec and acceptance-criteria alignment is deferred to the dedicated issue. |
-| `refactor` | Keep | The inspected upstreams offer architecture discovery (`improve-codebase-architecture`, `codebase-design`), which produces an HTML report and proposes deepening candidates rather than performing behavior-preserving edits. The current skill is shorter and already enforces contract preservation, deletion over wrappers, and separation of behavior from structure. |
-| `dependency-upgrade` | Keep | Neither inspected upstream contains a dependency-upgrade workflow, so there is no alternative to compare. The audit did not search beyond the two upstreams named in the issue, so other maintained upgrade workflows remain unevaluated. |
-| `technical-design` | Keep | `to-spec` and `writing-plans` publish to an issue tracker or write implementation plans under their own paths, with a larger framework. repo-seed's skill keeps its document ownership (`docs/project/designs/`, the TSD template) and no-invented-decisions rule. |
-| `documentation-bootstrap` | Keep | `domain-modeling` builds a glossary and ADRs interactively. It does not replace evidence-only documentation of an existing repository, which repo-seed's no-invented-intent rule requires. |
+| Skill | Decision | Adopted | Not adopted |
+|---|---|---|---|
+| `bug-fix` | Adapt, ideas only | Reliable reproduction, falsifiable hypotheses, one variable at a time, greppable debug markers, real-seam regression test, stop after repeated failures, secret redaction | Shell script template, mandatory phase gates, `superpowers:` namespace, automatic commits and PRs |
+| `code-review` | Adapt, ideas only | Merge-base pinning, cited rules, smells as judgement calls, standards findings kept separate; later, acceptance review against the originating spec, omitted and unrequested work, regression-test evidence | Parallel sub-agents, full smell catalog, issue-tracker fetch, severity labels, posting review actions |
+| `refactor` | Keep | None | The inspected upstreams do architecture discovery, not behavior-preserving edits |
+| `dependency-upgrade` | Keep | None | No upstream equivalent was found in the two inspected repositories |
+| `technical-design` | Keep | None | Upstreams publish to issue trackers or write plans under their own paths |
+| `documentation-bootstrap` | Keep | None | `domain-modeling` is interactive and does not replace evidence-only documentation |
+| `issue-authoring` | New, ideas only (`triage`) | Concept-level duplicate search, claim verification, durable acceptance criteria, prior-rejection check | Tracker state machine, role labels, `.out-of-scope/` writes, automatic hosted writes |
+| `issue-implementation` | New, ideas only (`implement`, `implement-spec`) | State the ticket first, narrow checks while working, full suite at the end, review the finished work | Integration branches, worktrees, sub-agents, automatic commits, draft PRs, ticket closing |
+| `test-driven-development` | New, derived (`tdd`, with Superpowers' `test-driven-development`) | Named seams, vertical slices, behavior over implementation, mocks only at boundaries, verified red failure, refactor only when green, mutation check | Iron law, rationalization tables, TDD for every change, extra `tests.md` and `mocking.md` |
+| `code-simplification` | New, derived (`addyosmani/agent-skills`) | Behavior-preservation test, project conventions, clarity over cleverness, one change at a time, modified tests signal a behavior change | `simplify-ignore` hook, slash commands, plugin manifest, evals, language examples, per-change commits |
+| `architecture-review` | New, derived (`improve-codebase-architecture`, with `codebase-design`) | Scoping, reading existing decisions first, friction questions, deletion test, seam discipline, ranking by strength | Generated HTML report, mandatory glossary and ADR files, grilling loop, design-it-twice sub-agents, proposing interfaces |
 
-The `issue-authoring` skill added afterwards was written from `triage`
-(`49dd158d1076134a641b33efb035946536778336`) and its `AGENT-BRIEF.md`. Adopted
-ideas: concept-level redundancy search, claim verification before drafting,
-behavioral and durable acceptance criteria, and a prior-rejection check
-(restated as the already-implemented, removed-on-purpose, and already-tracked
-cases). Not adopted: the tracker state machine and role labels, setup files,
-the AI-disclaimer policy, `.out-of-scope/` writes, and automatic hosted
-writes.
+Derived skills have a `pack/skill-sources.json` entry. `architecture-review`
+stays read-only and separate from `technical-design`, and `code-simplification`
+stays separate from `refactor` by excluding behavior, compatibility, and
+structural change.
 
-The `issue-implementation` skill was written from `implement` and
-`implement-spec` (same revision). Adopted ideas: state the ticket before
-starting, run narrow checks while working and the full suite at the end, and
-review the finished work. Not adopted: integration branches, per-ticket
-worktrees, implementer and merger sub-agents, `tdd` and `code-review` calls by
-tool name, automatic commits, draft pull requests, and ticket closing.
-
-The `code-review` acceptance review was added afterwards from `code-review` in
-`mattpocock/skills` (same revision) and `code-review` in `github/spec-kit`
-(`f6e72bc8523de8ec8368129cbdea78d45f27cef8`, MIT). Adopted ideas: evaluate the
-change against the originating spec separately from standards, quote the
-requirement behind each finding, flag omitted work and unrequested additions,
-require positive and negative test coverage, look for regression-test evidence
-on bug fixes, and treat an intentional design change differently from an
-unexplained violation. Not adopted: parallel sub-agents, tracker setup files,
-framework-specific design documents and commands, and posting review actions.
-
-The `test-driven-development` skill is the first upstream-derived skill and has
-a `pack/skill-sources.json` entry. It adapts `tdd` in `mattpocock/skills`
-(`49dd158d1076134a641b33efb035946536778336`, MIT) after comparison with
-`test-driven-development` and `writing-good-tests.md` in `obra/superpowers`
-(`bb92a77741419a4ab5f06e711a283343f1ada0c3`, MIT). From the baseline: named
-seams, vertical slices rather than all tests first, behavior over
-implementation detail, tautological-test warnings, and mocking only at system
-boundaries. From Superpowers: verify the red failure is the expected one, run
-the wider suite before finishing, refactor only while green, name the break a
-test catches, and a closing mutation check. Not adopted: the iron law and
-delete-the-code rule, rationalization tables, applying TDD to every change,
-excluding refactoring from the loop, requiring user confirmation of every
-seam, calls to other skills by tool name, automatic commits, and the extra
-`tests.md` and `mocking.md` files.
-
-The `code-simplification` skill adapts `code-simplification` in
-`addyosmani/agent-skills` (`aeac41d4d005999432bb7312f7ff06383a91d59d`, MIT) and
-has a `pack/skill-sources.json` entry. Adopted: the behavior-preservation test
-before every change, project-convention matching, clarity over cleverness, the
-over-simplification traps, scoping to what changed, understanding the code
-before changing it, one change at a time with tests after each, and the rule
-that tests needing modification signal a behavior change. Not adopted: the
-`simplify-ignore` shell hook and its settings, the slash-command definitions,
-the plugin manifest, evals, language-specific examples, the 500-line codemod
-rule, per-change commits, and any pull-request assumptions. Distinct from
-`refactor` by explicitly excluding behavior, compatibility, and structural
-change.
-
-The `architecture-review` skill adapts `improve-codebase-architecture` in
-`mattpocock/skills` (`49dd158d1076134a641b33efb035946536778336`, MIT, read with
-`codebase-design`, `DEEPENING.md`, and `DESIGN-IT-TWICE.md`) and has a
-`pack/skill-sources.json` entry. Adopted: scoping by named direction or
-recently changed areas, reading existing decisions first, the friction
-questions, the deletion test, seam discipline (one implementation means
-indirection, not a seam), and ranking by strength. Not adopted: the generated
-HTML report with CDN scripts and temp-file writing, mandatory glossary and ADR
-files, the grilling loop and dependent skills, the parallel design-it-twice
-sub-agents, and proposing interfaces. It stays read-only and distinct from
-`technical-design`, which designs a specific proposed change.
-
-No skill was split or retired. Both skill surfaces were updated together and
-remain identical.
+No skill was split or retired. Both skill surfaces are updated together and stay
+identical.
