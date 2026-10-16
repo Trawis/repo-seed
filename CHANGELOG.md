@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.16.1 - 2026-10-16
+
+The `repository-upgrade` skill now tells the agent that a copy line marked
+`and discard local changes` overwrites local edits, to rerun the command with
+`--diff` to show the user those diffs, and to get their go-ahead before
+applying.
+
 ## 5.16.0 - 2026-10-16
 
 Added `--diff` to `sync-docs.py`. It behaves like `--dry-run` and also prints,
