@@ -28,7 +28,7 @@ fields. Forms only apply in the web UI. Issues created through the API, the
 GitHub CLI, or by maintainers can bypass them, so the structures below still
 apply.
 
-Tech debt, chores, decisions, ideas, documentation, and questions have no
+Tech debt, chores, ideas, documentation, and questions have no
 form. Maintainers create them as a blank issue and apply the `type:*` label
 manually. `blank_issues_enabled: false` in `.github/ISSUE_TEMPLATE/config.yml`
 only hides the blank-issue option from contributors; maintainers with write
@@ -51,21 +51,27 @@ Every issue gets exactly one type label:
 
 - `type: bug` - existing behavior is incorrect.
 - `type: feature` - implementation-ready new behavior or capability.
-- `type: tech-debt` - refactoring, internal cleanup, architecture
-  improvement, or accumulated maintenance debt.
-- `type: chore` - tooling, dependencies, CI, repository maintenance, or
+- `type: tech-debt` - changes to the project's own code or architecture that
+  improve its structure without changing behavior: refactoring,
+  simplification, removing dead code, or architecture cleanup.
+- `type: chore` - upkeep of the tooling and files around the code:
+  dependencies, CI, build and release setup, repository configuration, or
   documentation maintenance.
-- `type: decision` - a concrete choice must be resolved before
-  implementation.
-- `type: idea` - worth recording but not yet defined enough to implement.
+- `type: idea` - worth recording but not yet defined enough to implement,
+  including work blocked on an unresolved choice.
+
+When `tech-debt` and `chore` both seem to fit, use `tech-debt` if the work
+changes the structure of the product's source. Use `chore` if it changes the
+tooling, configuration, or documentation around it. A dependency upgrade is a
+`chore` even when it needs code changes.
 
 Forms need not map one-to-one to types. Bug and Feature are contributor entry
 points. Maintainers apply the other types through a blank issue, for example:
 
 ```text
 internal refactor        -> blank issue -> type: tech-debt
-dependency cleanup       -> blank issue -> type: chore
-architecture choice      -> blank issue -> type: decision
+dependency upgrade       -> blank issue -> type: chore
+architecture choice      -> blank issue -> type: idea
 possible future feature  -> blank issue -> type: idea
 ```
 
@@ -89,17 +95,17 @@ Do not establish a mandatory shared `area:*` taxonomy. A project may add a few
 component or area labels when they give real filtering value. Do not add one
 just for completeness.
 
-## Idea, Decision, and Feature Lifecycle
+## Idea and Feature Lifecycle
 
 ```text
-idea -> decision (only when a real unresolved choice blocks implementation) -> feature / tech-debt / chore
+idea -> feature / tech-debt / chore
 ```
 
-An idea may stay incomplete indefinitely. Promote it to `type: decision` only
-when a choice blocks implementation. Promote it to `type: feature`,
-`type: tech-debt`, or `type: chore` once it is implementation-ready. Do not
-create Idea or Decision forms; maintainers use a blank issue with the
-structures below.
+An idea may stay incomplete indefinitely, including while an unresolved choice
+blocks implementation. Record the choice and its outcome in the idea, then
+promote it to `type: feature`, `type: tech-debt`, or `type: chore` once it is
+implementation-ready. Do not create an Idea form; maintainers use a blank issue
+with the structures below.
 
 ## Issue Structure
 
@@ -130,22 +136,9 @@ practical. Do not force Context, Scope, Dependencies, Risks, Priority,
 Requirements, or Implementation Notes onto every issue. Add one only when that
 issue benefits.
 
-Decision issues:
-
-```md
-## Decision
-
-What must be decided?
-
-## Context
-
-Relevant constraints or alternatives.
-
-## Done when
-
-- The decision is recorded.
-- Follow-up implementation issues are created when needed.
-```
+Idea issues need only a `Summary`. State any unresolved choice that blocks
+implementation, with the alternatives, so the idea can be promoted once it is
+settled.
 
 Bug reports keep a dedicated diagnostic structure with reproduction, expected,
 actual, and environment fields; see `.github/ISSUE_TEMPLATE/bug_report.yml`.
@@ -170,3 +163,4 @@ automatically. Migrate them deliberately, as a separate step.
 | `medium`      | `priority: medium` |
 | `low`         | `priority: low` |
 | `lowest`      | `priority: low` |
+| `type: decision` | `type: idea` |

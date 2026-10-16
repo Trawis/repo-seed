@@ -9,6 +9,18 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.13.0 - 2026-10-16
+
+Removed the `type: decision` label from the issue convention, the label
+catalog, and the `issue-authoring` skill. An unresolved choice that blocks
+implementation is now recorded in a `type: idea` issue, and the Decision issue
+structure is gone. `sync-github-labels.py` and `issues.md` list `type: decision`
+as a legacy label that maps to `type: idea`. Tightened the `type: tech-debt`
+and `type: chore` definitions: tech-debt changes the structure of the project's
+own source, chore covers the tooling, configuration, and documentation around
+it. Added a tie-breaker rule, and aligned the label catalog descriptions with
+`issues.md`.
+
 ## 5.12.4 - 2026-10-16
 
 Added merge rules, release and hotfix flow, and commit message format to

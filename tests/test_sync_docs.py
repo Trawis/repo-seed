@@ -1155,12 +1155,12 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "type: feature",
             "type: tech-debt",
             "type: chore",
-            "type: decision",
             "type: idea",
             "priority: critical",
             "priority: high",
             "priority: medium",
             "priority: low",
+            "A dependency upgrade is a\n`chore` even when it needs code changes.",
             "Do not establish a mandatory shared `area:*` taxonomy",
             "Priority is optional",
             "Bug Report",
@@ -1177,9 +1177,19 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "enhancement": "type: feature",
             "critical": "priority: critical",
             "lowest": "priority: low",
+            "type: decision": "type: idea",
         }.items():
             self.assertIn(legacy, guidance)
             self.assertIn(replacement, guidance)
+        self.assertNotIn("Decision issues", guidance)
+
+    def test_label_catalog_and_guidance_state_the_same_type_scope(self):
+        catalog = {label["name"]: label for label in github_labels.load_catalog(GITHUB_LABELS_CATALOG)}
+        self.assertNotIn("type: decision", catalog)
+        self.assertNotIn("maintenance", catalog["type: tech-debt"]["description"].lower())
+        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
+        tech_debt_entry = guidance.split("- `type: tech-debt`", 1)[1].split("- `type: chore`", 1)[0]
+        self.assertNotIn("maintenance", tech_debt_entry.lower())
 
     def test_distributed_issue_guidance_is_self_contained_for_target_repositories(self):
         guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
@@ -2805,7 +2815,6 @@ class GitHubLabelToolTests(unittest.TestCase):
                 "type: feature",
                 "type: tech-debt",
                 "type: chore",
-                "type: decision",
                 "type: idea",
                 "priority: critical",
                 "priority: high",
