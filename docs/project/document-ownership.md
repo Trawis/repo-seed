@@ -38,9 +38,9 @@ belongs in `upgrading-to-5.md`.
 
 ## Upstream-Derived Skills
 
-`pack/skill-sources.json` and `scripts/validate-skill-sources.py` are
-repo-seed-side tooling and never synced. Derived skills ship through
-`pack/manifest.json` like other managed skills, with a `NOTICE.md`. See
+`pack/skill-sources.json`, `scripts/validate-skill-sources.py`, and
+`scripts/mirror-skills.py` are repo-seed-side tooling and never synced. Derived
+skills ship through `pack/manifest.json` like other managed skills, with a `NOTICE.md`. See
 [Upstream-derived skills](upstream-skills.md).
 
 ## Profiles, Conventions, and Scaffolds
