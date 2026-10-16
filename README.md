@@ -22,11 +22,11 @@ Reusable coding-agent guidance and project-document templates with a small sync 
 
 ## Requirements
 
-- Python 3.10 or newer;
+- Python 3.11 or newer;
 - a writable target repository;
 - Windows, Linux, or macOS.
 
-The scripts use only the Python standard library. CI runs Python 3.10 and 3.13
+The scripts use only the Python standard library. CI runs Python 3.11 and 3.14
 on Linux.
 
 ## Safety
