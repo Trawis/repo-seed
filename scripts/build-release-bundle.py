@@ -13,7 +13,7 @@ PACK_DIRECTORY = "pack"
 MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
-VALID_SCAFFOLD_GROUPS = {"project", "optional", "github", "editorconfig"}
+VALID_SCAFFOLD_GROUPS = {"project", "optional", "github", "editorconfig", "workflows"}
 PROJECT_OWNED_TREES = (".github/workflows",)
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
@@ -136,10 +136,16 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
                 ):
                     raise ValueError(f"{context} must define a valid scaffold group and target")
                 safe_relative_path(scaffold_target)
-                reject_project_owned_tree_path(
-                    scaffold_target,
-                    f"{context}.scaffold_target",
-                )
+                if scaffold_group == "workflows":
+                    if not any(
+                        scaffold_target.startswith(f"{tree}/") for tree in PROJECT_OWNED_TREES
+                    ):
+                        raise ValueError(f"{context}.scaffold_target must be under .github/workflows")
+                else:
+                    reject_project_owned_tree_path(
+                        scaffold_target,
+                        f"{context}.scaffold_target",
+                    )
                 if scaffold_target in seen_scaffolds:
                     raise ValueError(f"Duplicate scaffold target: {scaffold_target}")
                 seen_scaffolds.add(scaffold_target)
