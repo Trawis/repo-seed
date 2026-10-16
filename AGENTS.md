@@ -97,7 +97,7 @@ python scripts/build-release-bundle.py --help
 python scripts/sync-github-labels.py --help
 python scripts/validate-skill-sources.py
 python scripts/mirror-skills.py --check
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py
+python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py tests/test_audit_workflow.py
 git diff --check
 ```
 

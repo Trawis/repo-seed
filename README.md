@@ -191,6 +191,37 @@ python /path/to/extracted/pack/files/scripts/sync-docs.py \
 The copied `scripts/sync-docs.py` cannot cross manifest-schema changes and may
 lack newer fixes. Pass `--profile` to change the profile.
 
+## Automatic Drift Check
+
+Optional. A target repository can find out on its own when a newer pack is
+released or its managed files drift, instead of waiting for someone to run the
+script. Add a workflow that calls the reusable audit workflow in this
+repository. The pack does not install it, because `.github/workflows/` is
+always project-owned:
+
+```yaml
+name: repo-seed audit
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+jobs:
+  audit:
+    permissions:
+      contents: read
+      issues: write
+    uses: Trawis/repo-seed/.github/workflows/audit.yml@v5.17.0
+```
+
+Pin `@` to a release tag; Dependabot can update it. Each run downloads the
+latest release, checks its SHA-256, and runs `sync-docs.py --audit` against the
+repository. While the audit reports drift, exactly one open issue titled
+`repo-seed: managed files are out of date` carries the audit output, and it
+closes itself once the audit is clean. The job fails only when the tooling
+itself fails, such as a checksum mismatch, not when drift is found. It needs
+`issues: write` and network access to GitHub. It changes no file; apply updates
+with the steps above.
+
 ## Upgrading a Pre-5.0 Target
 
 Version 5 resets compatibility:

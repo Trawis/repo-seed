@@ -1,0 +1,90 @@
+name: Audit a repo-seed target
+
+# Reusable workflow for repositories that use repo-seed. A target calls it on a
+# schedule (see "Automatic Drift Check" in the README). It downloads the latest
+# release, checks its checksum, runs `sync-docs.py --audit` against the calling
+# repository, and keeps exactly one issue open while the audit reports drift.
+# The job fails only when the tooling itself fails, not when drift is found.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    env:
+      # The repository that publishes the pack. Not the caller.
+      PACK_REPOSITORY: Trawis/repo-seed
+      ISSUE_TITLE: "repo-seed: managed files are out of date"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Download the latest repo-seed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=$(gh release view --repo "$PACK_REPOSITORY" --json tagName --jq .tagName)
+          version=${tag#v}
+          pack_root="$RUNNER_TEMP/repo-seed-pack"
+          mkdir -p "$pack_root"
+          gh release download "$tag" --repo "$PACK_REPOSITORY" \
+            --pattern "repo-seed-pack-${version}.zip" \
+            --pattern "repo-seed-pack-${version}.zip.sha256" \
+            --dir "$pack_root"
+          (cd "$pack_root" && sha256sum --check "repo-seed-pack-${version}.zip.sha256")
+          unzip -q "$pack_root/repo-seed-pack-${version}.zip" -d "$pack_root/extracted"
+          echo "PACK_TAG=$tag" >> "$GITHUB_ENV"
+          echo "PACK_DIR=$pack_root/extracted/pack" >> "$GITHUB_ENV"
+
+      - name: Audit this repository
+        run: |
+          set -euo pipefail
+          python "$PACK_DIR/files/scripts/sync-docs.py" \
+            --source "$PACK_DIR" --target "$GITHUB_WORKSPACE" --audit \
+            | tee "$RUNNER_TEMP/audit.txt"
+          if grep -qx 'no drift detected' "$RUNNER_TEMP/audit.txt"; then
+            echo "DRIFT=false" >> "$GITHUB_ENV"
+          else
+            echo "DRIFT=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Open, update, or close the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --state open --limit 100 --json number,title \
+            --jq '.[] | "\(.number)\t\(.title)"' \
+            | awk -F '\t' -v title="$ISSUE_TITLE" '$2 == title { print $1; exit }')
+          if [ "$DRIFT" = "true" ]; then
+            {
+              echo "The latest repo-seed release is \`$PACK_TAG\`. \`sync-docs.py --audit\` reported:"
+              echo
+              echo '```text'
+              cat "$RUNNER_TEMP/audit.txt"
+              echo '```'
+              echo
+              echo "Review the changes with \`sync-docs.py --diff\` using the new pack, then update. This issue is kept up to date by the scheduled audit and closes itself when the audit is clean."
+            } > "$RUNNER_TEMP/body.md"
+            if [ -n "$number" ]; then
+              gh issue edit "$number" --body-file "$RUNNER_TEMP/body.md"
+            else
+              gh issue create --title "$ISSUE_TITLE" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --comment "The audit is clean against repo-seed \`$PACK_TAG\`."
+          fi
