@@ -12,23 +12,13 @@
     },
     {
       "name": "type: tech-debt",
-      "description": "Refactoring, internal cleanup, or architecture improvement.",
+      "description": "Refactoring, simplification, or architecture cleanup of the project's own code.",
       "color": "fbca04"
     },
     {
       "name": "type: chore",
-      "description": "Tooling, dependencies, CI, or repository maintenance.",
+      "description": "Upkeep of tooling and files around the code: dependencies, CI, build, config, or docs.",
       "color": "c5def5"
-    },
-    {
-      "name": "type: decision",
-      "description": "A concrete choice must be resolved before implementation.",
-      "color": "5319e7"
-    },
-    {
-      "name": "type: idea",
-      "description": "Worth recording but not yet implementation-ready.",
-      "color": "bfdadc"
     },
     {
       "name": "priority: critical",

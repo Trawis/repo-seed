@@ -16,6 +16,8 @@ from pathlib import Path
 
 DEFAULT_CATALOG = Path(__file__).resolve().parents[1] / "pack" / "github-labels.json"
 
+RETIRED_TYPE_REPLACEMENT = "type: feature, type: tech-debt, or type: chore"
+
 LEGACY_LABELS = {
     "bug": "type: bug",
     "enhancement": "type: feature",
@@ -25,6 +27,8 @@ LEGACY_LABELS = {
     "medium": "priority: medium",
     "low": "priority: low",
     "lowest": "priority: low",
+    "type: decision": RETIRED_TYPE_REPLACEMENT,
+    "type: idea": RETIRED_TYPE_REPLACEMENT,
 }
 
 

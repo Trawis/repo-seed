@@ -1123,7 +1123,12 @@ class GuidanceAndTemplateTests(unittest.TestCase):
 
     def test_issue_forms_scaffold_verbatim_without_markdown_provenance(self):
         manifest = sync.load_manifest(PACK_ROOT)
-        for suffix in ("bug-report.template.yml", "feature-request.template.yml"):
+        for suffix in (
+            "bug-report.template.yml",
+            "feature-request.template.yml",
+            "tech-debt.template.yml",
+            "chore.template.yml",
+        ):
             asset = next(a for a in manifest.assets if a.path.endswith(suffix))
             with self.subTest(form=suffix), tempfile.TemporaryDirectory() as temp:
                 target = Path(temp)
@@ -1145,6 +1150,9 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         feature_rendered = sync.render_scaffold(PACK_ROOT, feature_asset)
         self.assertIn('labels: ["type: bug"]', bug_rendered)
         self.assertIn('labels: ["type: feature"]', feature_rendered)
+        for suffix, label in (("tech-debt.template.yml", "type: tech-debt"), ("chore.template.yml", "type: chore")):
+            asset = next(a for a in manifest.assets if a.path.endswith(suffix))
+            self.assertIn(f'labels: ["{label}"]', sync.render_scaffold(PACK_ROOT, asset))
         self.assertNotIn("labels: bug", bug_rendered)
         self.assertNotIn("labels: enhancement", feature_rendered)
 
@@ -1155,17 +1163,16 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "type: feature",
             "type: tech-debt",
             "type: chore",
-            "type: decision",
-            "type: idea",
             "priority: critical",
             "priority: high",
             "priority: medium",
             "priority: low",
+            "A dependency upgrade is a\n`chore` even when it needs code changes.",
             "Do not establish a mandatory shared `area:*` taxonomy",
             "Priority is optional",
             "Bug Report",
             "Feature Request",
-            "Blank issue -> assign type manually",
+            "starts from a form",
             "blank_issues_enabled: false",
             "GitHub Issue Forms",
             "can bypass them",
@@ -1177,9 +1184,24 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             "enhancement": "type: feature",
             "critical": "priority: critical",
             "lowest": "priority: low",
+            "type: decision": "re-triage",
+            "type: idea": "re-triage",
         }.items():
             self.assertIn(legacy, guidance)
             self.assertIn(replacement, guidance)
+        for retired in ("Decision issues", "Idea issues", "blank issue ->"):
+            self.assertNotIn(retired, guidance)
+        self.assertIn("Chore (`chore.yml`, applies `type: chore`)", guidance)
+        self.assertIn("Tech Debt (`tech_debt.yml`, applies `type: tech-debt`)", guidance)
+
+    def test_label_catalog_and_guidance_state_the_same_type_scope(self):
+        catalog = {label["name"]: label for label in github_labels.load_catalog(GITHUB_LABELS_CATALOG)}
+        self.assertNotIn("type: decision", catalog)
+        self.assertNotIn("type: idea", catalog)
+        self.assertNotIn("maintenance", catalog["type: tech-debt"]["description"].lower())
+        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
+        tech_debt_entry = guidance.split("- `type: tech-debt`", 1)[1].split("- `type: chore`", 1)[0]
+        self.assertNotIn("maintenance", tech_debt_entry.lower())
 
     def test_distributed_issue_guidance_is_self_contained_for_target_repositories(self):
         guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
@@ -1231,6 +1253,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             {
                 ".github/ISSUE_TEMPLATE/bug_report.yml",
                 ".github/ISSUE_TEMPLATE/feature_request.yml",
+                ".github/ISSUE_TEMPLATE/tech_debt.yml",
+                ".github/ISSUE_TEMPLATE/chore.yml",
                 ".github/ISSUE_TEMPLATE/config.yml",
                 ".github/pull_request_template.md",
             },
@@ -1247,6 +1271,12 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         return fields
 
     def test_issue_forms_require_the_minimum_contract_and_nothing_more(self):
+        implementation_fields = {
+            "Summary": True,
+            "Goal": True,
+            "Suggested approach": False,
+            "Done when": True,
+        }
         expected = {
             "bug-report.template.yml": {
                 "Summary": True,
@@ -1256,12 +1286,9 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 "Environment": True,
                 "Additional Context": False,
             },
-            "feature-request.template.yml": {
-                "Summary": True,
-                "Goal": True,
-                "Suggested approach": False,
-                "Done when": True,
-            },
+            "feature-request.template.yml": implementation_fields,
+            "tech-debt.template.yml": implementation_fields,
+            "chore.template.yml": implementation_fields,
         }
         manifest = sync.load_manifest(PACK_ROOT)
         for suffix, fields in expected.items():
@@ -1278,13 +1305,18 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             repo_form = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE" / asset.scaffold_target.rsplit("/", 1)[1]
             self.assertEqual(self._form_fields(repo_form.read_text(encoding="utf-8")), fields)
 
-    def test_root_issue_chooser_has_two_issue_forms(self):
+    def test_root_issue_chooser_has_one_issue_form_per_type(self):
         issue_root = REPOSITORY_ROOT / ".github/ISSUE_TEMPLATE"
         self.assertEqual(
             sorted(path.name for path in issue_root.iterdir()),
-            ["bug_report.yml", "config.yml", "feature_request.yml"],
+            ["bug_report.yml", "chore.yml", "config.yml", "feature_request.yml", "tech_debt.yml"],
         )
-        for name, label in (("bug_report.yml", "type: bug"), ("feature_request.yml", "type: feature")):
+        for name, label in (
+            ("bug_report.yml", "type: bug"),
+            ("feature_request.yml", "type: feature"),
+            ("tech_debt.yml", "type: tech-debt"),
+            ("chore.yml", "type: chore"),
+        ):
             content = (issue_root / name).read_text(encoding="utf-8")
             self.assertRegex(content, r"(?m)^name: .+$", name)
             self.assertRegex(content, r"(?m)^description: .+$", name)
@@ -2080,7 +2112,7 @@ class SyncBehaviorTests(unittest.TestCase):
             issue_root = target / ".github/ISSUE_TEMPLATE"
             self.assertFalse(issue_root.exists())
             sync.synchronize(PACK_ROOT, target, "minimal", scaffold_github_templates=True)
-            for name in ("bug_report.yml", "feature_request.yml", "config.yml"):
+            for name in ("bug_report.yml", "feature_request.yml", "tech_debt.yml", "chore.yml", "config.yml"):
                 self.assertTrue((issue_root / name).is_file(), name)
             self.assertEqual(
                 (issue_root / "config.yml").read_text(encoding="utf-8").strip(),
@@ -2805,8 +2837,6 @@ class GitHubLabelToolTests(unittest.TestCase):
                 "type: feature",
                 "type: tech-debt",
                 "type: chore",
-                "type: decision",
-                "type: idea",
                 "priority: critical",
                 "priority: high",
                 "priority: medium",

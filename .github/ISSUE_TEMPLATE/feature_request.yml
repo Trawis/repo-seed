@@ -4,9 +4,6 @@ name: Feature Request
 description: Propose a guideline, convention, template, sync option, or tooling improvement
 labels: ["type: feature"]
 body:
-  - type: markdown
-    attributes:
-      value: "Not implementation-ready yet? Ask a maintainer to record it as `type: idea` instead."
   - type: textarea
     id: summary
     attributes:

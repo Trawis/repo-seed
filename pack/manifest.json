@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.12.4",
+  "pack_version": "5.13.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -317,6 +317,20 @@
       "profiles": ["minimal", "library", "app", "game"],
       "scaffold_group": "github",
       "scaffold_target": ".github/ISSUE_TEMPLATE/feature_request.yml"
+    },
+    {
+      "path": "docs/templates/.github/tech-debt.template.yml",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game"],
+      "scaffold_group": "github",
+      "scaffold_target": ".github/ISSUE_TEMPLATE/tech_debt.yml"
+    },
+    {
+      "path": "docs/templates/.github/chore.template.yml",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game"],
+      "scaffold_group": "github",
+      "scaffold_target": ".github/ISSUE_TEMPLATE/chore.yml"
     },
     {
       "path": "docs/templates/.github/config.template.yml",
