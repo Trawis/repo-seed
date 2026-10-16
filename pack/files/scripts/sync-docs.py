@@ -30,8 +30,11 @@ SCAFFOLD_HASH_PATTERN = re.compile(
     r"^<!-- Scaffolded content SHA-256: (?P<hash>[0-9a-f]{64}) -->\r?\n?",
     re.MULTILINE,
 )
-LEGACY_LABEL_PATTERN = re.compile(r"^labels:\s*(.+)$", re.MULTILINE)
+LABELS_KEY_PATTERN = re.compile(r"^labels:[ \t]*(?P<inline>.*)$", re.MULTILINE)
+LABEL_LIST_ITEM_PATTERN = re.compile(r"^[ \t]*-[ \t]+(?P<label>.+)$")
 LEGACY_LABEL_VALUES = {"bug", "enhancement"}
+ISSUE_TEMPLATE_DIRECTORY = ".github/ISSUE_TEMPLATE"
+ISSUE_TEMPLATE_SUFFIXES = {".md", ".yml", ".yaml"}
 PRE_5_0_STATE_ERROR = (
     "This repository uses a pre-5.0 repo-seed state without explicit conventions.\n"
     "Rerun with --conventions <list>."
@@ -654,6 +657,59 @@ def render_scaffold(source_root: Path, asset: Asset) -> str:
     return body
 
 
+def issue_template_labels(path: Path, content: str) -> list[str]:
+    """Labels a GitHub issue template applies, from Markdown front matter or a form's top-level key.
+
+    Understands the inline forms (`labels: bug`, `labels: [bug, "type: bug"]`) and a
+    block list; anything it cannot read yields no labels rather than an error.
+    """
+    if path.suffix.lower() == ".md":
+        if not content.startswith("---"):
+            return []
+        closing = content.find("\n---", 3)
+        if closing < 0:
+            return []
+        content = content[:closing]
+    match = LABELS_KEY_PATTERN.search(content)
+    if match is None:
+        return []
+    inline = match.group("inline").split("#", 1)[0].strip()
+    if inline:
+        values = inline.strip("[]").split(",")
+    else:
+        values = []
+        for line in content[match.end():].splitlines()[1:]:
+            item = LABEL_LIST_ITEM_PATTERN.match(line)
+            if item is None:
+                if line.strip():
+                    break
+                continue
+            values.append(item.group("label").split("#", 1)[0])
+    return [value.strip().strip("\"'").strip() for value in values if value.strip().strip("\"'").strip()]
+
+
+def legacy_label_findings(target_root: Path) -> list[str]:
+    """Legacy `bug`/`enhancement` labels in the target's issue templates, forms and Markdown alike."""
+    directory = target_root / ISSUE_TEMPLATE_DIRECTORY
+    if not directory.is_dir() or directory.is_symlink():
+        return []
+    findings: list[str] = []
+    for path in sorted(directory.iterdir()):
+        if path.suffix.lower() not in ISSUE_TEMPLATE_SUFFIXES or path.is_symlink() or not path.is_file():
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for label in issue_template_labels(path, content):
+            if label in LEGACY_LABEL_VALUES:
+                findings.append(
+                    f"legacy label: {ISSUE_TEMPLATE_DIRECTORY}/{path.name} uses '{label}' "
+                    "instead of a canonical type: label"
+                )
+    return findings
+
+
 def verified_current_scaffold(content: str, asset: Asset) -> bool | None:
     """Whether `content` carries valid, matching repo-seed scaffold provenance.
 
@@ -813,6 +869,8 @@ def audit_target(
     if not project_guidance.is_file():
         lines.append("info: .agents/project.md not present")
 
+    lines.extend(legacy_label_findings(target_root))
+
     for asset in selected:
         if asset.asset_type != "template" or asset.scaffold_target is None:
             continue
@@ -821,13 +879,6 @@ def audit_target(
         scaffold = safe_child(target_root, asset.scaffold_target, "scaffold target")
         if not scaffold.is_file():
             continue
-        content = scaffold.read_text(encoding="utf-8")
-        match = LEGACY_LABEL_PATTERN.search(content)
-        if match and match.group(1).strip() in LEGACY_LABEL_VALUES:
-            lines.append(
-                f"legacy label: {asset.scaffold_target} uses '{match.group(1).strip()}' "
-                "instead of a canonical type: label"
-            )
         # Reuse the same verification the sync path uses to decide whether a
         # scaffold may be upgraded, so "outdated" is reported only when there
         # is reliable evidence of an unchanged repo-seed scaffold, never for
