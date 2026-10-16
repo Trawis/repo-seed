@@ -25,6 +25,7 @@ LEGACY_LABELS = {
     "medium": "priority: medium",
     "low": "priority: low",
     "lowest": "priority: low",
+    "type: decision": "type: idea",
 }
 
 
