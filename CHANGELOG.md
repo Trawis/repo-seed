@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.14.3 - 2026-10-16
+
+Restored the original `issue-implementation` description. The 5.14.2 wording
+dropped "fix" from its triggers and pointed bugs without an issue at
+`bug-fix`, which the skill body already handles by delegating defect issues to
+`bug-fix`.
+
 ## 5.14.2 - 2026-10-16
 
 Updated the `repository-upgrade` skill for the removed pre-5.0 state bridge: it

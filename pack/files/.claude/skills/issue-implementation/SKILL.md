@@ -1,6 +1,6 @@
 ---
 name: issue-implementation
-description: Implements a specific repository issue or ticket from current repository evidence through focused changes and explicit acceptance-condition validation. Use when asked to implement, work on, complete, or address a numbered issue or ticket. For a bug with no issue, use bug-fix.
+description: Implements a specific repository issue or ticket from current repository evidence through focused changes and explicit acceptance-condition validation. Use when asked to implement, work on, complete, address, or fix a numbered issue or ticket.
 ---
 
 # Issue Implementation
