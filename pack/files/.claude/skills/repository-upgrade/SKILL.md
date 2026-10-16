@@ -36,7 +36,10 @@ script lacks, report that rather than improvising.
 5. Run the intended command with `--dry-run` first, and read every line: managed
    files it would replace, files it would remove, modified files it would
    preserve, tombstones, state changes, and any scaffold effects. Resolve
-   anything unexpected before continuing, and show the user the plan.
+   anything unexpected before continuing, and show the user the plan. A copy
+   line marked `and discard local changes` overwrites local edits: run the same
+   command with `--diff` instead of `--dry-run`, show the user those diffs, and
+   get their go-ahead before applying.
 6. A `remove` line is a managed file the pack no longer selects and that is
    unchanged. A `preserve` line, sometimes also reported as a tombstone, is a
    file the script deliberately keeps: locally modified, dropped from the

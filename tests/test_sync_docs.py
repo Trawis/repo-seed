@@ -871,6 +871,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 "omit them for a normal upgrade",
                 "do not choose for the user",
                 "`--dry-run` first",
+                "and discard local changes",
+                "with `--diff`",
                 "Do not force a change to files the script preserves",
                 "report its error to the user and ask",
                 "do not download a pack without permission",
