@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "5.13.0",
+  "pack_version": "5.12.2",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
