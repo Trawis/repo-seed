@@ -68,6 +68,25 @@ confirm:
 
 Prefer removing a stale rule over indefinitely accumulating new ones.
 
+## Versioning
+
+`pack_version` in `pack/manifest.json` follows Semantic Versioning. Its public
+interface is what adopters receive or run: pack files, skills, templates, and
+labels; the `sync-docs.py` command line and output; the manifest and state
+schemas; and the supported Python and operating systems.
+
+- **Major**: a change that breaks an adopter. Examples: removing or renaming a
+  managed file, skill, flag, or label; a schema change; dropping a supported
+  Python or OS version; ending an upgrade path.
+- **Minor**: a backward-compatible addition. Examples: a new skill, template,
+  flag, or optional workflow.
+- **Patch**: a fix or wording change in what adopters receive or run.
+
+Every merge to `main` that changes `pack_version` publishes a release, and the
+top `CHANGELOG.md` heading must match it. Do not bump for repo-only changes that
+adopters never receive: this repository's docs, tests, CI, and tooling. Published
+releases are immutable and are never renumbered.
+
 ## GitHub Flow
 
 - `main` is the only long-lived branch.
