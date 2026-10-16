@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.12.3 - 2026-10-16
+
+Changed `AGENTS.md`, the Git, CI/CD, documentation, and issue guidelines, and
+the convention files to shorter sentences, without changing any rule. Shortened
+comments, docstrings, and help text in the Python scripts, with no behavior
+change.
+
 ## 5.12.2 - 2026-10-16
 
 Added a short pull request template, scaffolded to

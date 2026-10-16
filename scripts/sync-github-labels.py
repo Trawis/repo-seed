@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Check or apply the canonical repo-seed label catalog on a GitHub repository.
 
-This is a separate, explicitly invoked tool. Normal repo-seed file
-synchronization (`sync-docs.py`) never requires GitHub CLI or network access,
-and this tool never touches target repository files.
+This tool is run on its own. `sync-docs.py` never needs GitHub CLI or network
+access, and this tool never touches target repository files.
 """
 
 from __future__ import annotations

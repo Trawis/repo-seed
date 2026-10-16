@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Validate provenance, licensing, and surface parity for distributed skills.
 
-Repo-seed-only tooling: never copied into target repositories and never run
-during target synchronization. It reads only local files and never contacts an
-upstream repository.
+Repo-seed-only tooling: never copied into target repositories or run during
+target synchronization. It reads local files only.
 """
 
 from __future__ import annotations
@@ -19,8 +18,7 @@ SCHEMA_VERSION = 1
 SURFACES = (".agents/skills", ".claude/skills")
 NOTICE_FILE = "NOTICE.md"
 SKILL_FILE = "SKILL.md"
-# Permissive licenses that allow redistribution with attribution. Anything
-# else (unlicensed, proprietary, copyleft, NOASSERTION) is rejected.
+# Permissive licenses allowing redistribution with attribution. All others are rejected.
 ALLOWED_LICENSES = frozenset(
     {"MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "CC0-1.0", "Unlicense"}
 )
@@ -187,8 +185,8 @@ def validate(pack_root: Path) -> list[str]:
                 errors.append(f"skill '{name}': registered more than once")
             registered.add(name)
 
-    # A skill that ships a NOTICE.md (or is registered) must have provenance,
-    # and every skill must stay identical across the two agent surfaces.
+    # A skill with a NOTICE.md (or registered) needs provenance.
+    # Every skill must be identical across both agent surfaces.
     surface_maps = {surface: skill_files(manifest, surface) for surface in SURFACES}
     for surface, skills in surface_maps.items():
         for name, files in skills.items():
