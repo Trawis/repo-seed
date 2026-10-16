@@ -13,8 +13,7 @@ choice matters, or opening or targeting a pull request, resolve the
 repository's branch model and branch-name convention. Editing files alone does
 not require branch-model or hosted-state investigation.
 
-Discover the model progressively, using only what is needed. Start with local
-or repository information:
+Start with local information, and use only what you need:
 
 - repository instructions, including applicable `AGENTS.md` files and
   `.agents/project.md`;
@@ -24,8 +23,7 @@ or repository information:
 
 Consult remote or hosted information only when needed to resolve ambiguity.
 Fetching or pruning remotes, inspecting protected branches, and reviewing
-recent pull requests are not required when the model and target are already
-clear.
+recent pull requests are not required when the model and target are clear.
 
 If the base branch, PR target, current branch family, or branch-name convention
 is unclear, stop and resolve it before branch or PR work. Unknown base branch,
@@ -36,12 +34,11 @@ the repository clearly uses `develop` or `dev`.
 
 ## Branch Models
 
-- GitHub Flow: normal feature work starts from `main` or `master`; normal PRs
-  target `main` or `master`.
-- GitFlow: normal feature work starts from `develop` or `dev`; normal PRs
-  target `develop` or `dev`; `main` is production; release and hotfix branches
-  follow repository-specific release rules; normal feature PRs must not target
-  `main`.
+- GitHub Flow: feature work starts from `main` or `master`. Normal PRs target
+  `main` or `master`.
+- GitFlow: feature work starts from `develop` or `dev`. Normal PRs target
+  `develop` or `dev`. `main` is production. Release and hotfix branches follow
+  repository-specific release rules; normal feature PRs must not target `main`.
 - Unknown model: after inspection, branch from the hosted default branch with
   `feature/<short-kebab-description>` and report the fallback.
 
@@ -52,10 +49,12 @@ the repository clearly uses `develop` or `dev`.
 - Keep PR titles and descriptions concise and use the repository template.
 - Never force-push a long-lived branch, bypass protection, auto-merge, or approve your own PR.
 - Do not include assistant, model, or tool names in repository history or release text.
+- Squash short-lived feature branches when desired.
+- With long-lived integration and production branches such as `develop` and
+  `main`, preserve merge commits across that boundary for releases, hotfixes,
+  and merge-backs so both branches keep shared ancestry.
 
-Squash short-lived feature branches when desired. When a repository uses long-lived integration and production branches such as `develop` and `main`, preserve merge commits across that boundary for releases, hotfixes, and merge-backs so both branches retain shared ancestry.
-
-Before opening a PR, confirm the source branch and target branch still match the
+Before opening a PR, confirm the source and target branches still match the
 discovered model. A wrong branch family or wrong PR target is blocking.
 
 If hosted tooling is unavailable, report the intended source branch, target, title, and validation without claiming a PR exists.
