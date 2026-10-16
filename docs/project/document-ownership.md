@@ -24,6 +24,7 @@ belongs in `upgrading-to-5.md`.
 - `AGENTS.md` and `CLAUDE.md`
 - `.agents/guidelines/` and selected `.agents/conventions/`
 - `docs/templates/`
+- `.agents/skills/` and `.claude/skills/`
 - `scripts/sync-docs.py`
 - `.repo-seed-state.json` generated in each target repository
 
@@ -45,21 +46,10 @@ skills ship through `pack/manifest.json` like other managed skills, with a `NOTI
 
 ## Profiles, Conventions, and Scaffolds
 
-Three independent concepts:
-
-- **Profile** (`minimal`, `library`, `app`, `game`) selects project-shape
-  assets: which reference templates a target may use. It says nothing about
-  language. There is no "install everything" profile.
-- **Conventions** (`csharp`, `python`, `scripts`, `shell`, `unity`) select
-  which `.agents/conventions/*.md` files are installed. They are chosen with
-  `--conventions` and saved in `.repo-seed-state.json`. Nothing selects one
-  automatically, and a fresh install has none. Converting a pre-5.0 state
-  needs the 5.13.2 pack once; see `upgrading-to-5.md`.
-- **Scaffolds** are optional project documents created from a template on
-  request. `--scaffold-project-files` creates the baseline `README.md` and
-  `CHANGELOG.md`. `architecture`, `fsd`, `gdd`, and `user-guide` need
-  `--scaffold <name>`. Availability for a profile never means a document must
-  exist.
+Profiles select project-shape assets, conventions select
+`.agents/conventions/*.md` files, and scaffolds are optional project documents
+created from a template. Usage and flags are in the
+[README](../../README.md#profiles-conventions-and-scaffolds).
 
 ## Claude Code Wrapper
 
