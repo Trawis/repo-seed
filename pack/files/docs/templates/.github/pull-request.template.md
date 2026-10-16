@@ -12,7 +12,7 @@ unchanged scaffold may be upgraded
 
 ## Validation
 
-- [ ] Relevant tests, build, and lint or format checks ran, or skips are explained in Notes
+- [ ] Relevant tests, build, and lint or format checks ran, or skips are listed in Risks / Notes
 - [ ] Documentation and changelog were updated when needed
 
 ## Linked Issue / Requirements
