@@ -1220,7 +1220,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("may be created once as a missing-only scaffold", content)
         self.assertNotIn(".editorconfig` is also project-owned; it is never touched", content)
 
-    def test_manifest_has_exactly_two_contributor_issue_forms(self):
+    def test_manifest_github_scaffolds_are_issue_forms_and_pr_template(self):
         github_scaffolds = {
             asset.scaffold_target
             for asset in sync.load_manifest(PACK_ROOT).assets
@@ -1232,6 +1232,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 ".github/ISSUE_TEMPLATE/bug_report.yml",
                 ".github/ISSUE_TEMPLATE/feature_request.yml",
                 ".github/ISSUE_TEMPLATE/config.yml",
+                ".github/pull_request_template.md",
             },
         )
 

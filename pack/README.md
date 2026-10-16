@@ -1,6 +1,6 @@
 # Repo Seed Pack
 
-Package-only instructions for the downloadable documentation pack. This file and `LICENSE` are included in the archive but are never synchronized into target repositories.
+Package-only instructions for the downloadable pack. This file and `LICENSE` are in the archive but never synced into targets.
 
 ## First Sync
 
@@ -14,44 +14,39 @@ python pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-Choose `minimal`, `library`, `app`, or `game`. Select any language/tool
-conventions your project actually uses (`csharp`, `python`, `scripts`,
-`shell`, `unity`) with `--conventions`; a fresh sync installs none if
-omitted.
+Choose `minimal`, `library`, `app`, or `game`. Use `--conventions` for the
+languages and tools you use (`csharp`, `python`, `scripts`, `shell`, `unity`).
+A fresh sync installs none by default.
 
-Every profile installs native Codex and Claude Code skills for code review, bug
-fixing, refactoring, dependency upgrades, issue authoring, issue
-implementation, test-driven development, code simplification, repository
-audit, repository bootstrap, and repository upgrade. Library, application, and game profiles also
-install technical-design, documentation-bootstrap, and architecture-review
-skills.
-Cross-cutting Git, CI/CD, documentation, and language rules remain in the
-conditionally loaded `.agents/` guidance.
+Every profile installs Codex and Claude Code skills for code review, bug fixing,
+refactoring, dependency upgrades, issues, TDD, code simplification, repository
+audit, bootstrap, and upgrade. `library`, `app`, and `game` also install
+technical-design, documentation-bootstrap, and architecture-review. Git, CI/CD,
+documentation, and language rules stay in `.agents/` guidance.
 
 Add only the scaffolding you need:
 
 ```text
 --scaffold-project-files          # baseline README/CHANGELOG
---scaffold-github-templates       # bug/feature Issue Forms
+--scaffold-github-templates       # bug/feature Issue Forms, PR template
 --scaffold-editorconfig           # .editorconfig
 --scaffold <name>                 # one on-demand document: architecture, fsd, gdd, user-guide
 ```
 
-Review the dry-run output, commit or back up the target repository, then rerun
-without `--dry-run`. Managed guidance is updated only when different, and
-modified or unverified project files are preserved.
+Review the dry run, commit or back up the target, then rerun without
+`--dry-run`. Managed guidance updates only when different. Modified or
+unverified project files are kept.
 
-The `.github/workflows/` tree is always project-owned and cannot be managed,
-scaffolded, or deleted by this pack.
+The `.github/workflows/` tree is always project-owned and never managed.
 
-Commit the generated `.repo-seed-state.json`. It records managed ownership so a
-smaller profile or a changed convention selection can remove unchanged stale
-assets while retaining modified files as tombstones for review.
+Commit the generated `.repo-seed-state.json`. It lets a smaller profile or a
+changed convention selection remove unchanged stale files and keep modified ones
+as tombstones for review.
 
 ## Update an Existing Project
 
-Prefer the script from the newly extracted pack so the newest validation runs
-before any target file is inspected or changed:
+Use the script from the newly extracted pack, so the newest validation runs
+first:
 
 ```bash
 python /path/to/extracted/pack/files/scripts/sync-docs.py \
@@ -59,18 +54,15 @@ python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-A recorded `minimal`, `library`, `app`, or `game` profile and its convention
-selection are reused when `--profile` / `--conventions` are omitted. The
-copied target script remains available for compatible packs, but it cannot
-cross manifest-schema changes and may not contain the newest preflight fixes.
+The recorded profile and conventions are reused when `--profile` and
+`--conventions` are omitted. The copied target script cannot cross
+manifest-schema changes and may lack newer fixes.
 
 ## Upgrading a Pre-5.0 Target
 
-Version 5 is a compatibility reset. Its manifest schema (`schema_version: 3`)
-is intentionally incompatible with older pack scripts. Its managed-state
-schema has exactly one supported transition: a `.repo-seed-state.json`
-written before explicit conventions existed (schema 1) requires one
-explicit `--conventions <list>` sync to convert to the current schema 2:
+Version 5 resets compatibility. The manifest (`schema_version: 3`) is
+incompatible with older scripts. A `.repo-seed-state.json` from before explicit
+conventions (schema 1) needs one `--conventions <list>` sync to reach schema 2:
 
 ```bash
 python /path/to/extracted/pack/files/scripts/sync-docs.py \
@@ -80,8 +72,8 @@ python /path/to/extracted/pack/files/scripts/sync-docs.py \
   --dry-run
 ```
 
-For complete documentation, visit [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
+Full documentation: [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 
 ## License
 
-This pack is distributed under the MIT License. See `LICENSE`.
+MIT. See `LICENSE`.

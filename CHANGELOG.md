@@ -4,787 +4,342 @@
 
 **Sync behavior**: Never copied into target repositories
 
-All meaningful user-facing and developer-facing changes should be documented in this file.
+All meaningful user-facing and developer-facing changes should be documented in
+this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.12.2 - 2026-10-16
+
+Added a short pull request template, scaffolded to
+`.github/pull_request_template.md` with `--scaffold-github-templates`. It is
+created only when missing, so existing templates are kept. Changed changelog
+guidance and the changelog template to short prose entries ordered added,
+changed, fixed, removed.
+
 ## 5.12.1 - 2026-10-16
 
-### Fixed
-
-- `sync-docs.py --audit` reports legacy `bug`/`enhancement` labels again.
-  The check only covered scaffold targets ending in `.md`, so after the issue
-  templates became Issue Forms it never ran on any distributed issue template.
-  It now reads every `.md`, `.yml`, and `.yaml` file in
-  `.github/ISSUE_TEMPLATE/`: Markdown front matter and a form's top-level
-  `labels` key, as an inline value, an inline list, or a block list. Nested
-  `labels` keys, body text, and canonical `type:*` labels produce no finding,
-  and unreadable, binary, or symlinked files are skipped without failing the
-  audit (#100).
+Fixed `--audit` not reporting legacy `bug`/`enhancement` labels in Issue Forms.
+It now checks every `.md`, `.yml`, and `.yaml` file in `.github/ISSUE_TEMPLATE/`
+(#100).
 
 ## 5.12.0 - 2026-10-15
 
-### Added
-
-- Added the `repository-upgrade` skill for Codex (`.agents/skills/`) and Claude
-  Code (`.claude/skills/`), distributed to every profile. It upgrades a
-  repository that already has a repo-seed install: it inspects
-  `.repo-seed-state.json` and the working tree, uses the newer pack's own
-  `sync-docs.py` rather than the older copy in the target, reuses recorded
-  profile and conventions, stops and asks when the script requires an explicit
-  selection for an older state schema, requires a dry run first, and verifies
-  the state schema, selections, managed set, preserved and tombstoned files, a
-  clean repeat dry run, and `--audit`. Migration, ownership, and tombstone
-  rules stay in the manifest and sync script, and a test asserts the skill
-  holds no version-specific migration rule. It is separate from
-  `repository-bootstrap`, adds no Git or hosted write permission, and is
-  original to repo-seed, so it has no upstream provenance entry.
+Added the `repository-upgrade` skill. It upgrades a repo-seed install with the
+newer pack's own `sync-docs.py`, starting with a dry run and ending with an
+audit. It stops and asks when an older state needs an explicit selection.
 
 ## 5.11.0 - 2026-10-15
 
-### Added
-
-- Added the `repository-bootstrap` skill for Codex (`.agents/skills/`) and
-  Claude Code (`.claude/skills/`), distributed to every profile. It guides
-  applying repo-seed to a new or existing repository with the pack's own
-  `sync-docs.py` as the only mechanism: it inspects the target first, chooses
-  only a supported profile (asking when evidence is ambiguous), only the
-  conventions the project uses (none by default), and opt-in scaffolds; warns
-  that existing `AGENTS.md` and `CLAUDE.md` are managed and replaced, and moves
-  project content to `.agents/project.md` first with the user's agreement;
-  requires a dry run before the first mutating sync; and verifies the recorded
-  state, the installed guidance, preserved project-owned files, and a clean
-  follow-up dry run. It does not invent project facts, hands project
-  documentation to `documentation-bootstrap`, and adds no Git or hosted write
-  permission. It is original to repo-seed, so it has no upstream provenance
-  entry.
+Added the `repository-bootstrap` skill. It applies repo-seed to a repository
+with `sync-docs.py`, after a dry run, and checks the result. It warns that an
+existing `AGENTS.md` and `CLAUDE.md` are replaced, and moves project content to
+`.agents/project.md` first, with the user's agreement.
 
 ## 5.10.0 - 2026-10-15
 
-### Added
-
-- Added the `repository-audit` skill for Codex (`.agents/skills/`) and Claude
-  Code (`.claude/skills/`), distributed to every profile. It audits a
-  repository that uses repo-seed for drift without modifying it: it reads
-  `.repo-seed-state.json`, compares against a named source pack by running the
-  repository's own `scripts/sync-docs.py` with `--audit` and `--dry-run`
-  instead of reimplementing sync logic, adds checks for competing agent
-  guidance the script does not judge, and reports managed drift, stale
-  artifacts, selection inconsistencies, competing guidance, intentional
-  project-owned differences (which are not drift), and unverifiable items. It
-  does not download a pack without permission and adds no Git or hosted write
-  permission. It is original to repo-seed, so it has no upstream provenance
-  entry.
+Added the read-only `repository-audit` skill. It reports drift, stale files, and
+competing agent guidance using the repository's own `sync-docs.py --audit`.
 
 ## 5.9.0 - 2026-10-15
 
-### Added
-
-- Added the `architecture-review` skill for Codex (`.agents/skills/`) and
-  Claude Code (`.claude/skills/`), distributed to the `library`, `app`, and
-  `game` profiles. It evaluates an existing codebase's architecture and reports
-  a small ranked set of evidence-backed friction points, such as callers
-  carrying complexity, wrong-way dependencies, pass-through abstractions
-  (checked with the deletion test), duplicated ownership, missing test seams,
-  and structure that makes routine changes spread. It reads existing
-  architecture documents and accepted decisions first, separates verified
-  friction from possible improvements, does not turn preferences or speculative
-  scale into defects, reports in the response rather than a generated file, and
-  hands substantial proposals to `technical-design`. It is read-only and adds
-  no Git or hosted write permission.
-- It is adapted from Matt Pocock's `improve-codebase-architecture` (MIT) with
-  vocabulary from `codebase-design`. Provenance is in
-  `pack/skill-sources.json`, and each surface ships a `NOTICE.md` with the MIT
-  notice. The HTML report, glossary and decision-record conventions, grilling
-  loop, dependent skills, and sub-agent pattern were not imported.
+Added the read-only `architecture-review` skill for `library`, `app`, and `game`
+profiles. It reports a small ranked set of evidence-backed architecture
+problems. Adapted from Matt Pocock's `improve-codebase-architecture` (MIT).
 
 ## 5.8.0 - 2026-10-15
 
-### Added
-
-- Added the `code-simplification` skill for Codex (`.agents/skills/`) and
-  Claude Code (`.claude/skills/`), distributed to every profile. It simplifies
-  working code for clarity while keeping behavior identical, and is distinct
-  from `refactor`: it never changes behavior, removes compatibility, or
-  redesigns structure, and it hands such work to `refactor`. It requires
-  understanding callers, edge cases, tests, and project conventions first;
-  applies one simplification at a time with tests after each; expects existing
-  tests to pass unmodified; and discourages line-count optimization, abstraction
-  churn, and speculative cleanup. It adds no Git or hosted write permission.
-- It is adapted from Addy Osmani's `code-simplification` (MIT). Provenance is
-  in `pack/skill-sources.json`, and each surface ships a `NOTICE.md` with the
-  MIT notice. The upstream hook, command, plugin, and language-example
-  material was not imported.
-
-### Fixed
-
-- Repo-seed's own `.claude/settings.json` now also turns off the distributed
-  `issue-authoring`, `issue-implementation`, and `test-driven-development`
-  wrappers added in 5.4.0 through 5.7.0, which were missing from it. A test now
-  checks that every distributed skill except `code-review` is off.
+Added the `code-simplification` skill. It simplifies code without changing
+behavior and hands behavior changes to `refactor`. Adapted from Addy Osmani's
+`code-simplification` (MIT). Turned off the `issue-authoring`,
+`issue-implementation`, and `test-driven-development` wrappers in repo-seed's
+own `.claude/settings.json`.
 
 ## 5.7.0 - 2026-10-15
 
-### Added
-
-- Added the `test-driven-development` skill for Codex (`.agents/skills/`) and
-  Claude Code (`.claude/skills/`), distributed to every profile. It applies
-  only when the user explicitly asks for TDD, test-first development, or
-  red-green-refactor, or when another workflow deliberately calls for it; it
-  does not make TDD mandatory. It runs vertical red-green slices over named
-  public seams, requires seeing each new test fail for the right reason,
-  refactors only while green, keeps tests on observable behavior with
-  independently derived expected values and test doubles only at system
-  boundaries, ends with a mutation check, and defers to the repository's own
-  test commands and conventions. It adds no Git or hosted write permission.
-- It is the first upstream-derived skill: adapted from Matt Pocock's `tdd`
-  (MIT) with ideas from Superpowers' `test-driven-development` (MIT).
-  Provenance is recorded in `pack/skill-sources.json`, and each surface ships
-  a `NOTICE.md` carrying the required MIT notice.
+Added the `test-driven-development` skill. It applies only when TDD is
+requested. Adapted from Matt Pocock's `tdd` (MIT), with ideas from Superpowers'
+`test-driven-development`.
 
 ## 5.6.0 - 2026-10-15
 
-### Changed
-
-- `code-review` gained an issue-driven acceptance review. When a governing
-  issue or explicit acceptance criteria exist, it reads the complete issue and
-  discussion, classifies each `Done when` condition as satisfied, unsatisfied,
-  or not verifiable (the same terms as `issue-implementation`), reports scope
-  omissions and material unrelated additions, reports issue assumptions the
-  repository contradicts, and lists acceptance coverage after the severity-
-  ordered findings without replacing them. An unsatisfied condition is a
-  finding only for a concrete implementation gap, and an unverifiable one is a
-  validation gap. Reviews with no governing issue are unchanged, and review
-  stays read-only for files and hosted state. It also now looks for
-  regression-test evidence on bug fixes. Ideas from Matt Pocock's two-axis
-  `code-review` and GitHub Spec Kit's `code-review` are restated in repo-seed
-  wording; no upstream text was copied.
+Added an acceptance review to `code-review`. When an issue or acceptance
+criteria exist, each `Done when` condition is marked satisfied, unsatisfied, or
+not verifiable. It also checks bug fixes for regression tests.
 
 ## 5.5.0 - 2026-10-15
 
-### Added
-
-- Added the `issue-implementation` skill for Codex (`.agents/skills/`) and
-  Claude Code (`.claude/skills/`), distributed to every profile. It reads the
-  governing issue, verifies it against current repository and tracker state
-  before editing (still open, not already implemented, no overlapping pull
-  request or issue, blockers resolved, assumptions current), delegates to
-  `bug-fix`, `refactor`, `dependency-upgrade`, or `technical-design` instead of
-  duplicating them, keeps issue scope distinct from repository truth, checks
-  every acceptance condition explicitly, and treats branch, commit, push, pull
-  request, merge, and issue-write actions as separately authorized. Ideas from
-  Matt Pocock's `implement` skill (state the ticket first, narrow checks while
-  working, review the finished work) are restated in repo-seed wording; no
-  upstream text was copied.
+Added the `issue-implementation` skill. It checks the issue against the current
+repository and tracker before editing, and checks every acceptance condition
+afterwards.
 
 ## 5.4.0 - 2026-10-15
 
-### Added
-
-- Added the `issue-authoring` skill for Codex (`.agents/skills/`) and Claude
-  Code (`.claude/skills/`), distributed to every profile. It drafts
-  repository-grounded issues: it inspects current implementation and tracker
-  state, searches open and closed issues and pull requests for duplicates and
-  already-implemented behavior, routes suspected vulnerabilities to
-  `SECURITY.md`, takes issue types and structure from
-  `.agents/guidelines/issues.md` instead of duplicating them, requires
-  testable `Done when` conditions for implementation-ready work, and treats
-  hosted issue creation as explicitly permission-gated. Ideas from Matt
-  Pocock's `triage` skill (redundancy and claim checks, durable acceptance
-  criteria) are restated in repo-seed wording; no upstream text was copied.
+Added the `issue-authoring` skill. It drafts issues from repository evidence,
+checks for duplicates, and creates hosted issues only with permission.
 
 ## 5.3.0 - 2026-10-15
 
-### Changed
-
-- Audited the six distributed skills against `mattpocock/skills`
-  (`diagnosing-bugs`, `code-review`, `codebase-design`, `to-spec`,
-  `domain-modeling`) and `obra/superpowers` (`systematic-debugging`,
-  `requesting-code-review`, `writing-plans`). Decisions are recorded in
-  `docs/project/skill-audit.md`.
-- `bug-fix` now starts from a trustworthy, minimized feedback loop, requires
-  falsifiable hypotheses tested one variable at a time, uses a greppable marker
-  for temporary debug output, checks that a regression-test seam is real,
-  stops after two failed fixes to re-examine assumptions, and redacts secrets.
-- `code-review` now pins and validates the comparison base, cites documented
-  repository rules for standards findings, labels design-smell observations as
-  judgement calls, and reports standards findings separately from correctness.
-  Acceptance-criteria alignment remains separate work.
-- `refactor`, `dependency-upgrade`, `technical-design`, and
-  `documentation-bootstrap` are unchanged. The wording is repo-seed's own, so
-  no upstream-derived registry entries were needed.
+Changed `bug-fix` to start from a reliable reproduction and test one hypothesis
+at a time. Changed `code-review` to validate the comparison base, cite
+repository rules, and report standards findings separately. Audit decisions are
+in `docs/project/skill-audit.md`.
 
 ## 5.2.0 - 2026-10-15
 
-### Added
-
-- Added a provenance and licensing model for skills derived from upstream
-  repositories: the `pack/skill-sources.json` registry (shipped in the
-  archive as a package file, never synced into targets), a per-skill
-  `NOTICE.md` convention, and the repo-seed-only
-  `scripts/validate-skill-sources.py` check. It rejects unpinned revisions,
-  disallowed or missing licenses, unregistered or undeclared files, hooks and
-  plugin configuration, unreviewed non-Markdown files, network fetch
-  commands, and divergence between `.agents/skills/` and `.claude/skills/`.
-  The registry is empty: no upstream-derived skill is distributed yet.
-  Target synchronization stays offline and never reads the registry. The
-  maintainer workflow is in `docs/project/upstream-skills.md`.
+Added provenance tracking for skills derived from upstream repositories:
+`pack/skill-sources.json` (shipped in the archive, never synced), a per-skill
+`NOTICE.md`, and `scripts/validate-skill-sources.py`. The registry is empty for
+now. Syncing stays offline. Maintainer steps are in
+`docs/project/upstream-skills.md`.
 
 ## 5.1.0 - 2026-10-15
 
-### Changed
-
-- Replaced the distributed Bug Report and Feature Request Markdown issue
-  templates with GitHub Issue Forms (`bug_report.yml`,
-  `feature_request.yml`). Required fields enforce the minimum issue contract
-  in the GitHub UI: Summary, Steps to Reproduce, Expected Behavior, Actual
-  Behavior, and Environment for bugs; Summary, Goal, and Done when for
-  features. Suggested approach stays optional, and no Priority, Area, or
-  other universal fields were added. `.agents/guidelines/issues.md` now
-  documents Issue Forms and that API- or maintainer-created issues can bypass
-  them. `repo-seed` itself uses the same forms.
-- Issue forms are scaffolded as new, missing-only, project-owned files.
-  Existing `.md` templates are not migrated or removed; repositories that
-  adopt the forms should delete their old `bug_report.md` and
-  `feature_request.md` after reviewing them, otherwise GitHub lists both.
+Added GitHub Issue Forms (`bug_report.yml`, `feature_request.yml`) in place of
+the Markdown issue templates. They are scaffolded when missing. Existing `.md`
+templates are not removed, so delete them after adopting the forms or GitHub
+lists both.
 
 ## 5.0.0 - 2026-09-23
 
-5.0 is a deliberate compatibility reset. The active repository fleet already
-uses the `.repo-seed-state.json` model, so pre-4.x legacy migration support
-is no longer needed and has been removed, not merely deprecated.
-
-### Added
-
-- Added a canonical shared label catalog and lightweight issue/decision
-  structure in `.agents/guidelines/issues.md`: `type:*` and optional
-  `priority:*` labels, an idea/decision/feature lifecycle, and a
-  Summary/Goal/Suggested-approach/Done-when issue shape. Contributors keep
-  exactly two Markdown templates (Bug Report, Feature Request); the
-  remaining types are maintainer classifications applied through a blank
-  issue.
-- Added `pack/github-labels.json` as the canonical machine-readable label
-  catalog, and the repo-seed-only, explicitly invoked
-  `scripts/sync-github-labels.py --check` / `--apply` tool to reconcile it
-  against a GitHub repository's hosted labels (via the GitHub CLI). Neither
-  is synced into a target repository; normal `sync-docs.py` synchronization
-  never requires the GitHub CLI or network access.
-- Added `--audit` to `scripts/sync-docs.py`: a local, read-only diagnostic
-  reporting pack version, profile, convention, and managed-file drift, an
-  informational note for a missing (optional) `.agents/project.md`, legacy
-  `bug`/`enhancement` labels in scaffolded issue templates, an unused
-  installed convention, and an outdated-but-safely-upgradable scaffold. It
-  never writes anything.
-- Added explicit `--conventions` selection (`csharp`, `python`, `scripts`,
-  `shell`, `unity`), independent of profile and persisted in
-  `.repo-seed-state.json`.
-- Added on-demand optional-document scaffolding: `--scaffold <name>`
-  (`architecture`, `fsd`, `gdd`, `user-guide`), which refuses to overwrite an
-  existing document.
-- Carried forward the native Codex and Claude Code engineering-workflow
-  skills introduced in 4.2.0 (code review, bug fixing, refactoring,
-  dependency upgrades, technical design, existing-project documentation
-  bootstrap), rescoped from the removed `full` profile to `minimal`,
-  `library`, `app`, and `game`.
-
-### Changed
-
-- Reduced the generated `CLAUDE.md` to a minimal `@AGENTS.md` import with an
-  ownership comment; `AGENTS.md` remains the sole canonical, cross-agent
-  instruction source and `CLAUDE.md` stays a compatibility wrapper, not a
-  second policy file.
-- Decoupled language/tool conventions from project-shape profiles. A profile
-  no longer implies any programming language. A fresh sync installs none by
-  default.
-- `--scaffold-project-files` now only creates the baseline README and
-  CHANGELOG; `architecture`, `fsd`, `gdd`, and `user-guide` moved to the
-  on-demand `--scaffold <name>` path above.
-- Replaced the `bug` and `enhancement` labels in the scaffolded and
-  repo-seed's own bug-report/feature-request templates with the canonical
-  `type: bug` / `type: feature` labels and the lightweight shared issue
-  structure.
-- Added a maintainer principle to `AGENTS.md`: a new persistent distributed
-  agent rule should solve a recurring, cross-project problem, not a
-  hypothetical one, and a stale rule should be removed rather than
-  accumulated indefinitely.
-
-### Removed
-
-- Removed the `full` profile. It was not a real project type, offered no
-  benefit over the release archive (which already contains every asset) or
-  testing the manifest/catalog directly, and caused special-cased behavior
-  around conventions and scaffolding.
-- Removed pre-4.x legacy migration support entirely: the
-  `.agent-guidelines-manifest.json` / `.agent-guidelines-version` /
-  `.agent-guidelines-conflicts` mechanisms, retired-path and retired-asset
-  migration, ancient scaffold-upgrade tables, and the corresponding
-  `pack/manifest.json` `migration` section. A target without
-  `.repo-seed-state.json` is now simply a fresh install.
-- Removed automatic convention inference (filesystem detection of
-  `.sln`/`.csproj`, `pyproject.toml`, Unity project markers) and the
-  migration action that used it. Explicit `--conventions` is required
-  instead; see Breaking below.
-- Removed legacy scaffold provenance support (the old
-  `<!-- repo-seed-template id="..." sha256="..." -->` marker format,
-  ancient-scaffold detection, and its upgrade branch). Only the current
-  `Scaffolded from` / `Scaffolded content SHA-256` markers are recognized;
-  an older, unmarked project-owned scaffold is treated as ordinary
-  project-owned content, never as a migration target.
-- Removed `previous_hashes` from the asset/manifest model. The managed state
-  file is the source of truth for which hash to expect; historical hash
-  arrays are no longer needed once every active target has a state file.
-- Removed obsolete `docs/project/upgrading-to-3.md` and
-  `docs/project/upgrading-to-4.md`; replaced with a single, short
-  `docs/project/upgrading-to-5.md`.
-
-### Breaking
-
-- The manifest schema moved from `schema_version: 2` to `schema_version: 3`.
-  Older sync scripts cannot read a 5.0 manifest, and 5.0's `sync-docs.py`
-  cannot read an old manifest.
-- A target with no `.repo-seed-state.json` at all is treated as a fresh
-  install; ancient pre-3.x installations are not auto-detected or migrated.
-- A target with a `.repo-seed-state.json` written before explicit
-  conventions existed (`schema_version: 1`) requires one explicit
-  `--conventions <list>` sync to convert to the current `schema_version: 2`
-  state; omitting it fails clearly and writes nothing. See
-  `docs/project/upgrading-to-5.md`.
+Breaking release. Added `--conventions` selection (`csharp`, `python`,
+`scripts`, `shell`, `unity`), independent of profile; a fresh sync installs
+none. Added `--audit`, a read-only drift report. Added `--scaffold <name>` for
+`architecture`, `fsd`, `gdd`, and `user-guide`; `--scaffold-project-files` now
+creates only README and CHANGELOG. Added the label catalog
+`pack/github-labels.json` with `scripts/sync-github-labels.py` (`--check`,
+`--apply`, needs the GitHub CLI), and issue guidance in
+`.agents/guidelines/issues.md`. Changed the manifest to `schema_version: 3`,
+which older and newer scripts cannot read from each other. Changed `CLAUDE.md` to
+a plain `@AGENTS.md` import, issue labels to `type: bug` and `type: feature`,
+and skills to the `minimal`, `library`, `app`, and `game` profiles. A state file
+from before explicit conventions (schema 1) fails without `--conventions <list>`
+and converts to schema 2 with it; see `docs/project/upgrading-to-5.md`. Removed
+the `full` profile, pre-4.x migration (a target with no state file is a fresh
+install), convention auto-detection, legacy scaffold markers (older unmarked
+scaffolds are now project-owned), and `previous_hashes`.
 
 ## 4.2.0 - 2026-08-26
 
-### Added
-
-- Added native Codex and Claude Code skills for code review, bug fixing,
-  refactoring, dependency upgrades, technical design, and existing-project
-  documentation bootstrap.
-- Added parity and portable-structure validation for mirrored native skill
-  definitions.
-- Added profile-aware skill distribution so the minimal profile carries the
-  core engineering workflows, which load conventions only when a target
-  provides them, while library and up also receive technical-design and
-  documentation-bootstrap.
-
-### Changed
-
-- Kept Git, CI/CD, documentation, and language guidance as conditionally loaded
-  cross-cutting rules instead of wrapping those files in trivial skills.
-- Kept skill bodies focused on repeatable investigation, execution, and
-  validation workflows that benefit from on-demand loading.
+Added Codex and Claude Code skills for code review, bug fixing, refactoring,
+dependency upgrades, technical design, and documentation bootstrap. `minimal`
+gets the core skills, and other profiles also get technical design and
+documentation bootstrap.
 
 ## 4.1.0 - 2026-08-26
 
-### Changed
-
-- Made agent guidance discovery demand-driven so agents inspect only the
-  project documentation and specialized guidance relevant to the task.
-- Limited branch-model and hosted-state discovery to Git and pull-request
-  operations where branch choice matters.
-- Clarified managed and project-owned file boundaries while retaining focused
-  safety, validation, and completion requirements.
+Changed agent guidance so agents read only the documentation relevant to the
+task, and check branch models only for Git and pull request work.
 
 ## 4.0.5 - 2026-07-08
 
-### Changed
-
-- Clarified branch-model discovery before branch and pull-request work.
-- Added code-convention discovery and final compliance checks to agent guidance.
+Clarified branch-model discovery before branch and pull request work. Added
+code convention checks before completion.
 
 ## 4.0.4 - 2026-07-07
 
-### Changed
-
-- Kept generated project-document templates current-state focused.
-- Added guidance against decision-diary wording in live documentation.
-- Added a regression check for narrative replacement language in templates.
+Added guidance against decision-diary wording in documentation. Changed
+templates to describe current state only.
 
 ## 4.0.3 - 2026-07-07
 
-### Fixed
-
-- Changed document metadata fields in FSD, GDD, architecture, technical design,
-  and user-guide templates to lists so populated values render on separate
-  lines.
+Changed metadata fields in the FSD, GDD, architecture, technical design, and
+user-guide templates to lists.
 
 ## 4.0.2 - 2026-07-07
 
-### Fixed
-
-- Hardened managed Markdown templates against non-ASCII punctuation, long
-  default prose lines, visible scaffold instructions, and placeholder
-  `Unreleased` changelog headings.
-- Recognized untouched v1.30 and v1.31 README/CHANGELOG scaffolds during
-  version 4 migration.
+Fixed templates for non-ASCII punctuation, long lines, visible scaffold
+instructions, and placeholder `Unreleased` headings.
 
 ## 4.0.1 - 2026-07-06
 
-### Fixed
-
-- Rejected unknown pack-owned paths in `.repo-seed-state.json` before any copy or deletion, and allowlisted retired managed assets with known hashes.
-- Protected the entire project-owned `.github/workflows/` tree from manifest management, scaffolding, retirement, and deletion.
-- Corrected the version 3 to version 4 update command to run the new pack's schema-compatible script.
-- Clarified profile reuse, applicable AI-bootstrap documents, library TSD references, and legacy migration guidance.
-- Removed a template-context broken changelog link and corrected profile-count wording.
+Fixed unknown pack paths in `.repo-seed-state.json` being accepted, and
+protected the whole `.github/workflows/` tree from management. Corrected the
+version 3 to 4 update command to run the new pack's script.
 
 ## 4.0.0 - 2026-07-06
 
-### Added
-
-- Added explicit existing-project bootstrap guidance for coding agents, including evidence and uncertainty handling.
-- Added a scalable documentation rule: stable overview documents become indexes while detail is added only when needed.
-
-### Changed
-
-- Made architecture the current technical system overview for libraries, applications, and games.
-- Reworked TSD as a reference-only template for substantial changes under `docs/project/designs/`.
-- Expanded FSD, GDD, architecture, README, user-guide, and changelog templates while keeping their responsibilities separate.
-- Required an explicit profile on first sync and reused the recorded profile on later syncs.
-- Defined `full` as a reference-catalog profile and rejected project scaffolding with it.
-- Upgraded the manifest to schema version 2 so templates may be synchronized without scaffold destinations.
-
-### Removed
-
-- Removed features from normal application and game profiles; the template remains an optional `full` reference.
-- Removed automatic scaffolding of a generic `docs/project/tsd.md`.
+Added existing-project bootstrap guidance for agents. Changed architecture to
+the current system overview and TSD to a reference template for substantial
+changes. Required an explicit profile on first sync, reused on later syncs, and
+moved the manifest to schema version 2. `full` became a reference-only profile
+that rejects project scaffolding. Removed the features template from normal
+profiles and the generic `docs/project/tsd.md` scaffold.
 
 ## 3.4.1 - 2026-07-06
 
-### Changed
-
-- Explicitly protected existing `.gitignore` files and reported them as project-owned during initial sync, version updates, and legacy migration.
+Changed existing `.gitignore` files to be reported as project-owned.
 
 ## 3.4.0 - 2026-07-06
 
-### Added
-
-- Added a Non-Functional Requirements section to the FSD template for user-observable targets.
-- Added guidance in the README template to link live `docs/project/` documents.
-- Added a semantic-versioning and release-hygiene note to the changelog template.
-- Added a Date column to the architecture template's design-decision log.
-
-### Changed
-
-- Unified template metadata blocks to the compact single-line style.
-
-### Removed
-
-- Removed the `.gitignore` scaffold and its template; `.gitignore` is fully project-owned and should come from the project's stack tooling. Targets synced with pack 3.3.0 or later remove the retired `docs/templates/gitignore.template` reference automatically; targets upgrading from 3.0.0-3.2.3 keep it as a harmless unmapped file that can be deleted manually.
+Added a non-functional requirements section to the FSD template, a date column
+to the architecture decision log, and a release note to the changelog template.
+Removed the `.gitignore` scaffold; it is fully project-owned. Targets synced
+with 3.3.0 or later drop the retired `docs/templates/gitignore.template`
+automatically. Older ones can delete it by hand.
 
 ## 3.3.0 - 2026-07-06
 
-### Added
-
-- Added version-bounded migration metadata and hash-safe retirement for legacy 1.x/2.x managed paths.
-- Added provenance hashes for new Markdown scaffolds and verified upgrades for known scaffolded files.
-- Added `.repo-seed-state.json` ownership and tombstone tracking for managed assets.
-
-### Changed
-
-- Legacy files with local changes, missing hash records, or conflict output are preserved and reported for review.
-- `.editorconfig` and the pull-request template are explicitly protected as project-owned files.
-- Managed files that already match the pack are reported as unchanged and are not rewritten, including during dry runs.
-- Profile reductions remove unchanged stale managed assets while preserving and tracking locally modified files.
+Added `.repo-seed-state.json` to track managed files and tombstones, and
+provenance hashes for Markdown scaffolds. Legacy files with local changes are
+kept and reported. Profile reductions remove only unchanged stale files.
+Protected `.editorconfig` and the pull request template as project-owned.
+Unchanged managed files are no longer rewritten.
 
 ## 3.2.3 - 2026-07-05
 
-### Changed
-
-- Expanded the version 3 migration guide for repositories currently using the 1.x or 2.x synchronizer.
-- Centralized the test pack-version fixture to reduce repetitive release bookkeeping.
+Changed the version 3 migration guide to cover 1.x and 2.x installs.
 
 ## 3.2.2 - 2026-07-05
 
-### Changed
-
-- Clarified that Git Flow repositories should preserve merge commits across long-lived integration and production branch boundaries.
+Clarified that Git Flow repositories keep merge commits across long-lived
+branches.
 
 ## 3.2.1 - 2026-07-05
 
-### Fixed
-
-- Added manifest-inventoried package instructions and the MIT License to the downloadable archive without syncing them into target repositories.
+Added package instructions and the MIT license to the release archive, without
+syncing them into targets.
 
 ## 3.2.0 - 2026-07-05
 
-### Changed
-
-- Corrected template-review guidance to match stateless synchronization without hashes or drift warnings.
-- Compacted managed agent guidance and language conventions while preserving their safety and project-style rules.
-- Reduced architecture, user-guide, functional, technical, and game-design templates to focused document responsibilities.
+Changed guidance and conventions to be shorter, and templates to have one
+purpose each. Fixed template review guidance to match stateless sync.
 
 ## 3.1.0 - 2026-07-05
 
-### Added
-
-- Added public contribution, security, licensing, installation, and version 2.x migration guidance.
-- Added focused pull-request CI on the minimum supported Python version.
-- Added SHA-256 checksums to release artifacts.
-- Added explicit `--scaffold-editorconfig` support.
-
-### Changed
-
-- Added destination preflight so managed paths that are directories or symbolic links fail before any files are copied.
-- Hardened synchronization and release packaging against unsafe source links and manifest path collisions.
-- Made `library` distinct from `minimal` by including the general coding conventions.
-- Made distributed Git guidance neutral toward repository branching models.
-- Renamed the release builder to `scripts/build-release-bundle.py`.
-- Kept the issue chooser focused on bug and feature reports with blank issues disabled.
-- Made `.gitignore` scaffolding preserve `.env.example`.
-- Removed repo-seed's redundant feature document and narrowed ownership and contribution guidance to single responsibilities.
-- Clarified boundaries between feature status, functional, technical, architecture, user, and game-design templates.
-- Reduced pull-request checks and policy boilerplate while retaining functional validation and release checks.
+Added contribution, security, license, install, and 2.x migration docs, a pull
+request CI job, release checksums, and `--scaffold-editorconfig`. Added a
+pre-copy check that fails on directory or symlink paths, and hardening against
+unsafe source links and path collisions. Changed `library` to include general
+coding conventions, Git guidance to be branching-model neutral, and the release
+builder name to `scripts/build-release-bundle.py`. Removed the redundant
+features document.
 
 ## 3.0.0 - 2026-07-04
 
-### Changed
-
-- Replaced stateful, conflict-aware synchronization with unconditional managed-file copying and missing-only scaffolding.
-- Consolidated every distributed asset under the self-contained `pack/` directory.
-- Renamed the distributed sync tool to `scripts/sync-docs.py`.
-- Replaced five profile archives with one universal `repo-seed-pack-3.0.0.zip`.
-- Made `.editorconfig` an optional missing-only scaffold.
-- Added a generic GitHub issue configuration template alongside bug and feature templates.
-
-### Removed
-
-- Managed-file hashes, target state, conflict copies, template drift tracking, migration cleanup, and Git branch operations.
+Added a generic GitHub issue config template and made `.editorconfig` an
+optional missing-only scaffold. Replaced stateful sync with plain managed-file
+copying and missing-only scaffolding, moved all assets under `pack/`, renamed
+the sync tool to `scripts/sync-docs.py`, and shipped one universal archive.
+Removed managed-file hashes, target state, conflict copies, drift tracking,
+migration cleanup, and Git branch operations.
 
 ## 2.0.1 - 2026-07-04
 
-### Changed
-
-- Reduced the generic gitignore scaffold to pack-owned conflict artifacts only.
-- Removed the deprecated project-doc alias from normal CLI and README documentation while retaining compatibility.
-- Consolidated deferred ideas in `docs/project/features.md` to keep 2.0 stabilization feature-frozen.
-
-### Fixed
-
-- Prevented Python and release-output ignore rules from leaking into unrelated target repositories.
+Changed the gitignore scaffold to cover only pack artifacts, and moved deferred
+ideas into `docs/project/features.md`. Fixed Python and release ignore rules
+leaking into target repositories.
 
 ## 2.0.0 - 2026-07-04
 
-### Added
-- Added `pack-manifest.json` as the shared inventory for sync, profiles, scaffolding, migration, and release bundles.
-- Added focused managed guidance for documentation, Git, and CI/CD work.
-- Added content-hash provenance and non-failing review warnings for scaffolded project documents.
-- Added explicit project-file and GitHub issue-template scaffolding.
-- Added a manifest-driven release-bundle builder and sync regression suite.
-
-### Changed
-- Replaced the oversized distributed `AGENTS.md` with concise, self-contained core rules and task-specific routing.
-- Moved managed supporting guidance and conventions under target `.agents/`.
-- Moved all reference templates under `docs/templates/`; live non-root project documentation now belongs under `docs/project/`.
-- Made template and scaffold selection profile-specific.
-- Kept managed template filenames and relative structure unchanged during sync, including GitHub references under `docs/templates/.github/`.
-- Added a managed gitignore reference template that scaffolds target `.gitignore` only when missing.
-- Clarified that distributed AGENTS/CLAUDE files are always synced from `pack/`, while source root documents are repo-seed-only.
-- Changed automatic branch selection to prefer existing `develop`/`dev` branches and fall back to `main`/`master`.
-- Made obsolete managed-file cleanup hash-safe for migrations and profile reductions.
-- Changed release packaging and version discovery to consume the manifest.
-- Bumped the pack and sync script to 2.0.0 for the breaking layout and CLI changes.
-
-### Fixed
-- Repo-seed root documents can no longer be confused with target sync sources.
-- Managed templates no longer overwrite or masquerade as live project documentation.
-- Missing sources, unsafe paths, malformed manifests, invalid templates, and managed conflicts now fail clearly.
-- The distributed pull-request template no longer assumes Git Flow.
-
-### Removed
-- Removed the redundant roadmap; future work now lives in `docs/project/features.md`.
-- Removed project-document force overwrite behavior and the temporary `.agents/base.md` design.
-
-### Deprecated
-- Deprecated `--include-project-docs` in favor of `--scaffold-project-files`.
-
-### Security
--
+Added `pack-manifest.json` as the single inventory. Added focused guidance for
+documentation, Git, and CI/CD, explicit project-file and issue-template
+scaffolding, and a release builder with sync tests. Changed `AGENTS.md` to short
+core rules with task routing, moved guidance and conventions under `.agents/`,
+templates to `docs/templates/`, and project docs to `docs/project/`. Branch
+selection now prefers `develop`/`dev`, then `main`/`master`. Fixed templates
+masquerading as live docs, the pull request template assuming Git Flow, and
+unsafe paths or bad manifests not failing clearly. Removed the roadmap (future
+work is in `docs/project/features.md`), forced project doc overwrite, and
+`.agents/base.md`. Deprecated `--include-project-docs` for
+`--scaffold-project-files`.
 
 ## 1.31.0 - 2026-07-02
 
-### Added
-- Added `docs/readme-template.md`, `docs/changelog-template.md`, and `docs/features-template.md`: generic starter content for target repos, copied by `--include-project-docs` in `scripts/sync-agent-guidelines.py`.
-
-### Changed
-- `PROJECT_DOC_TEMPLATES` in `scripts/sync-agent-guidelines.py` now maps each `docs/*-template.md` source to its target root filename (`README.md`, `CHANGELOG.md`, `FEATURES.md`) instead of copying this repo's own root docs. `repo-seed`'s root `README.md`, `CHANGELOG.md`, and `FEATURES.md` describe this pack itself and are no longer used as sync sources.
-- Bumped sync script to v1.7.0, pack reference to v1.31.0.
+Added README, changelog, and features starter templates for target repos. Fixed
+repo-seed's own root docs being used as sync sources.
 
 ## 1.30.0 - 2026-06-25
 
-### Added
-- Added `.github/workflows/release.yml`: triggers on every push to `main`, reads version from `.agent-guidelines-version`, skips if the release already exists, builds one ZIP per profile (`minimal`, `library`, `app`, `game`, `full`), and creates a tagged GitHub Release with all ZIPs attached.
-- Added GitHub issue templates: bug report (`.github/ISSUE_TEMPLATE/bug_report.md`) and feature request (`.github/ISSUE_TEMPLATE/feature_request.md`).
-- Added `docs/coding-conventions-unity.md` covering MonoBehaviour conventions, lifecycle order, serialized fields, component caching, coroutines, physics, tags/layers, events, ScriptableObjects, editor scripts, asset naming, and performance guidance.
-- Unity conventions are included in the `game` and `full` sync profiles.
-
-### Changed
-- Bumped sync script pack reference to v1.30.0.
+Added a release workflow that builds one ZIP per profile. Added bug report and
+feature request issue templates, and Unity conventions for the `game` and `full`
+profiles.
 
 ## 1.29.0 - 2026-06-23
 
-### Added
-- Added `--profile` flag to `scripts/sync-agent-guidelines.py` with five options: `minimal`, `library`, `app`, `game`, and `full` (default). Allows syncing only the files relevant to the target project type.
-- Added profile selection table to the sync section in `AGENTS.md`.
-
-### Changed
-- Default `--base-branch` changed from `develop` to `main` to match GitHub Flow.
-- "Next steps" message now references the actual base branch instead of hardcoded `develop`.
-- Bumped sync script to v1.6.0, pack reference to v1.29.0.
+Added a `--profile` flag with `minimal`, `library`, `app`, `game`, and `full`
+(the default). Changed the default base branch from `develop` to `main`.
 
 ## 1.28.0 - 2026-06-23
 
-### Changed
-- Restructured Git Workflow section to present Git Flow and GitHub Flow as explicit, documented options with a decision table.
-- Git Flow: `main`/`master` + `develop`/`dev`, with `feature/*`, `release/*`, and `hotfix/*` branch families. Recommended for applications with formal release cycles.
-- GitHub Flow: `main`/`master` only, all work via `feature/*` branches. Recommended for docs, seed/template repos, libraries, and solo projects.
-- This repository uses GitHub Flow.
-- Unified PR target table showing both models.
+Changed Git guidance to present Git Flow and GitHub Flow with a decision table.
+This repository uses GitHub Flow.
 
 ## 1.27.0 - 2026-06-23
 
-### Changed
-- Overridden Git Flow for this repository: `main` is the only long-lived branch; no `develop` branch exists or should be created.
-- All branch families (`feature/*`, `release/*`, `hotfix/*`) now base from `main` and target `main`.
-- Updated preflight merge check to use `origin/main` instead of `origin/develop`.
-- Removed back-merge requirements to `develop` from `release/*` and `hotfix/*` PR targets.
+Changed this repository to GitHub Flow: `main` is the only long-lived branch and
+all branches target it.
 
 ## 1.26.0 - 2026-06-23
 
-### Added
-- Added `docs/architecture-template.md` for documenting system context, components, tech stack, data flow, design decisions, deployment, integrations, security, and constraints.
-- Added `docs/user-guide-template.md` for GUI and client-facing apps, covering navigation, key workflows, settings, troubleshooting, FAQ, and glossary.
-- Added architecture and user guide guidance in `AGENTS.md`, including when to create and update each document.
-- Added architecture and user guide update checks to the agent completion checklist.
-
-### Fixed
-- Noted missing version 1.20 (skipped, not released) in version history.
+Added architecture and user-guide templates, with guidance on when to create and
+update them.
 
 ## 1.25.0 - 2026-06-19
 
-### Added
-- Added CI/CD and workflow automation guidance.
-- Added `docs/ci-cd-guidelines.md` for safe CI/CD changes, validation, and staged adoption.
-- Added CI/CD completion checklist guidance.
-
-### Changed
-- Clarified that CI/CD workflow, deployment, secret, permission, and release automation changes require explicit task scope.
-- Updated README links and sync metadata for pack version `1.25.0`.
+Added CI/CD guidance. CI/CD changes now need explicit task scope.
 
 ## 1.24.0 - 2026-06-19
 
-### Added
-- Added comment discipline guidance for code, scripts, public API documentation, and generated documentation.
-- Added summary discipline guidance for task summaries, PR summaries, and agent completion notes.
-- Added examples showing useful comments versus obvious/noisy comments.
-
-### Changed
-- Updated completion and PR checklists to include concise comments/summaries.
-- Bumped sync script metadata to pack version `1.24.0`.
+Added guidance on useful comments and concise task and PR summaries.
 
 ## 1.23.0 - 2026-06-19
 
-### Added
-- Added mandatory Git/PR preflight guidance before agents create branches, start duplicate work, or open pull requests.
-- Added duplicate-work protection for changes already merged into `develop` or already covered by an existing open PR.
-- Added generic-example guidance so shared templates avoid project-specific enum/domain names.
-
-### Changed
-- Updated sync script metadata to pack version `1.23.0` and added remote fetch/prune during branch preparation unless skipped.
-- Updated C# examples to use the generic `OrderStatusEnum` example instead of project-specific terminal enums.
+Added pre-flight checks before creating branches or pull requests, to avoid
+duplicate work, and generic-example guidance for templates. The sync script now
+fetches and prunes remotes during branch preparation unless skipped.
 
 ## 1.22.0 - 2026-06-19
 
-### Changed
-- Renamed the repo-seed sync script from a versioned filename to the stable path `scripts/sync-agent-guidelines.py` so Git history tracks script changes cleanly.
-- Clarified script filename/versioning guidance: scripts committed to a repository should use stable filenames, while distributed standalone copies, generated output files, and archive artifacts may use semantic-version suffixes.
-- Updated sync examples, README links, and managed-file manifest paths to use the stable sync script name.
+Renamed the sync script to the stable path `scripts/sync-agent-guidelines.py`.
 
 ## 1.21.0 - 2026-06-19
 
-### Added
-- Added `scripts/sync-agent-guidelines.py` for syncing this pack from `repo-seed` into other repositories.
-- Added `.agent-guidelines-version` to track the synced pack version in target repositories.
-- Added repo-seed sync workflow guidance.
-- Added managed-file hash tracking through `.agent-guidelines-manifest.json`.
-- Added conservative conflict behavior that writes incoming versions under `.agent-guidelines-conflicts/`.
-- Added separated Python and shell script convention files.
-
-### Changed
-- Replaced mixed branch type policy with strict Git Flow branch families: `feature/*`, `release/*`, and `hotfix/*`.
-- Set `develop` as the default integration branch, normal PR target, and recommended hosted default branch for Git Flow repositories.
-- Clarified that normal documentation, tests, refactors, chores, and non-emergency bug fixes use `feature/*` branches under strict Git Flow.
-- Renamed the central guideline source example from `project-seed` to `repo-seed`.
+Added `scripts/sync-agent-guidelines.py` with version and hash tracking and
+conflict copies, plus separate Python and shell conventions. Changed branching
+to strict Git Flow families `feature/*`, `release/*`, and `hotfix/*`, with
+`develop` as the default integration and PR target.
 
 ## 1.20.0
 
-> Skipped — this version number was not released.
+Skipped. This version was not released.
 
 ## 1.19.0 - 2026-06-19
 
-### Added
-- Added unified branch type table and branch naming policy.
-- Added explicit PR creation/proposal policy so agents do not randomly skip pull requests.
-- Added fallback PR reporting requirements when PR creation is unavailable.
-
-### Changed
-- Clarified when to use `feature`, `bugfix`, `docs`, `test`, `refactor`, `chore`, `release`, and `hotfix` branches.
-- Updated PR checklist to verify branch type, branch naming, and PR target.
+Added a branch type table, branch naming policy, and pull request policy with
+fallback reporting.
 
 ## 1.18.0 - 2026-06-18
 
-### Changed
-- Clarified C# control-flow convention: single-statement guard clauses may omit braces when the controlled statement is on the next line.
-- Updated `.editorconfig` to prefer braces only for multiline control blocks.
-- Replaced project-specific terminal/output examples with generic examples.
+Changed the C# rule to allow single-statement guard clauses without braces.
+Replaced project-specific examples with generic ones.
 
 ## 1.17.0 - 2026-06-18
 
-### Added
-- Added C# spacing convention requiring a blank line after a completed control block before the next independent statement.
-- Added examples for spacing between an `if` block and a following `return` statement.
-
-### Changed
-- Updated C# quick reference and agent checklist to include completed-control-block spacing.
+Added a C# rule for a blank line after a completed control block.
 
 ## 1.16.0 - 2026-06-18
 
-### Added
-- Added rule to preserve existing user-facing text/output style, including ASCII vs Unicode punctuation and decorative separators.
-- Added C# and script convention examples for plain ASCII separators versus Unicode/box-drawing separators.
-
-### Changed
-- Updated agent checklist and convention docs to check terminal/UI/output string consistency.
+Added a rule to keep the existing style of user-facing text, such as ASCII
+versus Unicode punctuation.
 
 ## 1.15.0 - 2026-06-18
 
-### Added
-- Added explicit C# control-flow convention forbidding inline guard statements such as `if (...) return ...;`.
-- Added examples showing `return` and `throw` on their own line instead of inline after the condition.
-
-### Changed
-- Updated C# quick reference to mention no inline control-flow statements.
+Added a C# rule against inline guards such as `if (...) return ...;`.
 
 ## 1.14.0 - 2026-06-15
 
-### Added
-- Added `MUST` / `SHOULD` / `MAY` instruction strictness levels.
-- Added rule to avoid AI assistant, tool, provider, or model names in branch names, commits, PR text, changelog entries, release notes, and generated helper text.
-- Added indentation preservation guidance: use spaces when the existing file/repository uses spaces and tabs when it uses tabs.
-
-### Changed
-- Softened Git Flow and PR wording for solo/local repositories while keeping branch isolation and no auto-merge.
-- Updated C# and script convention docs to preserve existing indentation style before applying defaults.
+Added `MUST`/`SHOULD`/`MAY` strictness levels, a rule against AI tool names in
+repository text, and indentation preservation guidance. Softened Git Flow and PR
+wording for solo repositories.
 
 ## 1.13.0 - 2026-06-12
 
-### Added
-- Added `CLAUDE.md` compatibility wrapper for Claude Code.
-
-### Changed
-- Updated `AGENTS.md` to version 1.13.
-- Collapsed early version-history churn into a clean `1.12.0` baseline entry.
-- Softened PR workflow wording for solo/local repositories where hosted PRs are unavailable.
+Added the `CLAUDE.md` wrapper for Claude Code. Softened PR wording for local
+repositories.
 
 ## 1.12.0 - 2026-06-12
 
-### Added
-- Baseline public starter pack.
-- Included `AGENTS.md`, `README.md`, `CHANGELOG.md`, `FEATURES.md`, `.editorconfig`, `.github/pull_request_template.md`, coding convention docs, and FSD/TSD/GDD templates.
+Baseline starter pack with `AGENTS.md`, README, changelog, features file,
+`.editorconfig`, a pull request template, conventions, and FSD, TSD, and GDD
+templates.

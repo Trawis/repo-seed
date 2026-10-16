@@ -4,35 +4,27 @@
 
 **Sync behavior**: Never copied into target repositories
 
-Version 5 is a deliberate compatibility reset, not an accidental regression.
-The active repository fleet already uses `.repo-seed-state.json`, so
-pre-4.x legacy migration support (`.agent-guidelines-manifest.json` and
-friends, retired-path tables, ancient scaffold-upgrade tables) has been
-removed rather than carried forward indefinitely.
+Version 5 is a deliberate compatibility reset. Targets already use
+`.repo-seed-state.json`, so pre-4.x migration support is removed.
 
 ## What Changed
 
-- The manifest moved from `schema_version: 2` to `schema_version: 3`; a 5.0
-  sync script cannot read an older manifest, and an older script cannot read
-  a 5.0 manifest.
+- The manifest moved to `schema_version: 3`. Older and newer scripts cannot read
+  each other's manifests.
 - The `full` profile is gone. Use `minimal`, `library`, `app`, or `game`.
-- Pre-4.x legacy migration (any mechanism older than
-  `.repo-seed-state.json`) is no longer supported. A target with no state
-  file is simply a fresh install.
-- Automatic convention detection is gone. Conventions
-  (`csharp`, `python`, `scripts`, `shell`, `unity`) are always explicit.
+- Pre-4.x migration is removed. A target with no state file is a fresh install.
+- Convention detection is gone. Conventions (`csharp`, `python`, `scripts`,
+  `shell`, `unity`) are always explicit.
 
 ## Upgrading a Pre-5.0 Target
 
-A target's existing `.repo-seed-state.json` already records its profile and
-managed-file hashes, so nothing needs to be rediscovered:
+The existing `.repo-seed-state.json` already records the profile and managed
+hashes.
 
 1. Commit or back up the target repository.
-2. Decide which conventions the project actually uses (see
-   [README](../../README.md#profiles-conventions-and-scaffolds) for
-   examples).
-3. Run the 5.0 `sync-docs.py` with the existing profile and an explicit
-   `--conventions`:
+2. Decide which conventions the project uses (see
+   [README](../../README.md#profiles-conventions-and-scaffolds)).
+3. Run the 5.0 `sync-docs.py` with the existing profile and `--conventions`:
 
    ```bash
    python pack/files/scripts/sync-docs.py \
@@ -42,8 +34,8 @@ managed-file hashes, so nothing needs to be rediscovered:
      --dry-run
    ```
 
-   Omitting `--conventions` on a pre-5.0 (`schema_version: 1`) state fails
-   clearly and writes nothing:
+   Without `--conventions`, a `schema_version: 1` state fails and writes
+   nothing:
 
    ```text
    This repository uses a pre-5.0 repo-seed state without explicit conventions.
@@ -51,12 +43,10 @@ managed-file hashes, so nothing needs to be rediscovered:
    ```
 4. Review the output, then rerun without `--dry-run`.
 
-Project-owned files (README, CHANGELOG, `docs/project/`, issue templates,
-the PR template, `.agents/project.md`, child `AGENTS.md` files) are
-preserved exactly as before; only managed files update. Once the sync
-succeeds, `.repo-seed-state.json` is `schema_version: 2` and later syncs
-need no `--conventions` unless changing the selection.
+Project-owned files (README, CHANGELOG, `docs/project/`, issue templates, the
+PR template, `.agents/project.md`, child `AGENTS.md` files) are kept. Only
+managed files update. Afterwards the state is `schema_version: 2`, and later
+syncs need no `--conventions` unless the selection changes.
 
-This is a per-repository decision: each active project chooses its own
-profile and conventions when it is upgraded. Repo-seed does not infer or
-hard-code them.
+Each project chooses its own profile and conventions. Repo-seed does not infer
+them.
