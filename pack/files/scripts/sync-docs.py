@@ -883,23 +883,20 @@ def audit_target(
 
     # A tombstone is stale managed content awaiting manual review. A state-owned
     # path missing from the manifest is the same case before a sync tombstones it.
-    # Report both without touching state.
+    # Report both without touching state. A path that resolves outside the
+    # repository is reported, not followed, so one bad path cannot abort the audit.
     known_paths = {asset.path for asset in manifest.assets}
-    reported_stale_paths: set[str] = set()
-    for path in sorted(state.tombstones):
-        if path in reported_stale_paths:
+    stale_paths = sorted(state.tombstones) + sorted(
+        path for path in state.managed_files if path not in known_paths
+    )
+    for path in stale_paths:
+        try:
+            target = safe_child(target_root, path, "stale managed target")
+        except ValueError:
+            lines.append(f"tombstone: {path} (resolves outside the repository; review manually)")
             continue
-        target = safe_child(target_root, path, "tombstone target")
         if target.is_file():
             lines.append(f"tombstone: {path} (preserved stale managed content requires review)")
-            reported_stale_paths.add(path)
-    for path in sorted(state.managed_files):
-        if path in reported_stale_paths or path in known_paths:
-            continue
-        target = safe_child(target_root, path, "historical managed target")
-        if target.is_file():
-            lines.append(f"tombstone: {path} (preserved stale managed content requires review)")
-            reported_stale_paths.add(path)
 
     findings = [
         line
