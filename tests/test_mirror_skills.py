@@ -83,6 +83,54 @@ class MirrorSkillsTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("already match", output)
 
+    def test_empty_directories_in_the_mirror_are_reported_and_removed(self):
+        write(self.pack, ".agents/skills/a/SKILL.md", "a\n")
+        write(self.pack, ".claude/skills/a/SKILL.md", "a\n")
+        (self.mirror / "z/x").mkdir(parents=True)
+        (self.mirror / "a/sub/deep").mkdir(parents=True)
+        code, output, _ = run("--pack-files", str(self.pack), "--check")
+        self.assertEqual(code, 1)
+        self.assertIn("empty directory: z/x", output)
+        self.assertIn("empty directory: a/sub/deep", output)
+        code, _, _ = run("--pack-files", str(self.pack), "--apply")
+        self.assertEqual(code, 0)
+        self.assertFalse((self.mirror / "z").exists())
+        self.assertFalse((self.mirror / "a/sub").exists())
+        self.assertEqual((self.mirror / "a/SKILL.md").read_bytes(), b"a\n")
+        self.assertEqual(run("--pack-files", str(self.pack), "--check")[0], 0)
+
+    def test_nested_skill_files_are_mirrored_and_stale_nested_files_removed(self):
+        write(self.pack, ".agents/skills/a/refs/deep/note.md", "note\n")
+        write(self.pack, ".claude/skills/old/refs/gone.md", "gone\n")
+        code, _, _ = run("--pack-files", str(self.pack), "--apply")
+        self.assertEqual(code, 0)
+        self.assertEqual((self.mirror / "a/refs/deep/note.md").read_bytes(), b"note\n")
+        self.assertFalse((self.mirror / "old").exists())
+
+    def test_a_symlinked_mirror_root_is_rejected_and_nothing_is_written_through_it(self):
+        write(self.pack, ".agents/skills/a/SKILL.md", "a\n")
+        outside = Path(self.temp.name) / "outside"
+        outside.mkdir()
+        write(outside, "keep/SKILL.md", "keep\n")
+        (self.pack / ".claude").mkdir()
+        try:
+            self.mirror.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks are not available")
+        for mode in ("--check", "--apply"):
+            with self.subTest(mode=mode):
+                code, _, error = run("--pack-files", str(self.pack), mode)
+                self.assertEqual(code, 2)
+                self.assertIn("cannot be a symbolic link", error)
+        self.assertEqual((outside / "keep/SKILL.md").read_bytes(), b"keep\n")
+        self.assertFalse((outside / "a").exists())
+
+    def test_apply_creates_a_missing_mirror_tree(self):
+        write(self.pack, ".agents/skills/a/SKILL.md", "a\n")
+        code, _, _ = run("--pack-files", str(self.pack), "--apply")
+        self.assertEqual(code, 0)
+        self.assertEqual((self.mirror / "a/SKILL.md").read_bytes(), b"a\n")
+
     def test_missing_source_tree_is_an_error(self):
         code, _, error = run("--pack-files", str(self.pack), "--check")
         self.assertEqual(code, 2)

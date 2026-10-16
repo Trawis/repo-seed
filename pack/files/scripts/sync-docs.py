@@ -32,7 +32,7 @@ SCAFFOLD_HASH_PATTERN = re.compile(
 )
 LABELS_KEY_PATTERN = re.compile(r"^labels:[ \t]*(?P<inline>.*)$", re.MULTILINE)
 LABEL_LIST_ITEM_PATTERN = re.compile(r"^[ \t]*-[ \t]+(?P<label>.+)$")
-LEGACY_LABEL_VALUES = {"bug", "enhancement"}
+LEGACY_LABEL_VALUES = {"bug", "enhancement", "type: decision", "type: idea"}
 ISSUE_TEMPLATE_DIRECTORY = ".github/ISSUE_TEMPLATE"
 ISSUE_TEMPLATE_SUFFIXES = {".md", ".yml", ".yaml"}
 PRE_5_0_STATE_ERROR = (

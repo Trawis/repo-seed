@@ -77,6 +77,8 @@ maintainer-side: the label catalog and its optional reconciler (see
 GitHub. Label reconciliation is separate from file sync and from `--audit`,
 neither of which needs network access.
 
+## Scaffolds and State
+
 Some templates, such as the TSD, are reference-only with no scaffold target.
 Agents copy them to a project-owned path only when needed.
 

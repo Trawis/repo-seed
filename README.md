@@ -65,8 +65,8 @@ python scripts/sync-github-labels.py --apply
 ```
 
 `--check` reports missing or drifted labels and legacy labels (`bug`,
-`enhancement`, `feature`, `critical`, `high`, `medium`, `low`, `lowest`), and
-exits non-zero on drift. `--apply` creates missing labels and updates
+`enhancement`, `feature`, `critical`, `high`, `medium`, `low`, `lowest`,
+`type: decision`, `type: idea`), and exits non-zero on drift. `--apply` creates missing labels and updates
 descriptions and colors. It never deletes labels.
 
 ## Profiles, Conventions, and Scaffolds

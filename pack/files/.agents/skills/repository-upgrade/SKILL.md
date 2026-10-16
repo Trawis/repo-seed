@@ -31,13 +31,18 @@ script lacks, report that rather than improvising.
    `--conventions` list because a recorded convention is no longer in the pack,
    do not choose for the user. Show what the script says, explain what each
    option would install or remove, and ask. If it refuses an old state file,
-   follow the instructions in its error and do not work around it.
+   report its error to the user and ask; do not work around it and do not
+   download a pack without permission.
 5. Run the intended command with `--dry-run` first, and read every line: managed
    files it would replace, files it would remove, modified files it would
    preserve, tombstones, state changes, and any scaffold effects. Resolve
    anything unexpected before continuing, and show the user the plan.
-6. Do not force a change to files the script preserves, and never edit
-   project-owned files. Report each preserved file for review.
+6. A `remove` line is a managed file the pack no longer selects and that is
+   unchanged. A `preserve` line, sometimes also reported as a tombstone, is a
+   file the script deliberately keeps: locally modified, dropped from the
+   manifest, or now project-owned. Do not force a change to files the script
+   preserves, never edit project-owned files by hand, and report each preserved
+   file for review.
 7. Apply by running the same command without `--dry-run` only after the dry run
    is acceptable and the user wants the upgrade.
 8. Verify: the state file records the intended pack version, profile, and
