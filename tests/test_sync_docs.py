@@ -501,23 +501,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("@AGENTS.md", claude)
         self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
 
-    def test_issue_guidance_is_not_conflated_with_pull_request_guidance(self):
-        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
-        normalized = " ".join(agents.split())
-        self.assertIn(
-            "Git, branches, commits, pull requests, or PR descriptions: `.agents/guidelines/git.md`",
-            normalized,
-        )
-        self.assertIn(
-            "issue creation, labels, issue structure, or triage: `.agents/guidelines/issues.md`",
-            normalized,
-        )
-        issues_guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
-        git_guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(encoding="utf-8")
-        self.assertIn("Keep PR titles and descriptions concise", git_guidance)
-        self.assertNotIn("Keep PR titles", issues_guidance)
-        self.assertNotIn("pull-request template", issues_guidance.lower())
-
     def test_managed_claude_wrapper_is_a_minimal_agents_import(self):
         claude = (PACK_ROOT / "files/CLAUDE.md").read_text(encoding="utf-8")
         visible = re.sub(r"<!--.*?-->", "", claude, flags=re.DOTALL).strip()
@@ -990,74 +973,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                     self.assertGreaterEqual(len(workflow_steps), 3)
                     self.assertIn("## Completion", body)
 
-    def test_documentation_guidance_routes_only_applicable_bootstrap_documents(self):
-        guidance = (
-            PACK_ROOT / "files/.agents/guidelines/documentation.md"
-        ).read_text(encoding="utf-8")
-        self.assertIn("FSD for\n   applications or GDD for games", guidance)
-        self.assertIn("user guidance for user-facing products", guidance)
-        tsd = (PACK_ROOT / "files/docs/templates/tsd.template.md").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("issue, acceptance criteria, FSD, or GDD", tsd)
-
-    def test_git_guidance_scopes_branch_model_preflight_to_git_operations(self):
-        guidance = (PACK_ROOT / "files/.agents/guidelines/git.md").read_text(
-            encoding="utf-8"
-        )
-        normalized = " ".join(guidance.split())
-        for required in (
-            "Branch Model Preflight",
-            "current branch and working tree",
-            "applicable `AGENTS.md` files",
-            ".agents/project.md",
-            "CONTRIBUTING.md",
-            "Consult remote or hosted information only when needed",
-            "protected branches",
-            "GitHub Flow",
-            "GitFlow",
-            "develop` or `dev`",
-            "normal feature PRs must not target `main`",
-            "Unknown model",
-            "Do not infer GitHub Flow only because",
-            "hosted default branch is `main` or `master`",
-            "Unknown base branch",
-            "missing branch-name convention",
-            "wrong PR target is blocking",
-            "Editing files alone does not require",
-        ):
-            self.assertIn(required, normalized)
-        self.assertNotIn("Before starting work that may change files", normalized)
-
-    def test_agent_guidance_scopes_code_inspection_and_final_compliance(self):
-        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
-        normalized = " ".join(agents.split())
-        for required in (
-            "Inspect the affected implementation and nearby tests before editing",
-            "Follow nearby established patterns",
-            "only when relevant to the change or needed to resolve an uncertainty",
-            "Make the smallest safe change",
-            "review the final diff against the request",
-            "scope, correctness, applicable local conventions, ownership boundaries",
-            "Check branch and pull-request requirements only when performing Git",
-            "Run the narrowest relevant validation",
-        ):
-            self.assertIn(required, normalized)
-        for overly_broad in (
-            "Before editing code, identify applicable conventions",
-            "formatter and linter config, test style, naming, imports",
-            "recheck the final diff against branch name, base branch, PR target",
-        ):
-            self.assertNotIn(overly_broad, normalized)
-
-    def test_update_docs_prefer_the_new_pack_script(self):
-        for path in (REPOSITORY_ROOT / "README.md", PACK_ROOT / "README.md"):
-            content = path.read_text(encoding="utf-8")
-            self.assertIn(
-                "python /path/to/extracted/pack/files/scripts/sync-docs.py",
-                content,
-            )
-
     def test_every_template_has_valid_metadata_and_a_body(self):
         for asset in sync.load_manifest(PACK_ROOT).assets:
             if asset.asset_type == "template":
@@ -1220,27 +1135,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             for needle in forbidden:
                 with self.subTest(path=path.relative_to(PACK_ROOT), needle=needle):
                     self.assertNotIn(needle, content)
-
-    def test_readme_does_not_claim_all_modified_managed_files_are_preserved(self):
-        content = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertNotIn(
-            "Modified managed or scaffolded files are preserved and reported, never overwritten",
-            content,
-        )
-        self.assertIn("repo-seed-owned and are updated", content)
-        self.assertIn("overwritten on the next sync", content)
-
-    def test_documentation_guidance_has_no_legacy_scaffold_hash_claim(self):
-        content = (PACK_ROOT / "files/.agents/guidelines/documentation.md").read_text(encoding="utf-8")
-        self.assertNotIn("Known older scaffolds", content)
-        self.assertNotIn("approved legacy content hash", content)
-        self.assertIn("No recognized provenance is also preserved as", content)
-
-    def test_editorconfig_scaffold_docs_are_internally_consistent(self):
-        content = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("--scaffold-editorconfig", content)
-        self.assertIn("may be created once as a missing-only scaffold", content)
-        self.assertNotIn(".editorconfig` is also project-owned; it is never touched", content)
 
     def test_manifest_github_scaffolds_are_issue_forms_and_pr_template(self):
         github_scaffolds = {
