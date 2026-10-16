@@ -9,6 +9,13 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.15.1 - 2026-10-16
+
+CI now also runs the test suite and command checks on macOS and Windows with
+Python 3.14, using bash for every step. Added a `mirror-skills.py` test for a
+case-only rename that runs only on case-insensitive filesystems, where the
+earlier ordering bug could occur. No distributed content changed.
+
 ## 5.15.0 - 2026-10-16
 
 Raised the supported Python version from 3.10 to 3.11. Python 3.10 reached

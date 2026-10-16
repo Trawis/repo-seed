@@ -27,7 +27,7 @@ Reusable coding-agent guidance and project-document templates with a small sync 
 - Windows, Linux, or macOS.
 
 The scripts use only the Python standard library. CI runs Python 3.11 and 3.14
-on Linux.
+on Linux, and Python 3.14 on macOS and Windows.
 
 ## Safety
 

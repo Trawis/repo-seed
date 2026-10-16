@@ -26,7 +26,8 @@ mirror = load_module()
 def write(root: Path, relative: str, text: str) -> None:
     path = root / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # Write bytes so Windows does not translate "\n" to "\r\n".
+    path.write_bytes(text.encode("utf-8"))
 
 
 def run(*args: str) -> tuple[int, str, str]:
@@ -34,6 +35,15 @@ def run(*args: str) -> tuple[int, str, str]:
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
         code = mirror.main(list(args))
     return code, out.getvalue(), err.getvalue()
+
+
+def filesystem_is_case_insensitive(directory: Path) -> bool:
+    probe = directory / "CaseProbe.tmp"
+    probe.write_text("probe", encoding="utf-8")
+    try:
+        return (directory / "caseprobe.tmp").exists()
+    finally:
+        probe.unlink()
 
 
 class MirrorSkillsTests(unittest.TestCase):
@@ -124,6 +134,16 @@ class MirrorSkillsTests(unittest.TestCase):
                 self.assertIn("cannot be a symbolic link", error)
         self.assertEqual((outside / "keep/SKILL.md").read_bytes(), b"keep\n")
         self.assertFalse((outside / "a").exists())
+
+    def test_a_case_only_rename_survives_apply_on_a_case_insensitive_filesystem(self):
+        if not filesystem_is_case_insensitive(Path(self.temp.name)):
+            self.skipTest("the filesystem is case sensitive; this case only exists on macOS and Windows")
+        write(self.pack, ".agents/skills/Skill/SKILL.md", "new\n")
+        write(self.pack, ".claude/skills/skill/SKILL.md", "old\n")
+        code, _, _ = run("--pack-files", str(self.pack), "--apply")
+        self.assertEqual(code, 0)
+        self.assertEqual((self.mirror / "Skill/SKILL.md").read_bytes(), b"new\n")
+        self.assertEqual(run("--pack-files", str(self.pack), "--check")[0], 0)
 
     def test_apply_creates_a_missing_mirror_tree(self):
         write(self.pack, ".agents/skills/a/SKILL.md", "a\n")
