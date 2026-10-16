@@ -1024,7 +1024,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Comma-separated convention ids to install, e.g. 'csharp,unity' "
             "(known: csharp, python, scripts, shell, unity). Later syncs reuse the recorded "
-            "selection; a pre-5.0 state requires this once."
+            "selection."
         ),
     )
     parser.add_argument(
