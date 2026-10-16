@@ -9,6 +9,17 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.14.2 - 2026-10-16
+
+Updated the `repository-upgrade` skill for the removed pre-5.0 state bridge: it
+no longer mentions converting an older state schema, tells the agent to follow
+the script's error for an old state file, and no longer restates tombstone
+rules that belong to the sync script. Added "use X instead" boundaries to the
+descriptions of `repository-upgrade`, `repository-audit`, `issue-implementation`,
+`refactor`, and `technical-design`, and changed `refactor` to preserve
+"supported" behavior to match its body. Removed the pre-5.0 note from the
+`--conventions` help text. The upstream-derived skills are unchanged.
+
 ## 5.14.1 - 2026-10-16
 
 Fixed `sync-docs.py --audit` aborting when a tombstoned or historical managed

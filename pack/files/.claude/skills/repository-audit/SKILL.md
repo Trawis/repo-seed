@@ -1,6 +1,6 @@
 ---
 name: repository-audit
-description: Audits a repository that uses or is expected to use repo-seed for drift from its installed state and reports an actionable, read-only findings list. Use when asked to audit, check, validate, compare, or find drift in a repo-seed repository, including managed files, profile and convention selection, stale artifacts, and competing agent guidance.
+description: Audits a repository that uses or is expected to use repo-seed for drift from its installed state and reports an actionable findings list without changing anything. Use when asked to audit, check, validate, compare, or find drift in a repo-seed repository, including stale artifacts and competing agent guidance. To apply updates use repository-upgrade.
 ---
 
 # Repository Audit
