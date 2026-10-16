@@ -115,7 +115,8 @@ Unity game:              profile game,    conventions csharp,unity
 small Python utility:    profile minimal, conventions python
 ```
 
-A pre-5.0 state file needs one `--conventions <list>` sync. See
+A pre-5.0 state file is no longer converted. Sync once with the 5.13.2 pack
+and `--conventions <list>`, then use a current pack. See
 [Upgrading to Version 5](docs/project/upgrading-to-5.md).
 
 ### Scaffolds
@@ -192,8 +193,9 @@ Version 5 resets compatibility:
 - **Manifest**: `schema_version: 3` is incompatible with older scripts. Pre-4.x
   migration is removed. A target with no `.repo-seed-state.json` is a fresh
   install.
-- **State**: schema 1 (before explicit conventions) converts to schema 2 with
-  one `--conventions <list>` sync.
+- **State**: schema 1 (before explicit conventions) converts to schema 2 only
+  with the [5.13.2 pack](https://github.com/Trawis/repo-seed/releases/tag/v5.13.2)
+  and one `--conventions <list>` sync. Later packs refuse it.
 
 See [Upgrading to Version 5](docs/project/upgrading-to-5.md).
 

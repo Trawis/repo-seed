@@ -1405,72 +1405,21 @@ class ConventionSelectionTests(unittest.TestCase):
                 sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"rust"}))
             self.assertEqual(list(target.iterdir()), [])
 
-    def test_pre_5_0_state_without_conventions_fails_clearly_and_writes_nothing(self):
+    def test_pre_5_0_state_is_rejected_with_the_last_converting_release_and_writes_nothing(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             (target / ".repo-seed-state.json").write_text(json.dumps(schema_1_state()), encoding="utf-8")
             before = (target / ".repo-seed-state.json").read_bytes()
 
-            with self.assertRaisesRegex(ValueError, re.escape(sync.PRE_5_0_STATE_ERROR)):
-                sync.synchronize(PACK_ROOT, target, "app")
+            for conventions in (None, frozenset({"csharp"})):
+                with self.subTest(conventions=conventions):
+                    with self.assertRaisesRegex(ValueError, re.escape("releases/tag/v5.13.2")):
+                        sync.synchronize(PACK_ROOT, target, "app", conventions=conventions)
+            with self.assertRaisesRegex(ValueError, "pre-5.0"):
+                sync.audit_target(PACK_ROOT, target, "app")
 
             self.assertEqual((target / ".repo-seed-state.json").read_bytes(), before)
             self.assertEqual(list(target.iterdir()), [target / ".repo-seed-state.json"])
-
-    def test_pre_5_0_state_with_explicit_conventions_converts_to_schema_2(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            manifest = sync.load_manifest(PACK_ROOT)
-            csharp_asset = next(a for a in manifest.assets if a.convention == "csharp")
-            source = PACK_ROOT / "files" / csharp_asset.path
-            destination = target / csharp_asset.path
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
-            state = schema_1_state(
-                profile="app",
-                managed_files={csharp_asset.path: sync.managed_file_hash(destination)},
-            )
-            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
-            project_owned = target / "docs/project/notes.md"
-            project_owned.parent.mkdir(parents=True, exist_ok=True)
-            project_owned.write_text("# Project notes\n", encoding="utf-8")
-
-            actions = sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
-
-            self.assertTrue((target / ".agents/conventions/csharp.md").is_file())
-            self.assertTrue((target / "AGENTS.md").is_file())
-            self.assertEqual(project_owned.read_text(encoding="utf-8"), "# Project notes\n")
-            new_state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
-            self.assertEqual(new_state["schema_version"], 2)
-            self.assertEqual(new_state["conventions"], ["csharp"])
-            self.assertTrue(any(action.action == "copy" and action.path == "AGENTS.md" for action in actions))
-
-            # A second sync with no arguments is now fully idempotent: no migration behavior remains.
-            second_actions = sync.synchronize(PACK_ROOT, target, "app")
-            self.assertTrue(
-                all(action.action in {"unchanged", "state"} for action in second_actions),
-                [(a.action, a.path) for a in second_actions],
-            )
-
-    def test_pre_5_0_conversion_drops_a_convention_not_re_selected(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            manifest = sync.load_manifest(PACK_ROOT)
-            csharp_asset = next(a for a in manifest.assets if a.convention == "csharp")
-            source = PACK_ROOT / "files" / csharp_asset.path
-            destination = target / csharp_asset.path
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
-            state = schema_1_state(
-                profile="library",
-                managed_files={csharp_asset.path: sync.managed_file_hash(destination)},
-            )
-            (target / ".repo-seed-state.json").write_text(json.dumps(state), encoding="utf-8")
-
-            sync.synchronize(PACK_ROOT, target, "library", conventions=frozenset({"python"}))
-
-            self.assertFalse((target / ".agents/conventions/csharp.md").exists())
-            self.assertTrue((target / ".agents/conventions/python.md").is_file())
 
     def test_audit_reports_unused_managed_convention(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1484,70 +1433,6 @@ class ConventionSelectionTests(unittest.TestCase):
             )
             self.assertIn("conventions: csharp", report)
             self.assertTrue((target / ".agents/conventions/python.md").is_file())
-
-    def test_audit_on_a_pre_5_0_state_reports_info_without_failing(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            (target / ".repo-seed-state.json").write_text(json.dumps(schema_1_state()), encoding="utf-8")
-
-            report = sync.audit_target(PACK_ROOT, target, "app")
-
-            self.assertTrue(
-                any(
-                    "pre-5.0 state has no explicit convention selection" in line and line.startswith("info:")
-                    for line in report
-                )
-            )
-            self.assertIn("conventions: unresolved (pre-5.0 state)", report)
-            self.assertEqual(list(target.iterdir()), [target / ".repo-seed-state.json"])
-
-    def test_audit_on_a_pre_5_0_state_without_conventions_does_not_flag_installed_convention_files(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            csharp = target / ".agents/conventions/csharp.md"
-            csharp.parent.mkdir(parents=True)
-            csharp.write_text("legacy csharp convention content\n", encoding="utf-8")
-            (target / ".repo-seed-state.json").write_text(
-                json.dumps(
-                    schema_1_state(managed_files={".agents/conventions/csharp.md": sync.managed_file_hash(csharp)})
-                ),
-                encoding="utf-8",
-            )
-
-            report = sync.audit_target(PACK_ROOT, target, "app")
-
-            self.assertFalse(any("unused managed convention" in line for line in report))
-            self.assertFalse(any(line.startswith("missing:") and "conventions" in line for line in report))
-
-    def test_audit_on_a_pre_5_0_state_with_explicit_conventions_evaluates_convention_state(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            csharp = target / ".agents/conventions/csharp.md"
-            python = target / ".agents/conventions/python.md"
-            csharp.parent.mkdir(parents=True)
-            csharp.write_text("legacy csharp convention content\n", encoding="utf-8")
-            python.write_text("legacy python convention content\n", encoding="utf-8")
-            (target / ".repo-seed-state.json").write_text(
-                json.dumps(
-                    schema_1_state(
-                        managed_files={
-                            ".agents/conventions/csharp.md": sync.managed_file_hash(csharp),
-                            ".agents/conventions/python.md": sync.managed_file_hash(python),
-                        }
-                    )
-                ),
-                encoding="utf-8",
-            )
-
-            report = sync.audit_target(PACK_ROOT, target, "app", conventions=frozenset({"csharp"}))
-
-            self.assertIn("conventions: csharp", report)
-            self.assertTrue(
-                any("unused managed convention: .agents/conventions/python.md" in line for line in report)
-            )
-            self.assertFalse(
-                any("unused managed convention: .agents/conventions/csharp.md" in line for line in report)
-            )
 
     def test_state_parsing_succeeds_when_a_recorded_convention_is_removed(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1564,7 +1449,6 @@ class ConventionSelectionTests(unittest.TestCase):
             manifest = sync.load_manifest(PACK_ROOT)
             parsed = sync.read_managed_state(target, manifest)
 
-            self.assertEqual(parsed.schema_version, 2)
             self.assertEqual(parsed.conventions, frozenset({"csharp", "old-tool"}))
 
     def test_sync_without_conventions_fails_clearly_when_a_recorded_convention_is_removed(self):
@@ -1733,7 +1617,7 @@ class ConventionSelectionTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 2)
             self.assertIn("pre-5.0 repo-seed state", result.stderr)
-            self.assertIn("Rerun with --conventions", result.stderr)
+            self.assertIn("releases/tag/v5.13.2", result.stderr)
             self.assertEqual((target / ".repo-seed-state.json").read_bytes(), before)
 
 
@@ -3059,7 +2943,7 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             audit = self.run_sync(newer, target, "--audit")
             self.assertIn("no drift detected", audit.stdout)
 
-    def test_older_state_schema_requires_an_explicit_selection_and_writes_nothing_until_given(self):
+    def test_older_state_schema_is_refused_with_the_last_converting_release_and_writes_nothing(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             target = root / "target"
@@ -3067,19 +2951,12 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             (target / ".repo-seed-state.json").write_text(json.dumps(schema_1_state(profile="library")), encoding="utf-8")
             before = self.snapshot(target)
 
-            refused = self.run_sync(PACK_ROOT, target, "--dry-run")
-            self.assertNotEqual(refused.returncode, 0)
-            self.assertIn("--conventions", refused.stderr)
-            self.assertEqual(before, self.snapshot(target))
-
-            chosen = self.run_sync(PACK_ROOT, target, "--conventions", "python")
-            self.assertEqual(chosen.returncode, 0, chosen.stderr)
-            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
-            self.assertEqual(state["schema_version"], 2)
-            self.assertEqual(state["profile"], "library")
-            self.assertEqual(state["conventions"], ["python"])
-            repeat = self.run_sync(PACK_ROOT, target, "--dry-run")
-            self.assertRegex(repeat.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
+            for extra in (("--dry-run",), ("--conventions", "python"), ("--audit",)):
+                with self.subTest(args=extra):
+                    refused = self.run_sync(PACK_ROOT, target, *extra)
+                    self.assertEqual(refused.returncode, 2)
+                    self.assertIn("releases/tag/v5.13.2", refused.stderr)
+                    self.assertEqual(before, self.snapshot(target))
 
     def test_assets_the_newer_pack_no_longer_selects_follow_the_ownership_rules(self):
         deselected_unchanged = "docs/templates/tsd.template.md"

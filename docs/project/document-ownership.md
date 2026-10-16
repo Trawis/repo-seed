@@ -54,7 +54,7 @@ Three independent concepts:
   which `.agents/conventions/*.md` files are installed. They are chosen with
   `--conventions` and saved in `.repo-seed-state.json`. Nothing selects one
   automatically, and a fresh install has none. Converting a pre-5.0 state
-  needs `--conventions` once; see `upgrading-to-5.md`.
+  needs the 5.13.2 pack once; see `upgrading-to-5.md`.
 - **Scaffolds** are optional project documents created from a template on
   request. `--scaffold-project-files` creates the baseline `README.md` and
   `CHANGELOG.md`. `architecture`, `fsd`, `gdd`, and `user-guide` need
