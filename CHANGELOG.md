@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.19.3 - 2026-10-17
+
+Removed the pre-5.0 upgrade guide and shortened the pre-5.0 section in the pack README. A pre-5.0 state file still needs the 5.13.2 pack, as the script error says.
+
 ## 5.19.2 - 2026-10-17
 
 Changed the sync script and the reusable audit and sync workflows to shorter comments, with no change in behavior.

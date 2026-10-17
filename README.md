@@ -122,9 +122,9 @@ Unity game:              profile game,    conventions csharp,unity
 small Python utility:    profile minimal, conventions python
 ```
 
-A pre-5.0 state file is no longer converted. Sync once with the 5.13.2 pack
-and `--conventions <list>`, then use a current pack. See
-[Upgrading to Version 5](docs/project/upgrading-to-5.md).
+A pre-5.0 state file is no longer converted. Sync once with the
+[5.13.2 pack](https://github.com/Trawis/repo-seed/releases/tag/v5.13.2) and
+`--conventions <list>`, then use a current pack.
 
 ### Scaffolds
 
@@ -308,19 +308,6 @@ the release, and the checksum detects corruption, not a compromised publisher.
 The script runs in steps that do not hold the write token. Pin `pack-version`
 to control which release is applied. Review the pull request before merging.
 
-## Upgrading a Pre-5.0 Target
-
-Version 5 resets compatibility:
-
-- **Manifest**: `schema_version: 3` is incompatible with older scripts. Pre-4.x
-  migration is removed. A target with no `.repo-seed-state.json` is a fresh
-  install.
-- **State**: schema 1 (before explicit conventions) converts to schema 2 only
-  with the [5.13.2 pack](https://github.com/Trawis/repo-seed/releases/tag/v5.13.2)
-  and one `--conventions <list>` sync. Later packs refuse it.
-
-See [Upgrading to Version 5](docs/project/upgrading-to-5.md).
-
 ## Source Layout
 
 ```text
@@ -369,7 +356,6 @@ The build writes `dist/repo-seed-pack-<version>.zip` from `pack/manifest.json`.
 - [Upstream-derived skills](docs/project/upstream-skills.md)
 - [Skill audit](docs/project/skill-audit.md)
 - [Issue guidance](pack/files/.agents/guidelines/issues.md)
-- [Upgrading to Version 5](docs/project/upgrading-to-5.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 

@@ -4,8 +4,7 @@
 
 **Sync behavior**: Never copied into target repositories
 
-This document defines ownership only. Usage belongs in `README.md`; upgrading
-belongs in `upgrading-to-5.md`.
+This document defines ownership only. Usage belongs in `README.md`.
 
 ## Ownership Classes
 
