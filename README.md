@@ -334,17 +334,14 @@ pack/
     .agents/
       guidelines/
       conventions/
-      skills/                # Codex skills
-    .claude/
-      skills/                # Claude Code skills
+      skills/                # skills; sync also installs them under .claude/skills/
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # documentation about repo-seed
 scripts/                     # tooling: release build, label sync, skill provenance
-                             # check, skill mirror, changelog-to-release-notes
+                             # check, changelog-to-release-notes
 tests/                       # pack and tooling tests
 .github/                     # this repository's CI, release, and reusable audit workflows
-.claude/settings.json        # turns the distributed skill wrappers off for repo-seed itself
 CHANGELOG.md                 # release history; the top entry is the release notes
 ```
 

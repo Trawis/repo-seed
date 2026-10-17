@@ -17,6 +17,8 @@ MANIFEST_FILE = "manifest.json"
 FILES_DIRECTORY = "files"
 DEFAULT_STATE_FILE = ".repo-seed-state.json"
 VERSION_PLACEHOLDER = "__PACK_VERSION__"
+SKILL_SOURCE_TREE = ".agents/skills/"
+SKILL_GENERATED_TREE = ".claude/skills/"
 TEMPLATE_METADATA_START = "repo-seed-template:start"
 TEMPLATE_METADATA_END = "repo-seed-template:end"
 VALID_TYPES = {"managed", "template"}
@@ -62,6 +64,12 @@ class Asset:
     scaffold_group: str | None = None
     scaffold_target: str | None = None
     convention: str | None = None
+    # Pack file to copy from when it differs from `path` (generated Claude skills).
+    source: str | None = None
+
+    @property
+    def source_path(self) -> str:
+        return self.source or self.path
 
 
 @dataclass(frozen=True)
@@ -237,6 +245,8 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
 
         relative_path(path, f"{context}.path")
         reject_project_owned_tree_path(path, f"{context}.path")
+        if path.startswith(SKILL_GENERATED_TREE):
+            raise ValueError(f"{context}.path cannot be under {SKILL_GENERATED_TREE}; it is generated from {SKILL_SOURCE_TREE}")
         if path in paths:
             raise ValueError(f"Duplicate asset path: {path}")
         if not isinstance(asset_type, str) or asset_type not in VALID_TYPES:
@@ -299,6 +309,20 @@ def load_manifest(source_root: Path, validate_sources: bool = True) -> PackManif
                 convention=convention if isinstance(convention, str) else None,
             )
         )
+
+    # Claude Code reads skills from .claude/skills, so every authored skill file is
+    # also installed there. The pack ships one copy; the second is derived here.
+    assets.extend(
+        Asset(
+            path=SKILL_GENERATED_TREE + asset.path[len(SKILL_SOURCE_TREE) :],
+            asset_type=asset.asset_type,
+            profiles=asset.profiles,
+            source=asset.path,
+        )
+        for asset in list(assets)
+        if asset.asset_type == "managed" and asset.path.startswith(SKILL_SOURCE_TREE)
+    )
+    paths.update(asset.path for asset in assets)
 
     collisions = paths.intersection(scaffold_targets)
     if collisions:
@@ -551,7 +575,7 @@ def copy_asset(
     recorded_hash: str | None = None,
     include_diff: bool = False,
 ) -> SyncAction:
-    source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+    source = safe_child(source_root / FILES_DIRECTORY, asset.source_path, "asset path")
     target = safe_child(target_root, asset.path, "asset target")
     existed = target.is_file()
     if existed and managed_file_hash(source) == managed_file_hash(target):
@@ -655,7 +679,7 @@ def write_managed_state(
         "conventions": sorted(conventions),
         "managed_files": {
             asset.path: managed_file_hash(
-                safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+                safe_child(source_root / FILES_DIRECTORY, asset.source_path, "asset path")
             )
             for asset in selected
         },
@@ -889,7 +913,7 @@ def audit_target(
 
     selected = assets_for_profile(manifest, active_profile, active_conventions)
     for asset in selected:
-        source = safe_child(source_root / FILES_DIRECTORY, asset.path, "asset path")
+        source = safe_child(source_root / FILES_DIRECTORY, asset.source_path, "asset path")
         try:
             target = safe_child(target_root, asset.path, "asset target")
             validate_managed_destination(target_root, asset)

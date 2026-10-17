@@ -18,9 +18,9 @@ contacts an upstream repository.
   stay authoritative. A derived skill must defer to the applicable
   `AGENTS.md` and must not grant itself automatic commit, push, pull request,
   or issue-write permission.
-- Both skill surfaces, `.agents/skills/` and `.claude/skills/`, carry
-  byte-identical content for every skill. Edit only `.agents/skills/`, then run
-  `python scripts/mirror-skills.py --apply` to regenerate `.claude/skills/`.
+- The pack ships each skill once, under `.agents/skills/`. `sync-docs.py`
+  installs the same bytes under `.claude/skills/` in targets, so both surfaces
+  are identical there. Edit only `.agents/skills/`.
 - Updates are deliberate maintainer actions. Nothing is refreshed from
   upstream during target sync.
 

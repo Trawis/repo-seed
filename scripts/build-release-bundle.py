@@ -105,6 +105,8 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
             raise ValueError(f"{context}.path must be a string")
         safe_relative_path(asset_path)
         reject_project_owned_tree_path(asset_path, f"{context}.path")
+        if asset_path.startswith(".claude/skills/"):
+            raise ValueError(f"{context}.path cannot be under .claude/skills/; it is generated from .agents/skills/")
         if asset_path in seen_paths:
             raise ValueError(f"Duplicate asset path: {asset_path}")
         if not isinstance(asset_type, str) or asset_type not in {"managed", "template"}:

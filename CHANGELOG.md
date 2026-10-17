@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.19.1 - 2026-10-17
+
+Changed the pack to ship each skill once, under `.agents/skills/`, and the sync script to install the same files under `.claude/skills/` in each target. Targets end up with the same files as before and a current sync reports no change to them; an older copied script leaves the existing `.claude/skills/` files in place. The manifest no longer lists `.claude/skills/` paths and both manifest loaders reject them.
+
 ## 5.19.0 - 2026-10-17
 
 Added a reusable `sync.yml` workflow that keeps one pull request open on `chore/repo-seed-sync` while a target's managed files differ from the latest pack release, and a `repo-seed-sync.template.yml` caller that `--scaffold-workflows` now creates next to the drift-check caller. Changed `--scaffold-workflows` to create both workflow callers when they are missing, so an existing adopter that reruns it gets the new sync caller; delete it to opt out.
