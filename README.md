@@ -18,7 +18,9 @@ Reusable coding-agent guidance and project-document templates with a small sync 
 - a shared label catalog, with an optional tool to sync hosted GitHub labels;
 - read-only templates for four project profiles, plus scaffolds for project
   documents, issue forms, and a pull request template;
-- one release archive, and a sync script with a read-only `--audit` report.
+- one release archive, and one sync script with a read-only `--audit` report;
+- optional workflows for targets: a weekly drift-check issue and a sync pull
+  request when a newer pack is released.
 
 ## Requirements
 
@@ -340,7 +342,7 @@ pack/
 docs/project/                # documentation about repo-seed
 scripts/repo-seed.py         # maintainer tooling: build, check, labels, notes
 tests/                       # pack and tooling tests
-.github/                     # this repository's CI, release, and reusable audit workflows
+.github/                     # this repository's CI and release, plus the reusable audit and sync workflows
 CHANGELOG.md                 # release history; the top entry is the release notes
 ```
 
@@ -351,9 +353,12 @@ Skills hold repeatable workflows. Policy and language rules stay in
 ## Build and Validate
 
 ```bash
-python scripts/repo-seed.py build
+python -m unittest discover -s tests
+python scripts/repo-seed.py check   # skill provenance and licences
+python scripts/repo-seed.py build   # writes dist/
 ```
 
+`repo-seed.py` also has `labels` and `notes` subcommands (`--help` lists them).
 The full validation list is in [`AGENTS.md`](AGENTS.md#repository-validation). CI runs the same commands.
 
 The build writes `dist/repo-seed-pack-<version>.zip` from `pack/manifest.json`.
