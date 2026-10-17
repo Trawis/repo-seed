@@ -12,7 +12,7 @@ belongs in `upgrading-to-5.md`.
 | Class | Location | Lifecycle |
 |---|---|---|
 | Repository-only | Repo-seed root and `docs/project/` | Maintained only for repo-seed |
-| Package-only | `pack/README.md` and `pack/LICENSE` | Included in releases; never synced |
+| Package-only | `pack/README.md`, `pack/LICENSE`, `pack/github-labels.json`, and `pack/skill-sources.json` | Included in releases; never synced |
 | Managed | Listed path under `pack/files/` | Updated when pack content differs |
 | Managed template | `pack/files/docs/templates/` | Updated as a read-only reference when content differs |
 | Managed state | `.repo-seed-state.json` in a target | Records active managed hashes and unresolved tombstones |

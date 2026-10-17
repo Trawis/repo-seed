@@ -14,6 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+LABEL_LIST_LIMIT = 1000
 DEFAULT_CATALOG = Path(__file__).resolve().parents[1] / "pack" / "github-labels.json"
 
 RETIRED_TYPE_REPLACEMENT = "type: feature, type: tech-debt, or type: chore"
@@ -66,17 +67,22 @@ def require_gh() -> str:
 
 
 def fetch_hosted_labels(gh: str, repo: str | None) -> list[dict]:
-    command = [gh, "label", "list", "--json", "name,description,color", "--limit", "1000"]
+    command = [gh, "label", "list", "--json", "name,description,color", "--limit", str(LABEL_LIST_LIMIT)]
     if repo:
         command.extend(["--repo", repo])
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    result = subprocess.run(command, capture_output=True, encoding="utf-8", check=False)
     if result.returncode != 0:
         raise RuntimeError(f"gh label list failed: {result.stderr.strip()}")
-    return json.loads(result.stdout)
+    labels = json.loads(result.stdout)
+    if len(labels) >= LABEL_LIST_LIMIT:
+        raise RuntimeError(
+            f"The repository has {LABEL_LIST_LIMIT} or more labels, so the list may be truncated; refusing to compare"
+        )
+    return labels
 
 
 def run_label_mutation(command: list[str], operation: str, name: str) -> None:
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    result = subprocess.run(command, capture_output=True, encoding="utf-8", check=False)
     if result.returncode != 0:
         raise RuntimeError(f"gh label {operation} failed for '{name}': {result.stderr.strip()}")
 
@@ -90,8 +96,11 @@ def create_label(gh: str, repo: str | None, label: dict) -> None:
     run_label_mutation(command, "create", label["name"])
 
 
-def update_label(gh: str, repo: str | None, label: dict) -> None:
-    command = [gh, "label", "edit", label["name"], "--description", label.get("description", "")]
+def update_label(gh: str, repo: str | None, label: dict, existing_name: str | None = None) -> None:
+    # GitHub label names are case-insensitive, so edit by the hosted spelling and rename to the catalog's.
+    command = [gh, "label", "edit", existing_name or label["name"], "--description", label.get("description", "")]
+    if existing_name is not None and existing_name != label["name"]:
+        command.extend(["--name", label["name"]])
     if label.get("color"):
         command.extend(["--color", label["color"]])
     if repo:
@@ -102,40 +111,45 @@ def update_label(gh: str, repo: str | None, label: dict) -> None:
 def label_differs(label: dict, existing: dict) -> bool:
     if label.get("description") and existing.get("description") != label["description"]:
         return True
-    if label.get("color") and existing.get("color", "").lower() != label["color"].lower():
+    if label.get("color") and (existing.get("color") or "").lower() != label["color"].lower():
         return True
-    return False
+    return existing.get("name") != label["name"]
+
+
+def index_by_name(hosted: list[dict]) -> dict[str, dict]:
+    """GitHub label names are case-insensitive, so key them in lower case."""
+    return {entry["name"].lower(): entry for entry in hosted}
 
 
 def audit(catalog: list[dict], hosted: list[dict]) -> list[str]:
-    hosted_by_name = {entry["name"]: entry for entry in hosted}
+    hosted_by_name = index_by_name(hosted)
     findings: list[str] = []
     for label in catalog:
         name = label["name"]
-        existing = hosted_by_name.get(name)
+        existing = hosted_by_name.get(name.lower())
         if existing is None:
             findings.append(f"missing: {name}")
         elif label_differs(label, existing):
             findings.append(f"drift: {name} differs from the canonical catalog")
     for legacy_name, replacement in LEGACY_LABELS.items():
-        if legacy_name in hosted_by_name:
+        if legacy_name.lower() in hosted_by_name:
             findings.append(f"legacy label: '{legacy_name}' is still hosted (replace with '{replacement}')")
     return findings
 
 
 def apply_catalog(gh: str, repo: str | None, catalog: list[dict], hosted: list[dict]) -> list[str]:
-    hosted_by_name = {entry["name"]: entry for entry in hosted}
+    hosted_by_name = index_by_name(hosted)
     report: list[str] = []
     for label in catalog:
-        existing = hosted_by_name.get(label["name"])
+        existing = hosted_by_name.get(label["name"].lower())
         if existing is None:
             create_label(gh, repo, label)
             report.append(f"created: {label['name']}")
         elif label_differs(label, existing):
-            update_label(gh, repo, label)
+            update_label(gh, repo, label, existing["name"])
             report.append(f"updated: {label['name']}")
     for legacy_name, replacement in LEGACY_LABELS.items():
-        if legacy_name in hosted_by_name:
+        if legacy_name.lower() in hosted_by_name:
             report.append(f"legacy label present, not removed: '{legacy_name}' (replace with '{replacement}')")
     return report
 

@@ -5,8 +5,9 @@
 **Sync behavior**: Never copied into target repositories
 
 Record of the keep/adapt decision for each distributed skill, made by reading
-the full upstream skills at the pinned revisions below. Both upstreams are
-MIT-licensed. Skills marked "ideas only" restate adopted ideas in repo-seed's
+the full upstream skills at the pinned revisions below. The license of each
+derived skill's upstream is recorded in `pack/skill-sources.json`. Skills
+marked "ideas only" restate adopted ideas in repo-seed's
 own words and copy no text, so they need no `pack/skill-sources.json` entry
 (see [Upstream-derived skills](upstream-skills.md)).
 
@@ -27,11 +28,14 @@ upstream defects were not reviewed.
 | `bug-fix` | Adapt, ideas only | Reliable reproduction, falsifiable hypotheses, one variable at a time, greppable debug markers, real-seam regression test, stop after repeated failures, secret redaction | Shell script template, mandatory phase gates, `superpowers:` namespace, automatic commits and PRs |
 | `code-review` | Adapt, ideas only | Merge-base pinning, cited rules, smells as judgement calls, standards findings kept separate; later, acceptance review against the originating spec, omitted and unrequested work, regression-test evidence | Parallel sub-agents, full smell catalog, issue-tracker fetch, severity labels, posting review actions |
 | `refactor` | Keep | None | The inspected upstreams do architecture discovery, not behavior-preserving edits |
-| `dependency-upgrade` | Keep | None | No upstream equivalent was found in the two inspected repositories |
+| `dependency-upgrade` | Keep | None | No upstream equivalent was found in the inspected repositories |
 | `technical-design` | Keep | None | Upstreams publish to issue trackers or write plans under their own paths |
 | `documentation-bootstrap` | Keep | None | `domain-modeling` is interactive and does not replace evidence-only documentation |
 | `issue-authoring` | New, ideas only (`triage`) | Concept-level duplicate search, claim verification, durable acceptance criteria, prior-rejection check | Tracker state machine, role labels, `.out-of-scope/` writes, automatic hosted writes |
 | `issue-implementation` | New, ideas only (`implement`, `implement-spec`) | State the ticket first, narrow checks while working, full suite at the end, review the finished work | Integration branches, worktrees, sub-agents, automatic commits, draft PRs, ticket closing |
+| `repository-audit` | New, repo-seed specific | None | Not derived from an upstream. It only orchestrates `sync-docs.py --audit` and adds read-only reporting rules |
+| `repository-bootstrap` | New, repo-seed specific | None | Not derived from an upstream. It only orchestrates a first `sync-docs.py` run and keeps scaffolds opt-in |
+| `repository-upgrade` | New, repo-seed specific | None | Not derived from an upstream. It only orchestrates the newer pack's `sync-docs.py` and owns no migration rules |
 | `test-driven-development` | New, derived (`tdd`, with Superpowers' `test-driven-development`) | Named seams, vertical slices, behavior over implementation, mocks only at boundaries, verified red failure, refactor only when green, mutation check | Iron law, rationalization tables, TDD for every change, extra `tests.md` and `mocking.md` |
 | `code-simplification` | New, derived (`addyosmani/agent-skills`) | Behavior-preservation test, project conventions, clarity over cleverness, one change at a time, modified tests signal a behavior change | `simplify-ignore` hook, slash commands, plugin manifest, evals, language examples, per-change commits |
 | `architecture-review` | New, derived (`improve-codebase-architecture`, with `codebase-design`) | Scoping, reading existing decisions first, friction questions, deletion test, seam discipline, ranking by strength | Generated HTML report, mandatory glossary and ADR files, grilling loop, design-it-twice sub-agents, proposing interfaces |

@@ -100,6 +100,28 @@ class SkillSourceValidationTests(unittest.TestCase):
             with self.subTest(revision=revision):
                 self.assertRejected(self.with_entry(source_revision=revision), "source_revision")
 
+    def test_values_with_a_trailing_newline_are_rejected(self):
+        self.assertRejected(self.with_entry(source_revision=REVISION + "\n"), "source_revision")
+        self.assertRejected(self.with_entry(reviewed="2026-10-15\n"), "reviewed")
+        self.assertRejected(self.with_entry(name="demo\n"), "name")
+
+    def test_duplicate_and_backslash_distributed_files_are_rejected(self):
+        self.assertRejected(self.with_entry(distributed_files=["SKILL.md", "SKILL.md", "NOTICE.md"]), "duplicates")
+        self.assertRejected(self.with_entry(distributed_files=["SKILL.md", "NOTICE.md", "dir\\x.md"]), "POSIX")
+
+    def test_malformed_manifest_shapes_are_reported_not_raised(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            Fixture(root)
+            for assets in (5, "x", {"a": 1}):
+                (root / "manifest.json").write_text(json.dumps({"assets": assets}), encoding="utf-8")
+                with self.subTest(assets=assets):
+                    self.assertRejected(validator.validate(root), "assets must be a list")
+            for assets in ([None], [{"path": 5}], [5, "x"]):
+                (root / "manifest.json").write_text(json.dumps({"assets": assets}), encoding="utf-8")
+                with self.subTest(assets=assets):
+                    validator.validate(root)  # must not raise
+
     def test_missing_provenance_fields_are_rejected(self):
         for field in (
             "upstream_repository",

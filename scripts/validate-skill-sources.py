@@ -59,9 +59,10 @@ def skill_files(manifest: dict, surface: str) -> dict[str, set[str]]:
     """Map skill name -> files (relative to the skill directory) in the manifest."""
     result: dict[str, set[str]] = {}
     prefix = f"{surface}/"
-    for asset in manifest.get("assets", []):
-        path = asset.get("path", "") if isinstance(asset, dict) else ""
-        if path.startswith(prefix):
+    assets = manifest.get("assets")
+    for asset in assets if isinstance(assets, list) else []:
+        path = asset.get("path") if isinstance(asset, dict) else None
+        if isinstance(path, str) and path.startswith(prefix):
             name, _, relative = path[len(prefix):].partition("/")
             if relative:
                 result.setdefault(name, set()).add(relative)
@@ -74,7 +75,7 @@ def check_entry(entry: object, index: int, pack_root: Path, manifest: dict, erro
         errors.append(f"{context} must be an object")
         return None
     name = entry.get("name")
-    if not isinstance(name, str) or not SKILL_NAME_PATTERN.match(name):
+    if not isinstance(name, str) or not SKILL_NAME_PATTERN.fullmatch(name):
         errors.append(f"{context}.name must be a valid skill name")
         return None
     context = f"skill '{name}'"
@@ -85,7 +86,7 @@ def check_entry(entry: object, index: int, pack_root: Path, manifest: dict, erro
         repository = None
     posix_path(entry.get("source_path"), f"{context}: source_path", errors)
     revision = entry.get("source_revision")
-    if not isinstance(revision, str) or not REVISION_PATTERN.match(revision):
+    if not isinstance(revision, str) or not REVISION_PATTERN.fullmatch(revision):
         errors.append(f"{context}: source_revision must be a full 40-character lowercase commit SHA")
         revision = None
     license_id = entry.get("license")
@@ -99,7 +100,7 @@ def check_entry(entry: object, index: int, pack_root: Path, manifest: dict, erro
     if entry.get("adaptation") not in ADAPTATIONS:
         errors.append(f"{context}: adaptation must be one of {', '.join(sorted(ADAPTATIONS))}")
     reviewed = entry.get("reviewed")
-    if not isinstance(reviewed, str) or not DATE_PATTERN.match(reviewed):
+    if not isinstance(reviewed, str) or not DATE_PATTERN.fullmatch(reviewed):
         errors.append(f"{context}: reviewed must be a YYYY-MM-DD date")
     review = entry.get("security_review")
     if not isinstance(review, str) or not review.strip():
@@ -169,6 +170,9 @@ def validate(pack_root: Path) -> list[str]:
     manifest = load_json(pack_root / "manifest.json", errors)
     registry = load_json(pack_root / REGISTRY_FILE, errors)
     if manifest is None or registry is None:
+        return errors
+    if not isinstance(manifest.get("assets"), list):
+        errors.append("manifest.json: assets must be a list")
         return errors
     if registry.get("schema_version") != SCHEMA_VERSION:
         errors.append(f"{REGISTRY_FILE}: schema_version must be {SCHEMA_VERSION}")
