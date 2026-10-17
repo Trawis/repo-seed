@@ -15,18 +15,30 @@ DEFAULT_CHANGELOG = Path(__file__).resolve().parents[1] / "CHANGELOG.md"
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
+def heading_lines(lines: list[str]) -> list[int]:
+    """Indexes of `## ` headings, ignoring lines inside fenced code blocks."""
+    indexes: list[int] = []
+    fence: str | None = None
+    for index, line in enumerate(lines):
+        stripped = line.lstrip()
+        marker = stripped[:3] if stripped.startswith(("```", "~~~")) else None
+        if marker is not None:
+            fence = None if fence == marker else (fence or marker)
+        elif fence is None and line.startswith("## "):
+            indexes.append(index)
+    return indexes
+
+
 def entry_for(changelog: str, version: str) -> str:
     """Return the body under `## <version> - <date>`, up to the next `## ` heading."""
     if not SEMVER_PATTERN.fullmatch(version):
         raise ValueError(f"Not a MAJOR.MINOR.PATCH version: {version}")
-    lines = changelog.splitlines()
-    start = next(
-        (index for index, line in enumerate(lines) if line.startswith(f"## {version} - ")),
-        None,
-    )
+    lines = changelog.split("\n")
+    headings = heading_lines(lines)
+    start = next((index for index in headings if lines[index].startswith(f"## {version} - ")), None)
     if start is None:
         raise ValueError(f"CHANGELOG.md has no entry for version {version}")
-    end = next((index for index in range(start + 1, len(lines)) if lines[index].startswith("## ")), len(lines))
+    end = next((index for index in headings if index > start), len(lines))
     body = "\n".join(lines[start + 1 : end]).strip()
     if not body:
         raise ValueError(f"CHANGELOG.md entry for version {version} is empty")

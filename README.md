@@ -259,8 +259,12 @@ pack/
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # documentation about repo-seed
-scripts/                     # tooling: build, labels, skill provenance check
+scripts/                     # tooling: release build, label sync, skill provenance
+                             # check, skill mirror, changelog-to-release-notes
 tests/                       # pack and tooling tests
+.github/                     # this repository's CI, release, and reusable audit workflows
+.claude/settings.json        # turns the distributed skill wrappers off for repo-seed itself
+CHANGELOG.md                 # release history; the top entry is the release notes
 ```
 
 Skills hold repeatable workflows. Policy and language rules stay in

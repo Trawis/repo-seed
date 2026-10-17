@@ -2761,8 +2761,62 @@ class GitHubLabelToolTests(unittest.TestCase):
 
     def test_audit_reports_no_findings_for_a_matching_catalog(self):
         catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
-        findings = github_labels.audit(catalog, catalog)
-        self.assertEqual(findings, [])
+        # Hosted copies differ in colour case and carry an unrelated project label.
+        hosted = [{**label, "color": label["color"].upper()} for label in catalog]
+        hosted.append({"name": "component: cli", "description": "project-specific", "color": "ffffff"})
+        self.assertEqual(github_labels.audit(catalog, hosted), [])
+
+    def test_label_names_match_case_insensitively_and_apply_renames_to_the_catalog_spelling(self):
+        catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
+        hosted = [{"name": "Type: Bug", "description": "d", "color": "d73a4a"}]
+        self.assertEqual(github_labels.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
+        done = subprocess.CompletedProcess([], 0, "", "")
+        with mock.patch.object(github_labels.subprocess, "run", return_value=done) as run:
+            report = github_labels.apply_catalog("gh", "o/r", catalog, hosted)
+        self.assertEqual(report, ["updated: type: bug"])
+        self.assertEqual(
+            run.call_args.args[0],
+            ["gh", "label", "edit", "Type: Bug", "--description", "d", "--name", "type: bug", "--color", "d73a4a", "--repo", "o/r"],
+        )
+
+    def test_a_null_hosted_colour_is_drift_not_a_crash(self):
+        catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
+        hosted = [{"name": "type: bug", "description": "d", "color": None}]
+        self.assertEqual(github_labels.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
+
+    def test_create_and_update_pass_colour_and_repository_to_gh(self):
+        label = {"name": "type: bug", "description": "d", "color": "d73a4a"}
+        done = subprocess.CompletedProcess([], 0, "", "")
+        with mock.patch.object(github_labels.subprocess, "run", return_value=done) as run:
+            github_labels.create_label("gh", "o/r", label)
+            github_labels.update_label("gh", None, label)
+        created, updated = (call.args[0] for call in run.call_args_list)
+        self.assertEqual(created, ["gh", "label", "create", "type: bug", "--description", "d", "--color", "d73a4a", "--repo", "o/r"])
+        self.assertEqual(updated, ["gh", "label", "edit", "type: bug", "--description", "d", "--color", "d73a4a"])
+        for call in run.call_args_list:
+            self.assertEqual(call.kwargs.get("encoding"), "utf-8")
+
+    def test_check_exits_1_on_drift_and_0_when_clean(self):
+        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        for hosted, expected, output in (
+            (catalog, 0, "no drift detected"),
+            (catalog[1:], 1, "missing: " + catalog[0]["name"]),
+        ):
+            with self.subTest(expected=expected):
+                out = io.StringIO()
+                with mock.patch.object(github_labels, "require_gh", return_value="gh"), mock.patch.object(
+                    github_labels, "fetch_hosted_labels", return_value=hosted
+                ), contextlib.redirect_stdout(out):
+                    code = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
+                self.assertEqual(code, expected)
+                self.assertIn(output, out.getvalue())
+
+    def test_a_possibly_truncated_label_list_is_refused(self):
+        listing = json.dumps([{"name": f"l{i}", "description": "", "color": "ffffff"} for i in range(github_labels.LABEL_LIST_LIMIT)])
+        done = subprocess.CompletedProcess([], 0, listing, "")
+        with mock.patch.object(github_labels.subprocess, "run", return_value=done):
+            with self.assertRaisesRegex(RuntimeError, "may be truncated"):
+                github_labels.fetch_hosted_labels("gh", None)
 
     def test_apply_creates_missing_updates_drifted_and_never_deletes(self):
         catalog = [
@@ -2781,7 +2835,7 @@ class GitHubLabelToolTests(unittest.TestCase):
             report = github_labels.apply_catalog("gh", None, catalog, hosted)
 
         create.assert_called_once_with("gh", None, catalog[1])
-        update.assert_called_once_with("gh", None, catalog[0])
+        update.assert_called_once_with("gh", None, catalog[0], "type: bug")
         self.assertTrue(any("created: type: feature" in line for line in report))
         self.assertTrue(any("updated: type: bug" in line for line in report))
         self.assertTrue(any("legacy label present, not removed: 'enhancement'" in line for line in report))
@@ -2796,8 +2850,11 @@ class GitHubLabelToolTests(unittest.TestCase):
 
     def test_main_reports_a_clear_error_without_the_github_cli(self):
         with mock.patch.object(shutil, "which", return_value=None):
-            result = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                result = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
         self.assertEqual(result, 2)
+        self.assertIn("GitHub CLI", err.getvalue())
 
     def test_cli_help_documents_check_and_apply(self):
         result = subprocess.run(

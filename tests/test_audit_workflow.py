@@ -13,8 +13,9 @@ class AuditWorkflowTests(unittest.TestCase):
         self.text = WORKFLOW.read_text(encoding="utf-8")
 
     def test_it_is_only_a_reusable_workflow(self):
-        triggers = re.search(r"(?ms)^on:\n(.*?)^\S", self.text + "\nx").group(1)
-        self.assertEqual(re.findall(r"^  (\w+):", triggers, re.M), ["workflow_call"])
+        block = re.search(r"(?ms)^on:\n(.*?)^\S", self.text + "\nx")
+        self.assertIsNotNone(block, "audit.yml has no top-level on: block")
+        self.assertEqual(re.findall(r"^  (\w+):", block.group(1), re.M), ["workflow_call"])
         self.assertNotIn("pull_request_target", self.text)
 
     def test_permissions_are_limited_to_reading_contents_and_writing_issues(self):

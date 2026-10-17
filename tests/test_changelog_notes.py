@@ -52,6 +52,12 @@ class ChangelogNotesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "no entry for version 2.0"):
             notes.entry_for(SAMPLE.replace("## 2.0.0", "## 2.0.01"), "2.0.0")
 
+    def test_a_heading_line_inside_a_code_fence_does_not_end_the_entry(self):
+        text = "## 1.0.0 - 2026-01-01\n\nBefore\n\n```md\n## not a heading\n```\n\nAfter\n\n## 0.9.0 - 2025-12-01\n\nold\n"
+        self.assertEqual(notes.entry_for(text, "1.0.0"), "Before\n\n```md\n## not a heading\n```\n\nAfter")
+        tilde = text.replace("```", "~~~")
+        self.assertIn("After", notes.entry_for(tilde, "1.0.0"))
+
     def test_missing_empty_and_malformed_versions_are_errors(self):
         with self.assertRaisesRegex(ValueError, "no entry"):
             notes.entry_for(SAMPLE, "9.9.9")
