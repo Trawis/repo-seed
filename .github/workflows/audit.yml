@@ -5,12 +5,21 @@ name: Audit a repo-seed target
 # release, checks its checksum, runs `sync-docs.py --audit` against the calling
 # repository, and keeps exactly one issue open while the audit reports drift.
 # The job fails only when the tooling itself fails, not when drift is found.
+#
+# Trust model: the release archive and its SHA-256 come from the same release, so
+# the checksum detects corruption, not a compromised publisher. The script runs in
+# the caller's checkout without the job token (checkout does not persist it, and
+# only the two `gh` steps receive it), so it cannot use the token to write.
 
 on:
   workflow_call:
 
 permissions:
   contents: read
+
+concurrency:
+  group: repo-seed-audit-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
   audit:
@@ -27,12 +36,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check that this repository uses repo-seed
+        run: |
+          if [ -f .repo-seed-state.json ]; then
+            echo "USES_REPO_SEED=true" >> "$GITHUB_ENV"
+          else
+            echo "::notice::No .repo-seed-state.json in this repository, so there is nothing to audit."
+          fi
 
       - uses: actions/setup-python@v6
+        if: env.USES_REPO_SEED == 'true'
         with:
           python-version: "3.13"
 
       - name: Download the latest repo-seed release
+        if: env.USES_REPO_SEED == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -51,6 +72,7 @@ jobs:
           echo "PACK_DIR=$pack_root/extracted/pack" >> "$GITHUB_ENV"
 
       - name: Audit this repository
+        if: env.USES_REPO_SEED == 'true'
         run: |
           set -euo pipefail
           python "$PACK_DIR/files/scripts/sync-docs.py" \
@@ -63,13 +85,19 @@ jobs:
           fi
 
       - name: Open, update, or close the drift issue
+        if: env.USES_REPO_SEED == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          number=$(gh issue list --state open --limit 100 --json number,title \
+          if [ "$(gh repo view "$GITHUB_REPOSITORY" --json hasIssuesEnabled --jq .hasIssuesEnabled)" != "true" ]; then
+            echo "::notice::Issues are disabled in this repository, so drift is reported only in the job log."
+            exit 0
+          fi
+          numbers=$(gh issue list --state open --limit 1000 --json number,title \
             --jq '.[] | "\(.number)\t\(.title)"' \
-            | awk -F '\t' -v title="$ISSUE_TITLE" '$2 == title { print $1; exit }')
+            | awk -F '\t' -v title="$ISSUE_TITLE" '$2 == title { print $1 }')
+          number=$(printf '%s\n' "$numbers" | head -n 1)
           if [ "$DRIFT" = "true" ]; then
             {
               echo "The latest repo-seed release is \`$PACK_TAG\`. \`sync-docs.py --audit\` reported:"
@@ -85,6 +113,8 @@ jobs:
             else
               gh issue create --title "$ISSUE_TITLE" --body-file "$RUNNER_TEMP/body.md"
             fi
-          elif [ -n "$number" ]; then
-            gh issue close "$number" --comment "The audit is clean against repo-seed \`$PACK_TAG\`."
+          else
+            for stale in $numbers; do
+              gh issue close "$stale" --comment "The audit is clean against repo-seed \`$PACK_TAG\`."
+            done
           fi

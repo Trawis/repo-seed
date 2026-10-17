@@ -28,6 +28,21 @@ class AuditWorkflowTests(unittest.TestCase):
         self.assertEqual(self.text.count('/sync-docs.py"'), 1)
         self.assertIn('--target "$GITHUB_WORKSPACE" --audit', self.text)
 
+    def test_the_checkout_does_not_persist_the_token_and_runs_are_serialized(self):
+        checkout = re.search(r"uses: actions/checkout@\S+\n((?:\s+.+\n)+)", self.text)
+        self.assertIsNotNone(checkout, "audit.yml has no checkout step")
+        self.assertIn("persist-credentials: false", checkout.group(1))
+        self.assertRegex(self.text, r"(?m)^concurrency:\n  group: .*github\.repository.*\n  cancel-in-progress: false$")
+
+    def test_a_repository_without_state_or_issues_is_skipped_not_failed(self):
+        self.assertIn("-f .repo-seed-state.json", self.text)
+        self.assertIn("hasIssuesEnabled", self.text)
+        self.assertIn("--limit 1000", self.text)
+
+    def test_the_release_is_tagged_at_the_tested_commit(self):
+        release = (REPOSITORY_ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+        self.assertIn('--target "$GITHUB_SHA"', release)
+
     def test_the_readme_caller_matches_the_workflow_path(self):
         readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("Trawis/repo-seed/.github/workflows/audit.yml@v", readme)
