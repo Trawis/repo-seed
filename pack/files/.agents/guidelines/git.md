@@ -48,7 +48,10 @@ the repository clearly uses `develop` or `dev`.
 - Keep commits focused: one logical change each.
 - Keep PR titles and descriptions concise and use the repository template.
 - Never force-push a long-lived branch, bypass protection, auto-merge, or approve your own PR.
-- Do not include assistant, model, or tool names in repository history or release text.
+- Do not add AI attribution (assistant or model names, co-author trailers,
+  "generated with" lines) to commit messages or release text. If the repository
+  or the agent host requires an attribution trailer, use exactly that and
+  nothing more.
 
 ## Merging
 
