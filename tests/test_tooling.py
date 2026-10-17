@@ -147,6 +147,35 @@ class SkillSourceValidationTests(unittest.TestCase):
         self.assertRejected(self.with_entry(adaptation="forked"), "adaptation")
         self.assertRejected(self.with_entry(upstream_repository="git@github.com:a/b.git"), "https URL")
 
+    def test_unhashable_provenance_values_are_validation_errors(self):
+        cases = {
+            "license object": ({"license": {"id": "MIT"}}, "not an allowed redistributable license"),
+            "license list": ({"license": ["MIT"]}, "not an allowed redistributable license"),
+            "adaptation object": ({"adaptation": {"x": 1}}, "adaptation must be one of"),
+            "distributed_files object": (
+                {"distributed_files": ["SKILL.md", "NOTICE.md", {"a": 1}]},
+                "distributed_files must be a non-empty list of strings without duplicates",
+            ),
+            "distributed_files number": (
+                {"distributed_files": ["SKILL.md", "NOTICE.md", 3]},
+                "distributed_files must be a non-empty list of strings without duplicates",
+            ),
+        }
+        for name, (overrides, fragment) in cases.items():
+            registry = {"schema_version": 1, "skills": [entry(**overrides)]}
+            with self.subTest(name):
+                self.assertRejected(self.errors(registry=registry), fragment)
+
+    def test_cli_exits_1_without_a_traceback_for_unhashable_provenance_values(self):
+        with tempfile.TemporaryDirectory() as temp:
+            Fixture(Path(temp), registry={"schema_version": 1, "skills": [entry(license={"id": "MIT"})]})
+            result = subprocess.run(
+                [sys.executable, str(TOOLING), "check", "--source", temp], capture_output=True, text=True
+            )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("error:", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
     def test_skill_with_notice_but_no_registry_entry_is_rejected(self):
         errors = self.errors(registry={"schema_version": 1, "skills": []})
         self.assertRejected(errors, "has no skill-sources.json entry")
