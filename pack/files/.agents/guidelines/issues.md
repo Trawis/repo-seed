@@ -58,6 +58,10 @@ disagrees.
 Do not replace `type:*` labels with GitHub's native issue types. The
 convention must stay portable across personal accounts and organizations.
 
+Labels named here may not exist on the hosted repository. Applying a missing
+label through the API or CLI can fail or create an unstyled label; check the
+hosted list first (see GitHub-Hosted Labels below).
+
 ## Priority Labels
 
 Priority is optional. Do not require it, and do not add a priority field or

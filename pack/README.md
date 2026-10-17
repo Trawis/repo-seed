@@ -1,6 +1,6 @@
 # Repo Seed Pack
 
-Package-only instructions for the downloadable pack. This file and `LICENSE` are in the archive but never synced into targets.
+Package-only instructions for the downloadable pack. This file, `LICENSE`, `github-labels.json`, and `skill-sources.json` are in the archive but never synced into targets.
 
 ## First Sync
 
@@ -58,7 +58,9 @@ python /path/to/extracted/pack/files/scripts/sync-docs.py \
 ```
 
 The recorded profile and conventions are reused when `--profile` and
-`--conventions` are omitted. The copied target script cannot cross
+`--conventions` are omitted. Pass `--conventions ""` to clear the recorded
+conventions. `--audit` reports drift without writing and exits 0 even when it
+finds some, so read its output rather than its exit code. The copied target script cannot cross
 manifest-schema changes and may lack newer fixes.
 
 ## Upgrading a Pre-5.0 Target

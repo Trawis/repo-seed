@@ -47,8 +47,6 @@ def require_string_list(value: object, context: str) -> tuple[str, ...]:
 
 
 def optional_string_list(value: object, context: str) -> tuple[str, ...]:
-    if value is None:
-        return ()
     if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
         raise ValueError(f"{context} must be a string array")
     if len(value) != len(set(value)):
@@ -84,7 +82,7 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
 
     profiles = require_string_list(data.get("profiles"), "manifest.profiles")
 
-    package_files = optional_string_list(data.get("package_files"), "manifest.package_files")
+    package_files = optional_string_list(data.get("package_files", []), "manifest.package_files")
     for index, package_file in enumerate(package_files):
         package_path = safe_relative_path(package_file)
         if package_file == MANIFEST_FILE or package_path.parts[0] == FILES_DIRECTORY:
@@ -109,7 +107,7 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
         reject_project_owned_tree_path(asset_path, f"{context}.path")
         if asset_path in seen_paths:
             raise ValueError(f"Duplicate asset path: {asset_path}")
-        if asset_type not in {"managed", "template"}:
+        if not isinstance(asset_type, str) or asset_type not in {"managed", "template"}:
             raise ValueError(f"{context}.type must be managed or template")
 
         asset_profiles = require_string_list(asset.get("profiles"), f"{context}.profiles")
@@ -131,7 +129,8 @@ def load_manifest(pack_root: Path) -> dict[str, object]:
                 raise ValueError(f"{context}.path must be under docs/templates")
             if scaffold_group is not None:
                 if (
-                    scaffold_group not in VALID_SCAFFOLD_GROUPS
+                    not isinstance(scaffold_group, str)
+                    or scaffold_group not in VALID_SCAFFOLD_GROUPS
                     or not isinstance(scaffold_target, str)
                 ):
                     raise ValueError(f"{context} must define a valid scaffold group and target")
@@ -209,7 +208,7 @@ def build_archive(source_root: Path, output_dir: Path) -> Path:
     pack_root = source_root / PACK_DIRECTORY
     manifest = load_manifest(pack_root)
     version = manifest["pack_version"]
-    package_files = optional_string_list(manifest.get("package_files"), "manifest.package_files")
+    package_files = optional_string_list(manifest.get("package_files", []), "manifest.package_files")
     assets = manifest["assets"]
     output_dir.mkdir(parents=True, exist_ok=True)
     archive = output_dir / f"repo-seed-pack-{version}.zip"
