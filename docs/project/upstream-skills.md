@@ -93,11 +93,11 @@ resources are allowed only after explicit review and are listed in
 ## Validation
 
 ```bash
-python scripts/validate-skill-sources.py
+python scripts/repo-seed.py check
 python -m unittest discover -s tests -v
 ```
 
-`validate-skill-sources.py` reads local files only. It fails when a derived
+`repo-seed.py check` reads local files only. It fails when a derived
 skill lacks provenance, has an unpinned revision or disallowed license, ships
 files that differ from `distributed_files`, includes hooks or unreviewed
 non-Markdown files, contains a network fetch command, omits the `NOTICE.md`

@@ -1,14 +1,7 @@
 name: Sync a repo-seed target
 
-# Reusable workflow for repositories that use repo-seed. A target calls it on a
-# schedule (see "Automatic Sync Pull Request" in the README). It downloads the
-# latest release (or the pinned one), checks its checksum, runs `sync-docs.py`
-# against the calling repository with its recorded profile and conventions, and
-# keeps one pull request open on `chore/repo-seed-sync` while the managed files
-# differ from the pack. It never passes a `--scaffold-*` flag, so project-owned
-# files are not touched. Trust model: the script that runs is the release's own;
-# the checksum detects corruption, not a compromised publisher, and the script
-# runs in steps that do not hold the write token.
+# Reusable workflow: keeps one pull request open on chore/repo-seed-sync while a
+# repository's managed files differ from the repo-seed release. See the README.
 
 on:
   workflow_call:

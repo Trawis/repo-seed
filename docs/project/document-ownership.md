@@ -40,7 +40,7 @@ belongs in `upgrading-to-5.md`.
 
 ## Upstream-Derived Skills
 
-`pack/skill-sources.json` and `scripts/validate-skill-sources.py` are
+`pack/skill-sources.json` and `scripts/repo-seed.py check` are
 repo-seed-side tooling and never synced. Derived
 skills ship through `pack/manifest.json` like other managed skills, with a `NOTICE.md`. See
 [Upstream-derived skills](upstream-skills.md).
@@ -72,7 +72,7 @@ repo-seed instructions into it.
 
 `.agents/guidelines/issues.md` is the only source for issue creation, labels,
 and issue structure, and the only part of this catalog sent to targets.
-`pack/github-labels.json` and `scripts/sync-github-labels.py` are
+`pack/github-labels.json` and `scripts/repo-seed.py labels` are
 maintainer-side: the label catalog and its optional reconciler (see
 [README](../../README.md)). Repository files cannot prove which labels exist in
 GitHub. Label reconciliation is separate from file sync and from `--audit`,
