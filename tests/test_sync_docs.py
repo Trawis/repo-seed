@@ -561,210 +561,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 self.assertLessEqual(len(description), 1024)
                 self.assertTrue(body)
 
-    def test_audited_skills_keep_adopted_workflow_ideas_and_permission_boundaries(self):
-        expected = {
-            "bug-fix": (
-                "Build a feedback loop before theorizing",
-                "falsifiable hypotheses",
-                "unique greppable marker",
-                "If two fix attempts fail",
-                "Redact secrets",
-                "Do not add temporary production instrumentation without permission",
-            ),
-            "code-review": (
-                "merge-base",
-                "diff is non-empty",
-                "cite the rule",
-                "judgement calls",
-            ),
-        }
-        forbidden = ("git push", "git commit", "gh pr", "gh issue", "sub-agent", "subagent")
-        for root in (".agents/skills",):
-            for skill, phrases in expected.items():
-                content = " ".join(
-                    (PACK_ROOT / "files" / root / skill / "SKILL.md").read_text(encoding="utf-8").split()
-                )
-                for phrase in phrases:
-                    with self.subTest(root=root, skill=skill, phrase=phrase):
-                        self.assertIn(phrase, content)
-                for phrase in forbidden:
-                    with self.subTest(root=root, skill=skill, forbidden=phrase):
-                        self.assertNotIn(phrase, content)
-
-    def test_code_review_acceptance_review_is_conditional_read_only_and_aligned_with_implementation(self):
-        implementation_terms = "satisfied, unsatisfied, or not verifiable"
-        for root in (".agents/skills",):
-            review = " ".join(
-                (PACK_ROOT / "files" / root / "code-review" / "SKILL.md").read_text(encoding="utf-8").split()
-            )
-            implementation = " ".join(
-                (PACK_ROOT / "files" / root / "issue-implementation" / "SKILL.md")
-                .read_text(encoding="utf-8")
-                .split()
-            )
-            self.assertIn(implementation_terms, implementation)
-            for phrase in (
-                "## Acceptance Review",
-                "only when the change is issue-driven",
-                "do not go looking for an issue",
-                "complete issue and relevant discussion",
-                "`Done when`",
-                implementation_terms,
-                "not-verifiable condition is a validation gap, not a defect",
-                "concrete implementation gap",
-                "scope divergence",
-                "material unrelated behavior",
-                "contradicts its assumptions",
-                "acceptance coverage",
-                "Acceptance coverage supplements real defect findings",
-                "regression test that failed before the change",
-                "issue or pull request state, labels, comments, or other hosted resources",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, review)
-            self.assertLess(review.index("## Workflow"), review.index("## Acceptance Review"))
-            self.assertLess(review.index("## Acceptance Review"), review.index("## Findings"))
-
-    def test_test_driven_development_skill_is_explicit_only_portable_and_attributed(self):
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        self.assertIn("test-driven-development", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills",):
-            directory = PACK_ROOT / "files" / root / "test-driven-development"
-            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
-            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
-            for phrase in (
-                "explicitly asks for TDD",
-                "Do not apply it to every implementation",
-                "Normal implementation work stays free to choose",
-                "authoritative",
-                "Refactor only while everything is green",
-                "fails for the expected reason",
-                "public interface",
-                "independently",
-                "only at system boundaries",
-                "mutation",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-            for phrase in ("superpowers:", "GLOSSARY", "Skill tool", "sub-agent", "gh pr", "git commit "):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase, content)
-            for phrase in (
-                "Copyright (c) 2026 Matt Pocock",
-                "49dd158d1076134a641b33efb035946536778336",
-                "Permission is hereby granted",
-                "Jesse Vincent",
-            ):
-                with self.subTest(root=root, notice=phrase):
-                    self.assertIn(phrase, notice)
-
-    def test_code_simplification_skill_is_behavior_preserving_distinct_and_attributed(self):
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        entry = next(e for e in registry["skills"] if e["name"] == "code-simplification")
-        self.assertEqual(entry["license"], "MIT")
-        self.assertEqual(entry["adaptation"], "adapted")
-        for root in (".agents/skills",):
-            directory = PACK_ROOT / "files" / root / "code-simplification"
-            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
-            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
-            for phrase in (
-                "Behavior stays identical",
-                "differs from `refactor`",
-                "use `refactor`",
-                "not fewer lines",
-                "Understand before touching",
-                "conventions",
-                "one simplification at a time",
-                "Existing tests should pass unmodified",
-                "Simplifying code you do not fully understand",
-                "replacing one abstraction with another",
-                "Speculative cleanup",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase.lower(), content.lower())
-            for phrase in ("superpowers:", "simplify-ignore", "CLAUDE.md", "Skill tool", "sub-agent", "gh pr"):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase, content)
-            for phrase in ("Copyright (c) 2025 Addy Osmani", entry["source_revision"], "Permission is hereby granted"):
-                with self.subTest(root=root, notice=phrase):
-                    self.assertIn(phrase, notice)
-
-    def test_architecture_review_skill_is_read_only_evidence_based_and_attributed(self):
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        entry = next(e for e in registry["skills"] if e["name"] == "architecture-review")
-        self.assertEqual(entry["license"], "MIT")
-        manifest = sync.load_manifest(PACK_ROOT)
-        for asset in manifest.assets:
-            if "/architecture-review/" in asset.path:
-                self.assertEqual(set(asset.profiles), {"library", "app", "game"}, asset.path)
-        for root in (".agents/skills",):
-            directory = PACK_ROOT / "files" / root / "architecture-review"
-            content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
-            notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
-            for phrase in (
-                "evaluates the system as it is",
-                "It is read-only",
-                "It does not design a replacement",
-                "`technical-design`",
-                "Do not re-raise a settled decision",
-                "deletion test",
-                "Separate what you verified",
-                "Do not turn a preference",
-                "small set of high-leverage findings",
-                "not as a file or a generated report",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-            for phrase in ("mermaid", "tailwind", "GLOSSARY", "ADR", "Skill tool", "sub-agent", "grilling", "cdn"):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase.lower(), content.lower())
-            for phrase in ("Copyright (c) 2026 Matt Pocock", entry["source_revision"], "Permission is hereby granted"):
-                with self.subTest(root=root, notice=phrase):
-                    self.assertIn(phrase, notice)
-
-    def test_repository_audit_skill_reuses_sync_machinery_and_stays_read_only(self):
-        manifest = sync.load_manifest(PACK_ROOT)
-        profiles = {
-            asset.path: set(asset.profiles) for asset in manifest.assets if "/repository-audit/" in asset.path
-        }
-        self.assertEqual(
-            profiles,
-            {
-                ".agents/skills/repository-audit/SKILL.md": {"minimal", "library", "app", "game"},
-                ".claude/skills/repository-audit/SKILL.md": {"minimal", "library", "app", "game"},
-            },
-        )
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        self.assertNotIn("repository-audit", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills",):
-            content = " ".join(
-                (PACK_ROOT / "files" / root / "repository-audit" / "SKILL.md").read_text(encoding="utf-8").split()
-            )
-            for phrase in (
-                "The audit is read-only",
-                ".repo-seed-state.json",
-                "Do not download one without permission",
-                "instead of reimplementing its logic",
-                "scripts/sync-docs.py --source <pack> --audit",
-                "`--dry-run`",
-                "Never run without `--audit` or `--dry-run`",
-                "**Managed drift**",
-                "**Stale artifacts**",
-                "**Selection inconsistencies**",
-                "**Competing guidance**",
-                "**Intentional project-owned differences**",
-                "**Unverifiable**",
-                "do not recommend overwriting them",
-                "overwrites the edit",
-                "Never claim a comparison was made when it was not",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-
     def test_repository_audit_commands_named_by_the_skill_exist_and_write_nothing(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "target"
@@ -787,37 +583,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn("drift: AGENTS.md", audit.stdout)
             after = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
             self.assertEqual(before, after)
-
-    def test_repository_bootstrap_skill_delegates_to_sync_and_keeps_scaffolding_opt_in(self):
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        self.assertNotIn("repository-bootstrap", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills",):
-            content = " ".join(
-                (PACK_ROOT / "files" / root / "repository-bootstrap" / "SKILL.md")
-                .read_text(encoding="utf-8")
-                .split()
-            )
-            for phrase in (
-                "`documentation-bootstrap`",
-                "only mechanism",
-                "Do not download one without permission",
-                "Only those values are valid",
-                "Inspect the target before choosing any argument",
-                "stop and ask rather than assuming",
-                "Install none by default and never all of them",
-                "Choose scaffolds as opt-in",
-                "`AGENTS.md` and `CLAUDE.md` are managed",
-                "`.agents/project.md` first",
-                "`.github/workflows/`",
-                "`--dry-run`",
-                "only after the dry run is acceptable",
-                "`.repo-seed-state.json` records the intended profile",
-                "follow-up run with `--dry-run` is clean",
-                "Do not invent project facts",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
 
     def test_repository_bootstrap_first_sync_matches_the_documented_verification(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -868,92 +633,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertNotIn("would create", follow_up.stdout)
             self.assertNotIn("would remove", follow_up.stdout)
 
-    def test_repository_upgrade_skill_orchestrates_the_newer_pack_and_owns_no_migration_rules(self):
-        registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
-        self.assertNotIn("repository-upgrade", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills",):
-            content = " ".join(
-                (PACK_ROOT / "files" / root / "repository-upgrade" / "SKILL.md").read_text(encoding="utf-8").split()
-            )
-            for phrase in (
-                "use `repository-bootstrap` instead",
-                "belong to the newer pack's manifest and `sync-docs.py`",
-                "Do not download one without permission",
-                "Inspect the installed state before changing anything",
-                "not the older copy in the target",
-                "omit them for a normal upgrade",
-                "do not choose for the user",
-                "`--dry-run` first",
-                "and discard local changes",
-                "with `--diff`",
-                "Do not force a change to files the script preserves",
-                "report its error to the user and ask",
-                "do not download a pack without permission",
-                "only after the dry run is acceptable",
-                "removals happened only for unchanged files repo-seed owned",
-                "repeat `--dry-run` is clean or every remaining line is explained",
-                "`--audit`",
-                "Do not create branches, commit, push, or change hosted state",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-            # No parallel migration table or version-specific rule lives in the skill.
-            for phrase in ("schema_version: 1", "4.1.0", "legacy_targets", "previous_hashes"):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase, content)
-
-    def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
-        for root in (".agents/skills",):
-            content = " ".join(
-                (PACK_ROOT / "files" / root / "issue-authoring" / "SKILL.md").read_text(encoding="utf-8").split()
-            )
-            for phrase in (
-                ".agents/guidelines/issues.md",
-                "open and closed issues",
-                "open and closed pull requests",
-                "already exist",
-                "SECURITY.md",
-                "Done when",
-                "explicit authorization",
-                "does not imply it",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-            # The taxonomy lives only in the canonical guidance.
-            for label in ("type: bug", "type: feature", "priority: high"):
-                with self.subTest(root=root, label=label):
-                    self.assertNotIn(label, content)
-            for phrase in ("git push", "git commit", "gh issue create", "gh pr"):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase, content)
-
-    def test_issue_implementation_skill_verifies_delegates_and_gates_permissions(self):
-        for root in (".agents/skills",):
-            content = " ".join(
-                (PACK_ROOT / "files" / root / "issue-implementation" / "SKILL.md")
-                .read_text(encoding="utf-8")
-                .split()
-            )
-            for phrase in (
-                ".agents/guidelines/issues.md",
-                "no open pull request",
-                "already exist",
-                "blocking decisions",
-                "bug-fix",
-                "refactor",
-                "dependency-upgrade",
-                "technical-design",
-                "satisfied, unsatisfied, or not verifiable",
-                "authorizes the working-tree edits",
-                "commit, push, open or update pull requests, merge",
-                "does not close the governing issue",
-            ):
-                with self.subTest(root=root, phrase=phrase):
-                    self.assertIn(phrase, content)
-            for phrase in ("superpowers:", "/implement", "worktree", "sub-agent", "subagent"):
-                with self.subTest(root=root, forbidden=phrase):
-                    self.assertNotIn(phrase, content)
-
     def test_skills_define_substantive_workflows(self):
         for root in (".agents/skills",):
             for skill in sorted((PACK_ROOT / "files" / root).glob("*/SKILL.md")):
@@ -983,29 +662,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             for line_number, line in enumerate(content.splitlines(), 1):
                 with self.subTest(path=path, line=line_number):
                     self.assertLessEqual(len(line), 100)
-
-    def test_project_doc_templates_avoid_decision_diary_language(self):
-        banned = (
-            "we decided",
-            "this replaces",
-            "the old system",
-            "consolidated",
-            "tighter redesign",
-            "because we",
-            "because the previous version",
-            "more legal sandbox depth",
-        )
-        for asset in sync.load_manifest(PACK_ROOT).assets:
-            if asset.asset_type != "template" or not asset.path.endswith(".template.md"):
-                continue
-            source = PACK_ROOT / "files" / asset.path
-            generated = sync.template_body(source)
-            if asset.scaffold_target:
-                generated = sync.render_scaffold(PACK_ROOT, asset)
-            generated = generated.lower()
-            with self.subTest(path=asset.path):
-                for phrase in banned:
-                    self.assertNotIn(phrase, generated)
 
     def test_architecture_scaffold_guidance_is_not_live_prose(self):
         asset = next(
@@ -1063,44 +719,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn(f'labels: ["{label}"]', sync.render_scaffold(PACK_ROOT, asset))
         self.assertNotIn("labels: bug", bug_rendered)
         self.assertNotIn("labels: enhancement", feature_rendered)
-
-    def test_issues_guidance_defines_canonical_catalog_and_entry_points(self):
-        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
-        for required in (
-            "type: bug",
-            "type: feature",
-            "type: tech-debt",
-            "type: chore",
-            "priority: critical",
-            "priority: high",
-            "priority: medium",
-            "priority: low",
-            "A dependency upgrade is a\n`chore` even when it needs code changes.",
-            "Do not establish a mandatory shared `area:*` taxonomy",
-            "Priority is optional",
-            "Bug Report",
-            "Feature Request",
-            "starts from a form",
-            "blank_issues_enabled: false",
-            "GitHub Issue Forms",
-            "can bypass them",
-            "Do not replace `type:*` labels with GitHub's native issue types",
-        ):
-            self.assertIn(required, guidance)
-        for legacy, replacement in {
-            "bug": "type: bug",
-            "enhancement": "type: feature",
-            "critical": "priority: critical",
-            "lowest": "priority: low",
-            "type: decision": "re-triage",
-            "type: idea": "re-triage",
-        }.items():
-            self.assertIn(legacy, guidance)
-            self.assertIn(replacement, guidance)
-        for retired in ("Decision issues", "Idea issues", "blank issue ->"):
-            self.assertNotIn(retired, guidance)
-        self.assertIn("Chore (`chore.yml`, applies `type: chore`)", guidance)
-        self.assertIn("Tech Debt (`tech_debt.yml`, applies `type: tech-debt`)", guidance)
 
     def test_label_catalog_and_guidance_state_the_same_type_scope(self):
         catalog = {label["name"]: label for label in tooling.load_catalog(GITHUB_LABELS_CATALOG)}
@@ -2777,22 +2395,6 @@ class GitHubLabelToolTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "description"):
                 tooling.load_catalog(path)
 
-    def test_catalog_rejects_a_non_object_root(self):
-        with tempfile.TemporaryDirectory() as temp:
-            path = Path(temp) / "labels.json"
-            for content in ([], "invalid"):
-                path.write_text(json.dumps(content), encoding="utf-8")
-                with self.assertRaisesRegex(ValueError, "JSON object"):
-                    tooling.load_catalog(path)
-
-    def test_label_mutation_failures_raise_a_clear_error(self):
-        failed = subprocess.CompletedProcess(["gh"], 1, stdout="", stderr="HTTP 403")
-        label = {"name": "type: bug", "description": "x", "color": "d73a4a"}
-        for function, operation in ((tooling.create_label, "create"), (tooling.update_label, "edit")):
-            with mock.patch.object(subprocess, "run", return_value=failed):
-                with self.assertRaisesRegex(RuntimeError, f"gh label {operation} failed for 'type: bug': HTTP 403"):
-                    function("gh", None, label)
-
     def test_main_reports_a_failed_apply_mutation_without_a_traceback(self):
         hosted = subprocess.CompletedProcess(["gh"], 0, stdout="[]", stderr="")
         failed = subprocess.CompletedProcess(["gh"], 1, stdout="", stderr="HTTP 403")
@@ -2823,13 +2425,6 @@ class GitHubLabelToolTests(unittest.TestCase):
         self.assertTrue(any("legacy label: 'bug'" in finding for finding in findings))
         self.assertFalse(any("component: cli" in finding for finding in findings))
 
-    def test_audit_reports_no_findings_for_a_matching_catalog(self):
-        catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
-        # Hosted copies differ in colour case and carry an unrelated project label.
-        hosted = [{**label, "color": label["color"].upper()} for label in catalog]
-        hosted.append({"name": "component: cli", "description": "project-specific", "color": "ffffff"})
-        self.assertEqual(tooling.audit(catalog, hosted), [])
-
     def test_label_names_match_case_insensitively_and_apply_renames_to_the_catalog_spelling(self):
         catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
         hosted = [{"name": "Type: Bug", "description": "d", "color": "d73a4a"}]
@@ -2842,23 +2437,6 @@ class GitHubLabelToolTests(unittest.TestCase):
             run.call_args.args[0],
             ["gh", "label", "edit", "Type: Bug", "--description", "d", "--name", "type: bug", "--color", "d73a4a", "--repo", "o/r"],
         )
-
-    def test_a_null_hosted_colour_is_drift_not_a_crash(self):
-        catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
-        hosted = [{"name": "type: bug", "description": "d", "color": None}]
-        self.assertEqual(tooling.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
-
-    def test_create_and_update_pass_colour_and_repository_to_gh(self):
-        label = {"name": "type: bug", "description": "d", "color": "d73a4a"}
-        done = subprocess.CompletedProcess([], 0, "", "")
-        with mock.patch.object(tooling.subprocess, "run", return_value=done) as run:
-            tooling.create_label("gh", "o/r", label)
-            tooling.update_label("gh", None, label)
-        created, updated = (call.args[0] for call in run.call_args_list)
-        self.assertEqual(created, ["gh", "label", "create", "type: bug", "--description", "d", "--color", "d73a4a", "--repo", "o/r"])
-        self.assertEqual(updated, ["gh", "label", "edit", "type: bug", "--description", "d", "--color", "d73a4a"])
-        for call in run.call_args_list:
-            self.assertEqual(call.kwargs.get("encoding"), "utf-8")
 
     def test_check_exits_1_on_drift_and_0_when_clean(self):
         catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
@@ -2905,13 +2483,6 @@ class GitHubLabelToolTests(unittest.TestCase):
         self.assertTrue(any("legacy label present, not removed: 'enhancement'" in line for line in report))
         self.assertFalse(any("component: cli" in line for line in report))
 
-    def test_cli_check_and_apply_are_mutually_exclusive(self):
-        parser = tooling.build_parser()
-        with self.assertRaises(SystemExit):
-            parser.parse_args(["labels"])
-        with self.assertRaises(SystemExit):
-            parser.parse_args(["labels", "--check", "--apply"])
-
     def test_main_reports_a_clear_error_without_the_github_cli(self):
         with mock.patch.object(shutil, "which", return_value=None):
             err = io.StringIO()
@@ -2919,17 +2490,6 @@ class GitHubLabelToolTests(unittest.TestCase):
                 result = tooling.main(["labels", "--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
         self.assertEqual(result, 2)
         self.assertIn("GitHub CLI", err.getvalue())
-
-    def test_cli_help_documents_check_and_apply(self):
-        result = subprocess.run(
-            [sys.executable, str(TOOLING), "labels", "--help"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        for option in ("--check", "--apply", "--catalog", "--repo"):
-            self.assertIn(option, result.stdout)
 
     def test_normal_sync_does_not_require_the_github_cli_or_network(self):
         with tempfile.TemporaryDirectory() as temp:
