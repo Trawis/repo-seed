@@ -29,7 +29,7 @@ Add only the scaffolding you need:
 ```text
 --scaffold-project-files          # baseline README/CHANGELOG
 --scaffold-github-templates       # bug/feature/tech-debt/chore Issue Forms, PR template
---scaffold-workflows              # optional drift-check workflow, only when missing
+--scaffold-workflows              # two optional workflows (drift issue, sync pull request), only when missing
 --scaffold-editorconfig           # .editorconfig
 --scaffold <name>                 # one on-demand document: architecture, fsd, gdd, user-guide
 ```
@@ -38,9 +38,12 @@ Review the dry run, commit or back up the target, then rerun without
 `--dry-run`. Managed guidance updates only when different. Modified or
 unverified project files are kept.
 
-The `.github/workflows/` tree is always project-owned and never managed. The
-only file the pack can create there is the optional drift check
-(`--scaffold-workflows`), once, and only when missing.
+The `.github/workflows/` tree is always project-owned and never managed.
+`--scaffold-workflows` can create two caller files there, each once and only
+when missing: `repo-seed-audit.yml` (weekly; opens or closes a drift issue; needs
+`issues: write`) and `repo-seed-sync.yml` (weekly; opens or updates a pull
+request with the changes; needs `contents: write` and `pull-requests: write`).
+Both are request-only; delete a file to turn it off.
 
 Commit the generated `.repo-seed-state.json`. It lets a smaller profile or a
 changed convention selection remove unchanged stale files and keep modified ones
