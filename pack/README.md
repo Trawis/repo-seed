@@ -65,19 +65,9 @@ manifest-schema changes and may lack newer fixes.
 
 ## Upgrading a Pre-5.0 Target
 
-Version 5 resets compatibility. The manifest (`schema_version: 3`) is
-incompatible with older scripts. A `.repo-seed-state.json` from before explicit
-conventions (schema 1) is no longer converted by this pack. Run the
+A pre-5.0 `.repo-seed-state.json` is no longer converted. Run the
 [5.13.2 pack](https://github.com/Trawis/repo-seed/releases/tag/v5.13.2) once
-with `--conventions <list>` to reach schema 2, then use a current pack:
-
-```bash
-python /path/to/extracted/pack/files/scripts/sync-docs.py \
-  --target . \
-  --profile app \
-  --conventions csharp \
-  --dry-run
-```
+with `--conventions <list>`, then use a current pack.
 
 Full documentation: [repo-seed on GitHub](https://github.com/Trawis/repo-seed).
 
