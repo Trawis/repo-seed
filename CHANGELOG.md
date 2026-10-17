@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.19.5 - 2026-10-17
+
+Fixed the repository-audit skill to run the source pack's `sync-docs.py` with `--source`, `--target`, and `--audit` instead of the target's possibly outdated copy. Fixed `--audit` to report a target pack version newer than the source as ahead instead of behind, comparing versions numerically; a matching version still reports no version drift.
+
 ## 5.19.4 - 2026-10-17
 
 Fixed the `--scaffold-workflows` help text, the pack README, and the repository-bootstrap skill to say the flag creates two request-only caller workflows, the drift-check issue and the sync pull request, and that the sync caller needs write permissions.

@@ -32,7 +32,7 @@ target repositories. Each entry requires:
 
 | Field | Meaning |
 |---|---|
-| `name` | Skill directory name under both skill surfaces |
+| `name` | Skill directory name under `.agents/skills/` |
 | `upstream_repository` | `https://` URL of the upstream repository |
 | `source_path` | Path of the skill in the upstream repository |
 | `source_revision` | Full 40-character commit SHA used for the adaptation |
@@ -55,7 +55,7 @@ restrict redistribution is rejected, not copied. Do not assume a
 repository-wide license covers a skill when the project licenses skills
 individually; record the file that proves the license in `license_evidence`.
 
-Every derived skill ships a `NOTICE.md` in both surfaces. It states the
+Every derived skill ships a `NOTICE.md` in its `.agents/skills/` directory. It states the
 upstream repository, source revision, and license, and carries any copyright
 or notice text the license requires. Because `NOTICE.md` is a managed skill
 file, it reaches targets through the normal manifest.
@@ -76,8 +76,10 @@ resources are allowed only after explicit review and are listed in
 2. Confirm the license covers the skill. Stop if it does not.
 3. Adapt the skill to repo-seed rules, removing automatic commit, push, PR, or
    issue behavior and any tool-specific framework dependence.
-4. Add the skill to both surfaces, add every file to `pack/manifest.json` as a
-   managed asset, and add `NOTICE.md`.
+4. Add the skill under `pack/files/.agents/skills/`, add every file there to
+   `pack/manifest.json` as a managed asset, and add `NOTICE.md`. Do not add a
+   `.claude/skills/` copy or manifest entries for it; `sync-docs.py` installs
+   the Claude copy in targets.
 5. Add the registry entry in `pack/skill-sources.json`.
 6. Run the validation below.
 
@@ -86,7 +88,7 @@ resources are allowed only after explicit review and are listed in
 1. Compare the recorded `source_revision` with the new upstream revision and
    review the diff, including every added or changed supporting file.
 2. Re-confirm the license for the new revision.
-3. Apply only the changes that fit repo-seed, and keep both surfaces identical.
+3. Apply only the changes that fit repo-seed, editing only `.agents/skills/`.
 4. Update `source_revision`, `reviewed`, `security_review`, and `NOTICE.md`.
 5. Re-run validation.
 
@@ -101,8 +103,7 @@ python -m unittest discover -s tests -v
 skill lacks provenance, has an unpinned revision or disallowed license, ships
 files that differ from `distributed_files`, includes hooks or unreviewed
 non-Markdown files, contains a network fetch command, omits the `NOTICE.md`
-details, or differs between skill surfaces. A skill that ships `NOTICE.md`
-without a registry entry also fails.
+details. A skill that ships `NOTICE.md` without a registry entry also fails.
 
 The checks are deterministic guards. They do not replace the maintainer
 review of what an upstream skill instructs the agent to do.
