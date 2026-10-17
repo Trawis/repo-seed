@@ -9,6 +9,14 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.18.1 - 2026-10-17
+
+Clarified the `git.md` rule on attribution. It now says what it always meant:
+no AI attribution in commit messages or release text (assistant or model names,
+co-author trailers, "generated with" lines). It no longer bans mentioning tools
+by name, and it allows the exact trailer when the repository or the agent host
+requires one.
+
 ## 5.18.0 - 2026-10-16
 
 Added `--scaffold-workflows` to `sync-docs.py`. It creates
