@@ -33,7 +33,7 @@ This document defines ownership only. Usage belongs in `README.md`.
 - root `README.md`, `CHANGELOG.md`, `.gitignore`, and `.editorconfig`
 - `docs/project/`
 - scaffolded GitHub issue files, `.github/pull_request_template.md`, and the optional
-  `.github/workflows/repo-seed-audit.yml` once created
+  `.github/workflows/repo-seed-audit.yml` and `.github/workflows/repo-seed-sync.yml` once created
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 
