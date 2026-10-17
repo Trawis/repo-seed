@@ -77,4 +77,5 @@ jobs:
           gh release create "v${{ steps.ver.outputs.version }}" \
             --title "Repo Seed Pack ${{ steps.ver.outputs.version }}" \
             --notes-file "$RUNNER_TEMP/release-notes.md" \
+            --target "$GITHUB_SHA" \
             dist/*

@@ -213,10 +213,11 @@ jobs:
     permissions:
       contents: read
       issues: write
-    uses: Trawis/repo-seed/.github/workflows/audit.yml@v5.17.0
+    uses: Trawis/repo-seed/.github/workflows/audit.yml@vX.Y.Z   # a release tag, such as the one the scaffold uses
 ```
 
-Pin `@` to a release tag; Dependabot can update it. Each run downloads the
+Pin `@` to a release tag. Dependabot can keep it current, but only if the repository has its own
+`.github/dependabot.yml` with a `github-actions` entry; the pack does not create one. Each run downloads the
 latest release, checks its SHA-256, and runs `sync-docs.py --audit` against the
 repository. While the audit reports drift, exactly one open issue titled
 `repo-seed: managed files are out of date` carries the audit output, and it
@@ -224,6 +225,15 @@ closes itself once the audit is clean. The job fails only when the tooling
 itself fails, such as a checksum mismatch, not when drift is found. It needs
 `issues: write` and network access to GitHub. It changes no file; apply updates
 with the steps above.
+
+**What you are trusting.** The pinned tag fixes only the workflow file. The
+script it runs is always the latest release of this repository, and the
+checksum comes from that same release, so it detects a corrupted download, not
+a compromised publisher. The script runs without the job token (checkout does
+not persist it, and only the two `gh` steps receive it), so it cannot use it to
+write. Pin to a commit or fork the workflow if you need a stricter guarantee. A
+repository without `.repo-seed-state.json`, or with issues disabled, is skipped
+with a notice instead of failing.
 
 ## Upgrading a Pre-5.0 Target
 
