@@ -64,7 +64,7 @@ jobs:
       - name: Build universal ZIP
         if: steps.check.outputs.exists == 'false'
         run: |
-          python scripts/build-release-bundle.py
+          python scripts/repo-seed.py build
           cd dist
           sha256sum *.zip > "repo-seed-pack-${{ steps.ver.outputs.version }}.zip.sha256"
 
@@ -73,7 +73,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python scripts/changelog-notes.py "${{ steps.ver.outputs.version }}" > "$RUNNER_TEMP/release-notes.md"
+          python scripts/repo-seed.py notes "${{ steps.ver.outputs.version }}" > "$RUNNER_TEMP/release-notes.md"
           gh release create "v${{ steps.ver.outputs.version }}" \
             --title "Repo Seed Pack ${{ steps.ver.outputs.version }}" \
             --notes-file "$RUNNER_TEMP/release-notes.md" \

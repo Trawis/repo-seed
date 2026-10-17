@@ -1,10 +1,7 @@
 name: Audit a repo-seed target
 
-# Reusable workflow for repositories that use repo-seed. A target calls it on a
-# schedule (see "Automatic Drift Check" in the README). It downloads the latest
-# release, checks its checksum, runs `sync-docs.py --audit` against the calling
-# repository, and keeps exactly one issue open while the audit reports drift.
-# The job fails only when the tooling itself fails, not when drift is found.
+# Reusable workflow: keeps one issue open while a repository's managed files
+# drift from the repo-seed release. See the README.
 #
 # Trust model: the release archive and its SHA-256 come from the same release, so
 # the checksum detects corruption, not a compromised publisher. The script runs in

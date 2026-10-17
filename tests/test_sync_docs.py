@@ -18,8 +18,7 @@ from unittest import mock
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACK_ROOT = REPOSITORY_ROOT / "pack"
 SYNC_SCRIPT = PACK_ROOT / "files" / "scripts" / "sync-docs.py"
-BUILD_SCRIPT = REPOSITORY_ROOT / "scripts" / "build-release-bundle.py"
-GITHUB_LABELS_SCRIPT = REPOSITORY_ROOT / "scripts" / "sync-github-labels.py"
+TOOLING = REPOSITORY_ROOT / "scripts" / "repo-seed.py"
 GITHUB_LABELS_CATALOG = PACK_ROOT / "github-labels.json"
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -64,8 +63,7 @@ def load_module(name: str, path: Path):
 
 
 sync = load_module("sync_docs", SYNC_SCRIPT)
-bundle_builder = load_module("build_release_bundle", BUILD_SCRIPT)
-github_labels = load_module("sync_github_labels", GITHUB_LABELS_SCRIPT)
+tooling = load_module("repo_seed_tooling", TOOLING)
 
 PACK_VERSION = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))["pack_version"]
 
@@ -117,50 +115,6 @@ class ManifestTests(unittest.TestCase):
             self.assertTrue((PACK_ROOT / package_file).is_file(), package_file)
         for asset in self.manifest.assets:
             self.assertTrue((PACK_ROOT / "files" / Path(asset.source_path)).is_file(), asset.path)
-
-    def test_sync_and_builder_accept_and_reject_the_same_manifests(self):
-        import copy
-        import shutil
-        import tempfile
-
-        original = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
-        first_template = next(i for i, a in enumerate(original["assets"]) if a["type"] == "template" and "scaffold_group" in a)
-
-        def mutate(fn):
-            data = copy.deepcopy(original)
-            fn(data)
-            return data
-
-        cases = {
-            "unchanged": mutate(lambda d: None),
-            "package_files null": mutate(lambda d: d.__setitem__("package_files", None)),
-            "package_files string": mutate(lambda d: d.__setitem__("package_files", "README.md")),
-            "package_files absent": mutate(lambda d: d.pop("package_files")),
-            "asset type list": mutate(lambda d: d["assets"][0].__setitem__("type", ["managed"])),
-            "scaffold_group list": mutate(lambda d: d["assets"][first_template].__setitem__("scaffold_group", ["project"])),
-            "workflows group outside workflows": mutate(
-                lambda d: d["assets"][-1].__setitem__("scaffold_target", ".github/other.yml")
-            ),
-            "profiles null": mutate(lambda d: d.__setitem__("profiles", None)),
-            "asset under the generated skill tree": mutate(
-                lambda d: d["assets"].append(
-                    {"path": ".claude/skills/x/SKILL.md", "type": "managed", "profiles": ["minimal"]}
-                )
-            ),
-        }
-        for name, data in cases.items():
-            with self.subTest(name), tempfile.TemporaryDirectory() as temp:
-                pack = Path(temp) / "pack"
-                shutil.copytree(PACK_ROOT, pack)
-                (pack / "manifest.json").write_text(json.dumps(data), encoding="utf-8")
-                outcomes = []
-                for loader in (lambda: sync.load_manifest(pack), lambda: bundle_builder.load_manifest(pack)):
-                    try:
-                        loader()
-                        outcomes.append(True)
-                    except ValueError:
-                        outcomes.append(False)
-                self.assertEqual(outcomes[0], outcomes[1], f"loaders disagree on: {name}")
 
     def test_full_profile_is_removed(self):
         self.assertNotIn("full", self.manifest.profiles)
@@ -478,8 +432,6 @@ class ManifestTests(unittest.TestCase):
                 )
                 with self.assertRaisesRegex(ValueError, "project-owned tree"):
                     sync.load_manifest(pack, validate_sources=False)
-                with self.assertRaisesRegex(ValueError, "project-owned tree"):
-                    bundle_builder.load_manifest(pack)
 
         managed = json.loads(json.dumps(raw))
         managed["assets"][0]["path"] = ".github/workflows/ci.yml"
@@ -505,11 +457,8 @@ class ManifestTests(unittest.TestCase):
                 (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "must be under .github/workflows"):
                     sync.load_manifest(pack, validate_sources=False)
-                with self.assertRaisesRegex(ValueError, "must be under .github/workflows"):
-                    bundle_builder.load_manifest(pack)
-        # The shipped manifest is valid for both loaders, with exactly one workflows scaffold.
+        # The shipped manifest is valid, with exactly one workflows scaffold.
         sync.load_manifest(PACK_ROOT, validate_sources=False)
-        bundle_builder.load_manifest(PACK_ROOT)
         workflow_scaffolds = [a for a in raw["assets"] if a.get("scaffold_group") == "workflows"]
         self.assertEqual(sorted(a["scaffold_target"] for a in workflow_scaffolds),
             [".github/workflows/repo-seed-audit.yml", ".github/workflows/repo-seed-sync.yml"],
@@ -1154,7 +1103,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("Tech Debt (`tech_debt.yml`, applies `type: tech-debt`)", guidance)
 
     def test_label_catalog_and_guidance_state_the_same_type_scope(self):
-        catalog = {label["name"]: label for label in github_labels.load_catalog(GITHUB_LABELS_CATALOG)}
+        catalog = {label["name"]: label for label in tooling.load_catalog(GITHUB_LABELS_CATALOG)}
         self.assertNotIn("type: decision", catalog)
         self.assertNotIn("type: idea", catalog)
         self.assertNotIn("maintenance", catalog["type: tech-debt"]["description"].lower())
@@ -1165,12 +1114,12 @@ class GuidanceAndTemplateTests(unittest.TestCase):
     def test_distributed_issue_guidance_is_self_contained_for_target_repositories(self):
         guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
         self.assertNotIn("pack/github-labels.json", guidance)
-        self.assertNotIn("scripts/sync-github-labels.py", guidance)
+        self.assertNotIn("scripts/repo-seed.py", guidance)
         self.assertIn("GitHub-Hosted Labels", guidance)
         self.assertIn("verify it\ndirectly through GitHub", guidance)
 
     def test_no_distributed_file_references_repo_seed_only_tooling_paths(self):
-        forbidden = ("pack/github-labels.json", "scripts/sync-github-labels.py")
+        forbidden = ("pack/github-labels.json", "scripts/repo-seed.py")
         files_root = PACK_ROOT / "files"
         for path in files_root.rglob("*"):
             if not path.is_file() or "__pycache__" in path.parts:
@@ -2605,7 +2554,7 @@ class BundleAndCliTests(unittest.TestCase):
     def test_universal_archive_contains_exact_manifest_inventory(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            archive = bundle_builder.build_archive(REPOSITORY_ROOT, output)
+            archive = tooling.build_archive(REPOSITORY_ROOT, output)
             self.assertEqual(archive.name, f"repo-seed-pack-{PACK_VERSION}.zip")
             self.assertEqual(list(output.glob("*.zip")), [archive])
             raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
@@ -2620,12 +2569,12 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertIn("pack/LICENSE", bundle.namelist())
                 self.assertNotIn("README.md", bundle.namelist())
                 self.assertNotIn("pack-manifest.json", bundle.namelist())
-                self.assertNotIn("scripts/sync-github-labels.py", bundle.namelist())
+                self.assertNotIn("scripts/repo-seed.py", bundle.namelist())
 
     def test_extracted_archive_auto_discovers_source_and_syncs_every_profile(self):
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            archive = bundle_builder.build_archive(REPOSITORY_ROOT, temp_root)
+            archive = tooling.build_archive(REPOSITORY_ROOT, temp_root)
             extract_root = temp_root / "extracted"
             with zipfile.ZipFile(archive) as bundle:
                 bundle.extractall(extract_root)
@@ -2698,7 +2647,7 @@ class BundleAndCliTests(unittest.TestCase):
             except OSError as ex:
                 self.skipTest(f"Symbolic links are unavailable: {ex}")
             with self.assertRaisesRegex(ValueError, "symbolic link|outside"):
-                bundle_builder.release_source(pack, "linked.md")
+                tooling.contained_file(pack / "files", "linked.md", "Release source")
 
     def test_release_builder_rejects_invalid_templates(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2724,7 +2673,7 @@ class BundleAndCliTests(unittest.TestCase):
             }
             (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "metadata markers"):
-                bundle_builder.build_archive(root, root / "dist")
+                tooling.build_archive(root, root / "dist")
 
     def test_release_builder_rejects_missing_package_files(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2744,8 +2693,8 @@ class BundleAndCliTests(unittest.TestCase):
                 ],
             }
             (pack / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-            with self.assertRaisesRegex(FileNotFoundError, "Missing package file"):
-                bundle_builder.build_archive(root, root / "dist")
+            with self.assertRaisesRegex(ValueError, "Package file does not exist"):
+                tooling.build_archive(root, root / "dist")
 
     def test_cli_help_has_only_the_small_interface(self):
         result = subprocess.run(
@@ -2795,7 +2744,7 @@ class BundleAndCliTests(unittest.TestCase):
 
 class GitHubLabelToolTests(unittest.TestCase):
     def test_catalog_matches_issues_guidance(self):
-        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
         names = {label["name"] for label in catalog}
         self.assertEqual(
             names,
@@ -2822,11 +2771,11 @@ class GitHubLabelToolTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "Duplicate"):
-                github_labels.load_catalog(path)
+                tooling.load_catalog(path)
 
             path.write_text(json.dumps({"labels": [{"name": "type: bug"}]}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "description"):
-                github_labels.load_catalog(path)
+                tooling.load_catalog(path)
 
     def test_catalog_rejects_a_non_object_root(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2834,12 +2783,12 @@ class GitHubLabelToolTests(unittest.TestCase):
             for content in ([], "invalid"):
                 path.write_text(json.dumps(content), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "JSON object"):
-                    github_labels.load_catalog(path)
+                    tooling.load_catalog(path)
 
     def test_label_mutation_failures_raise_a_clear_error(self):
         failed = subprocess.CompletedProcess(["gh"], 1, stdout="", stderr="HTTP 403")
         label = {"name": "type: bug", "description": "x", "color": "d73a4a"}
-        for function, operation in ((github_labels.create_label, "create"), (github_labels.update_label, "edit")):
+        for function, operation in ((tooling.create_label, "create"), (tooling.update_label, "edit")):
             with mock.patch.object(subprocess, "run", return_value=failed):
                 with self.assertRaisesRegex(RuntimeError, f"gh label {operation} failed for 'type: bug': HTTP 403"):
                     function("gh", None, label)
@@ -2851,7 +2800,7 @@ class GitHubLabelToolTests(unittest.TestCase):
         with mock.patch.object(shutil, "which", return_value="gh"), mock.patch.object(
             subprocess, "run", side_effect=[hosted, failed]
         ), contextlib.redirect_stderr(stderr):
-            result = github_labels.main(["--apply", "--catalog", str(GITHUB_LABELS_CATALOG)])
+            result = tooling.main(["labels", "--apply", "--catalog", str(GITHUB_LABELS_CATALOG)])
         self.assertEqual(result, 2)
         self.assertIn("error: gh label create failed for", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
@@ -2867,7 +2816,7 @@ class GitHubLabelToolTests(unittest.TestCase):
             {"name": "component: cli", "description": "project-specific", "color": "ffffff"},
         ]
 
-        findings = github_labels.audit(catalog, hosted)
+        findings = tooling.audit(catalog, hosted)
 
         self.assertTrue(any(finding == "missing: type: feature" for finding in findings))
         self.assertTrue(any("drift: type: bug" in finding for finding in findings))
@@ -2875,19 +2824,19 @@ class GitHubLabelToolTests(unittest.TestCase):
         self.assertFalse(any("component: cli" in finding for finding in findings))
 
     def test_audit_reports_no_findings_for_a_matching_catalog(self):
-        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
         # Hosted copies differ in colour case and carry an unrelated project label.
         hosted = [{**label, "color": label["color"].upper()} for label in catalog]
         hosted.append({"name": "component: cli", "description": "project-specific", "color": "ffffff"})
-        self.assertEqual(github_labels.audit(catalog, hosted), [])
+        self.assertEqual(tooling.audit(catalog, hosted), [])
 
     def test_label_names_match_case_insensitively_and_apply_renames_to_the_catalog_spelling(self):
         catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
         hosted = [{"name": "Type: Bug", "description": "d", "color": "d73a4a"}]
-        self.assertEqual(github_labels.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
+        self.assertEqual(tooling.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
         done = subprocess.CompletedProcess([], 0, "", "")
-        with mock.patch.object(github_labels.subprocess, "run", return_value=done) as run:
-            report = github_labels.apply_catalog("gh", "o/r", catalog, hosted)
+        with mock.patch.object(tooling.subprocess, "run", return_value=done) as run:
+            report = tooling.apply_catalog("gh", "o/r", catalog, hosted)
         self.assertEqual(report, ["updated: type: bug"])
         self.assertEqual(
             run.call_args.args[0],
@@ -2897,14 +2846,14 @@ class GitHubLabelToolTests(unittest.TestCase):
     def test_a_null_hosted_colour_is_drift_not_a_crash(self):
         catalog = [{"name": "type: bug", "description": "d", "color": "d73a4a"}]
         hosted = [{"name": "type: bug", "description": "d", "color": None}]
-        self.assertEqual(github_labels.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
+        self.assertEqual(tooling.audit(catalog, hosted), ["drift: type: bug differs from the canonical catalog"])
 
     def test_create_and_update_pass_colour_and_repository_to_gh(self):
         label = {"name": "type: bug", "description": "d", "color": "d73a4a"}
         done = subprocess.CompletedProcess([], 0, "", "")
-        with mock.patch.object(github_labels.subprocess, "run", return_value=done) as run:
-            github_labels.create_label("gh", "o/r", label)
-            github_labels.update_label("gh", None, label)
+        with mock.patch.object(tooling.subprocess, "run", return_value=done) as run:
+            tooling.create_label("gh", "o/r", label)
+            tooling.update_label("gh", None, label)
         created, updated = (call.args[0] for call in run.call_args_list)
         self.assertEqual(created, ["gh", "label", "create", "type: bug", "--description", "d", "--color", "d73a4a", "--repo", "o/r"])
         self.assertEqual(updated, ["gh", "label", "edit", "type: bug", "--description", "d", "--color", "d73a4a"])
@@ -2912,26 +2861,26 @@ class GitHubLabelToolTests(unittest.TestCase):
             self.assertEqual(call.kwargs.get("encoding"), "utf-8")
 
     def test_check_exits_1_on_drift_and_0_when_clean(self):
-        catalog = github_labels.load_catalog(GITHUB_LABELS_CATALOG)
+        catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
         for hosted, expected, output in (
             (catalog, 0, "no drift detected"),
             (catalog[1:], 1, "missing: " + catalog[0]["name"]),
         ):
             with self.subTest(expected=expected):
                 out = io.StringIO()
-                with mock.patch.object(github_labels, "require_gh", return_value="gh"), mock.patch.object(
-                    github_labels, "fetch_hosted_labels", return_value=hosted
+                with mock.patch.object(tooling, "require_gh", return_value="gh"), mock.patch.object(
+                    tooling, "fetch_hosted_labels", return_value=hosted
                 ), contextlib.redirect_stdout(out):
-                    code = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
+                    code = tooling.main(["labels", "--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
                 self.assertEqual(code, expected)
                 self.assertIn(output, out.getvalue())
 
     def test_a_possibly_truncated_label_list_is_refused(self):
-        listing = json.dumps([{"name": f"l{i}", "description": "", "color": "ffffff"} for i in range(github_labels.LABEL_LIST_LIMIT)])
+        listing = json.dumps([{"name": f"l{i}", "description": "", "color": "ffffff"} for i in range(tooling.LABEL_LIST_LIMIT)])
         done = subprocess.CompletedProcess([], 0, listing, "")
-        with mock.patch.object(github_labels.subprocess, "run", return_value=done):
+        with mock.patch.object(tooling.subprocess, "run", return_value=done):
             with self.assertRaisesRegex(RuntimeError, "may be truncated"):
-                github_labels.fetch_hosted_labels("gh", None)
+                tooling.fetch_hosted_labels("gh", None)
 
     def test_apply_creates_missing_updates_drifted_and_never_deletes(self):
         catalog = [
@@ -2944,10 +2893,10 @@ class GitHubLabelToolTests(unittest.TestCase):
             {"name": "enhancement", "description": "legacy", "color": "ffffff"},
         ]
 
-        with mock.patch.object(github_labels, "create_label") as create, mock.patch.object(
-            github_labels, "update_label"
+        with mock.patch.object(tooling, "create_label") as create, mock.patch.object(
+            tooling, "update_label"
         ) as update:
-            report = github_labels.apply_catalog("gh", None, catalog, hosted)
+            report = tooling.apply_catalog("gh", None, catalog, hosted)
 
         create.assert_called_once_with("gh", None, catalog[1])
         update.assert_called_once_with("gh", None, catalog[0], "type: bug")
@@ -2957,23 +2906,23 @@ class GitHubLabelToolTests(unittest.TestCase):
         self.assertFalse(any("component: cli" in line for line in report))
 
     def test_cli_check_and_apply_are_mutually_exclusive(self):
-        parser = github_labels.build_parser()
+        parser = tooling.build_parser()
         with self.assertRaises(SystemExit):
-            parser.parse_args([])
+            parser.parse_args(["labels"])
         with self.assertRaises(SystemExit):
-            parser.parse_args(["--check", "--apply"])
+            parser.parse_args(["labels", "--check", "--apply"])
 
     def test_main_reports_a_clear_error_without_the_github_cli(self):
         with mock.patch.object(shutil, "which", return_value=None):
             err = io.StringIO()
             with contextlib.redirect_stderr(err):
-                result = github_labels.main(["--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
+                result = tooling.main(["labels", "--check", "--catalog", str(GITHUB_LABELS_CATALOG)])
         self.assertEqual(result, 2)
         self.assertIn("GitHub CLI", err.getvalue())
 
     def test_cli_help_documents_check_and_apply(self):
         result = subprocess.run(
-            [sys.executable, str(GITHUB_LABELS_SCRIPT), "--help"],
+            [sys.executable, str(TOOLING), "labels", "--help"],
             capture_output=True,
             text=True,
             check=False,

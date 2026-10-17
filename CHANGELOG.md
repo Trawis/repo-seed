@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.19.2 - 2026-10-17
+
+Changed the sync script and the reusable audit and sync workflows to shorter comments, with no change in behavior.
+
 ## 5.19.1 - 2026-10-17
 
 Changed the pack to ship each skill once, under `.agents/skills/`, and the sync script to install the same files under `.claude/skills/` in each target. Targets end up with the same files as before and a current sync reports no change to them; an older copied script leaves the existing `.claude/skills/` files in place. The manifest no longer lists `.claude/skills/` paths and both manifest loaders reject them.

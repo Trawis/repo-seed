@@ -56,7 +56,7 @@ ownership.
 
 ## Hosted GitHub Labels
 
-`pack/github-labels.json` and `scripts/sync-github-labels.py` are maintainer
+`pack/github-labels.json` and `scripts/repo-seed.py labels` are maintainer
 tools. They are not synced into targets. The catalog defines the `type:*` and
 `priority:*` labels described in
 [Issue guidance](pack/files/.agents/guidelines/issues.md).
@@ -65,8 +65,8 @@ The tool is optional and never runs during `sync-docs.py`. It needs the
 [GitHub CLI](https://cli.github.com/) (`gh`), authenticated for the repository:
 
 ```bash
-python scripts/sync-github-labels.py --check
-python scripts/sync-github-labels.py --apply
+python scripts/repo-seed.py labels --check
+python scripts/repo-seed.py labels --apply
 ```
 
 `--check` reports missing or drifted labels and legacy labels (`bug`,
@@ -338,8 +338,7 @@ pack/
     docs/templates/
     scripts/sync-docs.py
 docs/project/                # documentation about repo-seed
-scripts/                     # tooling: release build, label sync, skill provenance
-                             # check, changelog-to-release-notes
+scripts/repo-seed.py         # maintainer tooling: build, check, labels, notes
 tests/                       # pack and tooling tests
 .github/                     # this repository's CI, release, and reusable audit workflows
 CHANGELOG.md                 # release history; the top entry is the release notes
@@ -352,7 +351,7 @@ Skills hold repeatable workflows. Policy and language rules stay in
 ## Build and Validate
 
 ```bash
-python scripts/build-release-bundle.py
+python scripts/repo-seed.py build
 ```
 
 The full validation list is in [`AGENTS.md`](AGENTS.md#repository-validation). CI runs the same commands.

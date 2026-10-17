@@ -109,10 +109,9 @@ For sync-script or packaging changes, run:
 ```bash
 python -m unittest discover -s tests -v
 python pack/files/scripts/sync-docs.py --help
-python scripts/build-release-bundle.py --help
-python scripts/sync-github-labels.py --help
-python scripts/validate-skill-sources.py
-python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/changelog-notes.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_release_metadata.py tests/test_audit_workflow.py tests/test_changelog_notes.py
+python scripts/repo-seed.py --help
+python scripts/repo-seed.py check
+python -m py_compile pack/files/scripts/sync-docs.py scripts/repo-seed.py tests/test_sync_docs.py tests/test_tooling.py
 git diff --check
 ```
 
