@@ -506,7 +506,9 @@ class ManifestTests(unittest.TestCase):
         sync.load_manifest(PACK_ROOT, validate_sources=False)
         bundle_builder.load_manifest(PACK_ROOT)
         workflow_scaffolds = [a for a in raw["assets"] if a.get("scaffold_group") == "workflows"]
-        self.assertEqual([a["scaffold_target"] for a in workflow_scaffolds], [".github/workflows/repo-seed-audit.yml"])
+        self.assertEqual(sorted(a["scaffold_target"] for a in workflow_scaffolds),
+            [".github/workflows/repo-seed-audit.yml", ".github/workflows/repo-seed-sync.yml"],
+        )
 
     def test_convention_field_only_applies_to_managed_assets(self):
         raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
@@ -2039,7 +2041,9 @@ class SyncBehaviorTests(unittest.TestCase):
             (workflows / "ci.yml").write_text("name: project ci\n", encoding="utf-8")
             actions = sync.synchronize(PACK_ROOT, target, "minimal", scaffold_workflows=True)
             touched = {a.path for a in actions if a.path.startswith(".github/workflows/")}
-            self.assertEqual(touched, {".github/workflows/repo-seed-audit.yml"})
+            self.assertEqual(
+                touched, {".github/workflows/repo-seed-audit.yml", ".github/workflows/repo-seed-sync.yml"}
+            )
             self.assertEqual((workflows / "ci.yml").read_text(encoding="utf-8"), "name: project ci\n")
 
     def test_preflight_rejects_directory_managed_target_before_copying(self):

@@ -191,7 +191,7 @@ Optional scaffolding:
 
 - `--scaffold-project-files`: missing README and CHANGELOG, or verified unchanged Markdown upgrades;
 - `--scaffold-github-templates`: missing Issue Forms, chooser config, and `.github/pull_request_template.md`; existing files, including legacy `.md` templates, are kept;
-- `--scaffold-workflows`: the optional drift-check workflow `.github/workflows/repo-seed-audit.yml`, only when missing (see Automatic Drift Check);
+- `--scaffold-workflows`: the optional drift-check and sync workflows `.github/workflows/repo-seed-audit.yml` and `.github/workflows/repo-seed-sync.yml`, each only when missing (see Automatic Drift Check and Automatic Sync Pull Request);
 - `--scaffold-editorconfig`: `.editorconfig`, only when missing;
 - `--scaffold <name>`: one on-demand document; repeat for more.
 
@@ -199,8 +199,8 @@ Existing project-owned files are kept unless an eligible Markdown scaffold is
 verified unchanged and can be upgraded safely. `.gitignore` is entirely
 project-owned and never touched. `.editorconfig` is project-owned too, but
 may be created once as a missing-only scaffold. The `.github/workflows/` tree is
-always project-owned and never managed. The only file the pack can create there
-is the optional drift check (`--scaffold-workflows`), once, and only when missing.
+always project-owned and never managed. The only files the pack can create there
+are the optional drift check and sync callers (`--scaffold-workflows`), once each, and only when missing.
 
 ## Update an Existing Project
 
@@ -257,6 +257,54 @@ not persist it, and only the two `gh` steps receive it), so it cannot use it to
 write. Pin to a commit or fork the workflow if you need a stricter guarantee. A
 repository without `.repo-seed-state.json`, or with issues disabled, is skipped
 with a notice instead of failing.
+
+## Automatic Sync Pull Request
+
+Optional. Instead of running the script by hand, a target repository can let a
+workflow open the update. `sync-docs.py --scaffold-workflows` creates
+`.github/workflows/repo-seed-sync.yml` once, pinned to the pack release that
+created it, and never changes an existing file. Delete the file to turn the
+sync off. It calls the reusable sync workflow in this repository:
+
+```yaml
+name: repo-seed sync
+on:
+  schedule:
+    - cron: "43 6 * * 1"
+  workflow_dispatch:
+jobs:
+  sync:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: Trawis/repo-seed/.github/workflows/sync.yml@vX.Y.Z   # a release tag
+    # with:
+    #   pack-version: "X.Y.Z"             # pin the pack instead of using the latest
+    # secrets:
+    #   token: ${{ secrets.REPO_SEED_TOKEN }}
+```
+
+Each run downloads the latest release (or the pinned one), checks its SHA-256,
+and runs `sync-docs.py` with the recorded profile and conventions and no
+`--scaffold-*` flag, so project-owned files are never touched. When managed
+files differ, it force-pushes the branch `chore/repo-seed-sync` and opens or
+updates one pull request that lists the dry-run output and flags any overwrite
+with no recorded baseline. When the files already match, it closes that pull
+request. It skips repositories without `.repo-seed-state.json` and runs from the
+default branch only.
+
+Setup the repository needs:
+
+- Settings, Actions, General: allow GitHub Actions to create and approve pull
+  requests.
+- A pull request opened with the default token does not start other workflows,
+  so required checks do not run on it. To run them, store a personal access
+  token or GitHub App token as a secret and pass it as `secrets.token`.
+
+The same trust model as the drift check applies: the script that runs comes from
+the release, and the checksum detects corruption, not a compromised publisher.
+The script runs in steps that do not hold the write token. Pin `pack-version`
+to control which release is applied. Review the pull request before merging.
 
 ## Upgrading a Pre-5.0 Target
 

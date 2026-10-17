@@ -1,0 +1,163 @@
+name: Sync a repo-seed target
+
+# Reusable workflow for repositories that use repo-seed. A target calls it on a
+# schedule (see "Automatic Sync Pull Request" in the README). It downloads the
+# latest release (or the pinned one), checks its checksum, runs `sync-docs.py`
+# against the calling repository with its recorded profile and conventions, and
+# keeps one pull request open on `chore/repo-seed-sync` while the managed files
+# differ from the pack. It never passes a `--scaffold-*` flag, so project-owned
+# files are not touched. Trust model: the script that runs is the release's own;
+# the checksum detects corruption, not a compromised publisher, and the script
+# runs in steps that do not hold the write token.
+
+on:
+  workflow_call:
+    inputs:
+      pack-version:
+        description: "Pin a pack release such as 5.19.0 instead of using the latest."
+        type: string
+        required: false
+        default: ""
+    secrets:
+      token:
+        description: "Optional PAT or GitHub App token so checks run on the pull request."
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-seed-sync-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    env:
+      # The repository that publishes the pack. Not the caller.
+      PACK_REPOSITORY: Trawis/repo-seed
+      SYNC_BRANCH: chore/repo-seed-sync
+      PACK_VERSION_INPUT: ${{ inputs.pack-version }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Check that this repository can be synced
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -f .repo-seed-state.json ]; then
+            echo "::notice::No .repo-seed-state.json, so this repository does not use repo-seed. Skipping."
+            exit 0
+          fi
+          base=$(gh repo view "$GITHUB_REPOSITORY" --json defaultBranchRef --jq .defaultBranchRef.name)
+          if [ "$GITHUB_REF_NAME" != "$base" ]; then
+            echo "::notice::Run on '$GITHUB_REF_NAME', not the default branch '$base'. Skipping."
+            exit 0
+          fi
+          echo "SYNC_BASE=$base" >> "$GITHUB_ENV"
+          echo "CAN_SYNC=true" >> "$GITHUB_ENV"
+
+      - name: Download the repo-seed release
+        if: env.CAN_SYNC == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -n "$PACK_VERSION_INPUT" ]; then
+            if ! printf '%s' "$PACK_VERSION_INPUT" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+'; then
+              echo "::error::pack-version must look like 5.19.0"
+              exit 1
+            fi
+            tag="v$PACK_VERSION_INPUT"
+          else
+            tag=$(gh release view --repo "$PACK_REPOSITORY" --json tagName --jq .tagName)
+          fi
+          version=${tag#v}
+          pack_root="$RUNNER_TEMP/repo-seed-pack"
+          mkdir -p "$pack_root"
+          gh release download "$tag" --repo "$PACK_REPOSITORY" \
+            --pattern "repo-seed-pack-${version}.zip" \
+            --pattern "repo-seed-pack-${version}.zip.sha256" \
+            --dir "$pack_root"
+          (cd "$pack_root" && sha256sum --check "repo-seed-pack-${version}.zip.sha256")
+          unzip -q "$pack_root/repo-seed-pack-${version}.zip" -d "$pack_root/extracted"
+          echo "PACK_TAG=$tag" >> "$GITHUB_ENV"
+          echo "PACK_DIR=$pack_root/extracted/pack" >> "$GITHUB_ENV"
+
+      - name: Preview and apply the sync
+        if: env.CAN_SYNC == 'true'
+        run: |
+          set -euo pipefail
+          # Neither step passes --profile, --conventions, or any --scaffold-* flag.
+          python "$PACK_DIR/files/scripts/sync-docs.py" \
+            --source "$PACK_DIR" --target "$GITHUB_WORKSPACE" --dry-run \
+            | tee "$RUNNER_TEMP/preview.txt"
+          python "$PACK_DIR/files/scripts/sync-docs.py" \
+            --source "$PACK_DIR" --target "$GITHUB_WORKSPACE"
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "CHANGED=true" >> "$GITHUB_ENV"
+          else
+            echo "CHANGED=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Open, update, or close the sync pull request
+        if: env.CAN_SYNC == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.token || github.token }}
+        run: |
+          set -euo pipefail
+          number=$(gh pr list --head "$SYNC_BRANCH" --base "$SYNC_BASE" --state open --json number \
+            --jq '.[0].number // empty')
+          if [ "$CHANGED" != "true" ]; then
+            if [ -n "$number" ]; then
+              gh pr close "$number" --delete-branch \
+                --comment "The files already match repo-seed \`$PACK_TAG\`, so this pull request is no longer needed."
+            fi
+            exit 0
+          fi
+
+          {
+            echo "Updates the managed repo-seed files to \`$PACK_TAG\`. \`sync-docs.py --dry-run\` reported:"
+            echo
+            echo '```text'
+            head -c 50000 "$RUNNER_TEMP/preview.txt"
+            echo
+            echo '```'
+            if grep -q 'no recorded baseline' "$RUNNER_TEMP/preview.txt"; then
+              echo
+              echo "**Some files had no recorded baseline**, so local content in them was replaced. Review the diff before merging."
+            fi
+            echo
+            echo "Only managed files and \`.repo-seed-state.json\` change. Project-owned files are not touched. This pull request is kept up to date by the scheduled sync."
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$SYNC_BRANCH"
+          git add -A
+          git commit -q -m "Update repo-seed files to $PACK_TAG"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          # The workflow owns this branch, so it is replaced on every run.
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push --force origin "$SYNC_BRANCH"
+
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "Update repo-seed files to $PACK_TAG" --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            gh pr create --head "$SYNC_BRANCH" --base "$SYNC_BASE" \
+              --title "Update repo-seed files to $PACK_TAG" --body-file "$RUNNER_TEMP/pr-body.md"
+          fi
