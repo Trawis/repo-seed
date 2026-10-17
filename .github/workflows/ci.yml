@@ -46,10 +46,9 @@ jobs:
           python scripts/build-release-bundle.py --help
           python scripts/sync-github-labels.py --help
           python scripts/validate-skill-sources.py
-          python scripts/mirror-skills.py --check
 
       - name: Compile Python files
-        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/mirror-skills.py scripts/changelog-notes.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_mirror_skills.py tests/test_release_metadata.py tests/test_audit_workflow.py tests/test_changelog_notes.py
+        run: python -m py_compile pack/files/scripts/sync-docs.py scripts/build-release-bundle.py scripts/sync-github-labels.py scripts/validate-skill-sources.py scripts/changelog-notes.py tests/test_sync_docs.py tests/test_skill_sources.py tests/test_release_metadata.py tests/test_audit_workflow.py tests/test_changelog_notes.py
 
       - name: Check whitespace in the pull request changes
         if: github.event_name == 'pull_request'

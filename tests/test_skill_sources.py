@@ -42,7 +42,7 @@ def entry(**overrides):
 
 
 class Fixture:
-    """A minimal pack with one skill mirrored on both agent surfaces."""
+    """A minimal pack with one skill."""
 
     def __init__(self, root: Path, files=None, registry=None):
         files = {"SKILL.md": SKILL_TEXT, "NOTICE.md": NOTICE_TEXT} if files is None else files
@@ -203,14 +203,7 @@ class SkillSourceValidationTests(unittest.TestCase):
         files = {"SKILL.md": "---\nname: demo\ndescription: Demo.\n---\n\nDo anything.\n", "NOTICE.md": NOTICE_TEXT}
         self.assertRejected(self.errors(files=files), "must defer to the applicable AGENTS.md")
 
-    def test_surface_divergence_is_rejected(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            Fixture(root)
-            (root / "files/.claude/skills/demo/SKILL.md").write_text(SKILL_TEXT + "drift\n", encoding="utf-8")
-            self.assertRejected(validator.validate(root), "differs between skill surfaces")
-
-    def test_pack_skill_surfaces_stay_identical(self):
+    def test_pack_skills_are_valid(self):
         # Covers every distributed skill, upstream-derived or not.
         for surface in validator.SURFACES:
             self.assertTrue((PACK_ROOT / "files" / surface).is_dir())

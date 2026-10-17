@@ -24,7 +24,7 @@ belongs in `upgrading-to-5.md`.
 - `AGENTS.md` and `CLAUDE.md`
 - `.agents/guidelines/` and selected `.agents/conventions/`
 - `docs/templates/`
-- `.agents/skills/` and `.claude/skills/`
+- `.agents/skills/` and `.claude/skills/` (the pack ships `.agents/skills/`; sync installs the same files under `.claude/skills/`)
 - `scripts/sync-docs.py`
 - `.repo-seed-state.json` generated in each target repository
 
@@ -40,8 +40,8 @@ belongs in `upgrading-to-5.md`.
 
 ## Upstream-Derived Skills
 
-`pack/skill-sources.json`, `scripts/validate-skill-sources.py`, and
-`scripts/mirror-skills.py` are repo-seed-side tooling and never synced. Derived
+`pack/skill-sources.json` and `scripts/validate-skill-sources.py` are
+repo-seed-side tooling and never synced. Derived
 skills ship through `pack/manifest.json` like other managed skills, with a `NOTICE.md`. See
 [Upstream-derived skills](upstream-skills.md).
 

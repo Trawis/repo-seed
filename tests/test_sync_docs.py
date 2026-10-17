@@ -116,7 +116,7 @@ class ManifestTests(unittest.TestCase):
         for package_file in self.manifest.package_files:
             self.assertTrue((PACK_ROOT / package_file).is_file(), package_file)
         for asset in self.manifest.assets:
-            self.assertTrue((PACK_ROOT / "files" / Path(asset.path)).is_file(), asset.path)
+            self.assertTrue((PACK_ROOT / "files" / Path(asset.source_path)).is_file(), asset.path)
 
     def test_sync_and_builder_accept_and_reject_the_same_manifests(self):
         import copy
@@ -142,6 +142,11 @@ class ManifestTests(unittest.TestCase):
                 lambda d: d["assets"][-1].__setitem__("scaffold_target", ".github/other.yml")
             ),
             "profiles null": mutate(lambda d: d.__setitem__("profiles", None)),
+            "asset under the generated skill tree": mutate(
+                lambda d: d["assets"].append(
+                    {"path": ".claude/skills/x/SKILL.md", "type": "managed", "profiles": ["minimal"]}
+                )
+            ),
         }
         for name, data in cases.items():
             with self.subTest(name), tempfile.TemporaryDirectory() as temp:
@@ -180,7 +185,7 @@ class ManifestTests(unittest.TestCase):
             for path in files_root.rglob("*")
             if path.is_file() and "__pycache__" not in path.parts
         }
-        listed = {asset.path for asset in self.manifest.assets}
+        listed = {asset.source_path for asset in self.manifest.assets}
         self.assertEqual(actual, listed)
 
         actual_package_files = {
@@ -566,23 +571,22 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         ):
             self.assertNotIn(guidance_import, claude)
 
-    def test_codex_and_claude_skills_are_identical(self):
-        codex_root = PACK_ROOT / "files/.agents/skills"
-        claude_root = PACK_ROOT / "files/.claude/skills"
-        codex = {
-            path.relative_to(codex_root): path
-            for path in codex_root.rglob("*")
-            if path.is_file()
-        }
-        claude = {
-            path.relative_to(claude_root): path
-            for path in claude_root.rglob("*")
-            if path.is_file()
-        }
-        self.assertEqual(set(codex), set(claude))
-        for relative in sorted(codex):
-            with self.subTest(skill=str(relative)):
-                self.assertEqual(codex[relative].read_bytes(), claude[relative].read_bytes())
+    def test_claude_skills_are_generated_from_the_authored_tree(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        raw = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        self.assertFalse((PACK_ROOT / "files/.claude").exists())
+        self.assertFalse([a for a in raw["assets"] if a["path"].startswith(".claude/skills/")])
+        authored = {a.path: a for a in manifest.assets if a.path.startswith(".agents/skills/")}
+        generated = {a.path: a for a in manifest.assets if a.path.startswith(".claude/skills/")}
+        self.assertTrue(authored)
+        self.assertEqual(
+            {p.replace(".agents/skills/", ".claude/skills/", 1) for p in authored}, set(generated)
+        )
+        for path, asset in generated.items():
+            source = authored[path.replace(".claude/skills/", ".agents/skills/", 1)]
+            self.assertEqual(asset.source_path, source.path)
+            self.assertEqual(asset.profiles, source.profiles)
+            self.assertEqual(asset.asset_type, "managed")
 
     def test_managed_skill_files_have_valid_portable_structure(self):
         manifest = sync.load_manifest(PACK_ROOT)
@@ -595,7 +599,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         ]
         self.assertTrue(skill_assets)
         for asset in skill_assets:
-            path = PACK_ROOT / "files" / asset.path
+            path = PACK_ROOT / "files" / asset.source_path
             fields, body = parse_skill_frontmatter(path.read_text(encoding="utf-8"))
             with self.subTest(path=asset.path):
                 self.assertEqual(set(fields), {"name", "description"})
@@ -626,7 +630,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             ),
         }
         forbidden = ("git push", "git commit", "gh pr", "gh issue", "sub-agent", "subagent")
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             for skill, phrases in expected.items():
                 content = " ".join(
                     (PACK_ROOT / "files" / root / skill / "SKILL.md").read_text(encoding="utf-8").split()
@@ -640,7 +644,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
 
     def test_code_review_acceptance_review_is_conditional_read_only_and_aligned_with_implementation(self):
         implementation_terms = "satisfied, unsatisfied, or not verifiable"
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             review = " ".join(
                 (PACK_ROOT / "files" / root / "code-review" / "SKILL.md").read_text(encoding="utf-8").split()
             )
@@ -675,7 +679,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
     def test_test_driven_development_skill_is_explicit_only_portable_and_attributed(self):
         registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
         self.assertIn("test-driven-development", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             directory = PACK_ROOT / "files" / root / "test-driven-development"
             content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
             notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
@@ -711,7 +715,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         entry = next(e for e in registry["skills"] if e["name"] == "code-simplification")
         self.assertEqual(entry["license"], "MIT")
         self.assertEqual(entry["adaptation"], "adapted")
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             directory = PACK_ROOT / "files" / root / "code-simplification"
             content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
             notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
@@ -746,7 +750,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         for asset in manifest.assets:
             if "/architecture-review/" in asset.path:
                 self.assertEqual(set(asset.profiles), {"library", "app", "game"}, asset.path)
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             directory = PACK_ROOT / "files" / root / "architecture-review"
             content = " ".join((directory / "SKILL.md").read_text(encoding="utf-8").split())
             notice = (directory / "NOTICE.md").read_text(encoding="utf-8")
@@ -786,7 +790,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         )
         registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
         self.assertNotIn("repository-audit", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             content = " ".join(
                 (PACK_ROOT / "files" / root / "repository-audit" / "SKILL.md").read_text(encoding="utf-8").split()
             )
@@ -838,7 +842,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
     def test_repository_bootstrap_skill_delegates_to_sync_and_keeps_scaffolding_opt_in(self):
         registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
         self.assertNotIn("repository-bootstrap", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             content = " ".join(
                 (PACK_ROOT / "files" / root / "repository-bootstrap" / "SKILL.md")
                 .read_text(encoding="utf-8")
@@ -918,7 +922,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
     def test_repository_upgrade_skill_orchestrates_the_newer_pack_and_owns_no_migration_rules(self):
         registry = json.loads((PACK_ROOT / "skill-sources.json").read_text(encoding="utf-8"))
         self.assertNotIn("repository-upgrade", [entry["name"] for entry in registry["skills"]])
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             content = " ".join(
                 (PACK_ROOT / "files" / root / "repository-upgrade" / "SKILL.md").read_text(encoding="utf-8").split()
             )
@@ -949,18 +953,8 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 with self.subTest(root=root, forbidden=phrase):
                     self.assertNotIn(phrase, content)
 
-    def test_repository_disables_every_distributed_skill_wrapper_except_code_review(self):
-        overrides = json.loads((REPOSITORY_ROOT / ".claude/settings.json").read_text(encoding="utf-8"))[
-            "skillOverrides"
-        ]
-        distributed = {
-            path.parent.name for path in (PACK_ROOT / "files/.claude/skills").glob("*/SKILL.md")
-        }
-        self.assertEqual(set(overrides), distributed - {"code-review"})
-        self.assertEqual(set(overrides.values()), {"off"})
-
     def test_issue_authoring_skill_is_grounded_gated_and_defers_to_issue_guidance(self):
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             content = " ".join(
                 (PACK_ROOT / "files" / root / "issue-authoring" / "SKILL.md").read_text(encoding="utf-8").split()
             )
@@ -985,7 +979,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                     self.assertNotIn(phrase, content)
 
     def test_issue_implementation_skill_verifies_delegates_and_gates_permissions(self):
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             content = " ".join(
                 (PACK_ROOT / "files" / root / "issue-implementation" / "SKILL.md")
                 .read_text(encoding="utf-8")
@@ -1012,7 +1006,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                     self.assertNotIn(phrase, content)
 
     def test_skills_define_substantive_workflows(self):
-        for root in (".agents/skills", ".claude/skills"):
+        for root in (".agents/skills",):
             for skill in sorted((PACK_ROOT / "files" / root).glob("*/SKILL.md")):
                 content = skill.read_text(encoding="utf-8")
                 _, body = parse_skill_frontmatter(content)
@@ -1616,6 +1610,25 @@ class SyncBehaviorTests(unittest.TestCase):
                 result = self.cli("--target", str(target), "--profile", "minimal", "--dry-run")
                 self.assertEqual(result.returncode, 2)
                 self.assertNotIn("Traceback", result.stderr)
+
+    def test_sync_installs_identical_claude_skills_and_audit_flags_their_drift(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "app")
+            authored = sorted((target / ".agents/skills").rglob("*"))
+            self.assertTrue(any(p.is_file() for p in authored))
+            for path in authored:
+                if path.is_file():
+                    mirror = target / ".claude/skills" / path.relative_to(target / ".agents/skills")
+                    self.assertEqual(mirror.read_bytes(), path.read_bytes())
+            (target / ".claude/skills/bug-fix/SKILL.md").write_text("edited\n", encoding="utf-8")
+            result = self.cli("--target", str(target), "--audit")
+            self.assertIn("drift: .claude/skills/bug-fix/SKILL.md differs", result.stdout)
+            self.cli("--target", str(target))
+            self.assertEqual(
+                (target / ".claude/skills/bug-fix/SKILL.md").read_bytes(),
+                (target / ".agents/skills/bug-fix/SKILL.md").read_bytes(),
+            )
 
     def test_discovery_requires_the_sync_script(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2658,7 +2671,7 @@ class BundleAndCliTests(unittest.TestCase):
                 expected_skills = core_skills
                 if profile != "minimal":
                     expected_skills |= extended_skills
-                for root in (".agents/skills", ".claude/skills"):
+                for root in (".agents/skills",):
                     actual_skills = {
                         path.parent.name
                         for path in (target / root).glob("*/SKILL.md")
