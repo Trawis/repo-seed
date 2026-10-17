@@ -23,8 +23,9 @@ separately asks for fixes.
    user names. Do not download one without permission. Without a source pack,
    deterministic comparison is impossible, so report that and continue with
    the evidence you can inspect.
-3. Run the repository's own sync script instead of reimplementing its logic.
-   From the target, use `python scripts/sync-docs.py --source <pack> --audit`
+3. Run the pack's sync script instead of reimplementing its logic. Prefer the
+   copy in the source pack; the target's `scripts/sync-docs.py` may itself be
+   out of date. From the target, use `python scripts/sync-docs.py --source <pack> --audit`
    for drift diagnostics, then `--dry-run` with the same arguments to see what
    a sync would change. Both write nothing. Pass `--profile` or `--conventions`
    only to test a selection, and say that you did. Never run without `--audit`

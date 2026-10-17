@@ -146,6 +146,29 @@ Each document has one job:
 
 Top-level documents become short indexes as detail documents are added.
 
+## Adopting into an Existing Project
+
+A first sync overwrites managed files, including `AGENTS.md` and `CLAUDE.md`,
+even when a copy already exists. Before the first real run:
+
+1. Commit or back up the target.
+2. Move your own rules from an existing `AGENTS.md` or `CLAUDE.md` into
+   `.agents/project.md`, which stays project-owned.
+3. Run with `--dry-run --diff` and read what would be lost. A file with no
+   recorded baseline is flagged `no recorded baseline`, and the run ends with a
+   `NOTE:` line when any managed file would be overwritten that way.
+
+`--target` defaults to the current directory.
+
+| Term | Meaning |
+|---|---|
+| Managed file | Owned by the pack; overwritten whenever it differs. |
+| Template | Read-only reference under `docs/templates/`. |
+| Scaffold | A project file created once from a template, then project-owned. |
+| Baseline | The hash recorded in `.repo-seed-state.json` when a file was last synced. |
+| Tombstone | A record of an unselected file that was kept because it was modified. |
+| Drift | A target that differs from what the pack and recorded state expect (`--audit`). |
+
 ## Download and First Sync
 
 Download the latest ZIP from

@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 5.18.2 - 2026-10-17
+
+Changed the sync to stop before writing anything when a managed file is not valid UTF-8, to show a diff and a closing note when a first sync overwrites a file with no recorded baseline, and to require the sync script when discovering a pack. Changed the audit to report non-UTF-8 and symlinked paths as findings instead of failing, and the manifest loaders to reject wrongly typed fields and a non-object state file with a clear error. Changed the release builder to reject `package_files: null` like the sync script. Changed the reusable drift workflow to drop persisted checkout credentials, run one audit per repository at a time, skip repositories without repo-seed state or with issues disabled, and look through up to 1000 issues, and the release workflow to tag the tested commit. Changed the Git guidance to say agents commit, push, open pull requests, merge, and delete branches only when asked, to cover pull request descriptions in the attribution rule, to resolve the base-branch contradiction, and to add the hotfix-into-release merge row. Fixed the changelog template, the bootstrap and audit skills, the drift-check template comment about Dependabot, and the pack README.
+
 ## 5.18.1 - 2026-10-17
 
 Clarified the `git.md` rule on attribution. It now says what it always meant:

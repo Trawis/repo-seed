@@ -118,6 +118,45 @@ class ManifestTests(unittest.TestCase):
         for asset in self.manifest.assets:
             self.assertTrue((PACK_ROOT / "files" / Path(asset.path)).is_file(), asset.path)
 
+    def test_sync_and_builder_accept_and_reject_the_same_manifests(self):
+        import copy
+        import shutil
+        import tempfile
+
+        original = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        first_template = next(i for i, a in enumerate(original["assets"]) if a["type"] == "template" and "scaffold_group" in a)
+
+        def mutate(fn):
+            data = copy.deepcopy(original)
+            fn(data)
+            return data
+
+        cases = {
+            "unchanged": mutate(lambda d: None),
+            "package_files null": mutate(lambda d: d.__setitem__("package_files", None)),
+            "package_files string": mutate(lambda d: d.__setitem__("package_files", "README.md")),
+            "package_files absent": mutate(lambda d: d.pop("package_files")),
+            "asset type list": mutate(lambda d: d["assets"][0].__setitem__("type", ["managed"])),
+            "scaffold_group list": mutate(lambda d: d["assets"][first_template].__setitem__("scaffold_group", ["project"])),
+            "workflows group outside workflows": mutate(
+                lambda d: d["assets"][-1].__setitem__("scaffold_target", ".github/other.yml")
+            ),
+            "profiles null": mutate(lambda d: d.__setitem__("profiles", None)),
+        }
+        for name, data in cases.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as temp:
+                pack = Path(temp) / "pack"
+                shutil.copytree(PACK_ROOT, pack)
+                (pack / "manifest.json").write_text(json.dumps(data), encoding="utf-8")
+                outcomes = []
+                for loader in (lambda: sync.load_manifest(pack), lambda: bundle_builder.load_manifest(pack)):
+                    try:
+                        loader()
+                        outcomes.append(True)
+                    except ValueError:
+                        outcomes.append(False)
+                self.assertEqual(outcomes[0], outcomes[1], f"loaders disagree on: {name}")
+
     def test_full_profile_is_removed(self):
         self.assertNotIn("full", self.manifest.profiles)
         for asset in self.manifest.assets:
@@ -1525,6 +1564,65 @@ class ConventionSelectionTests(unittest.TestCase):
 
 
 class SyncBehaviorTests(unittest.TestCase):
+    def cli(self, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(SYNC_SCRIPT), "--source", str(PACK_ROOT), *args],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def test_non_utf8_managed_file_stops_the_sync_before_any_write(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            (target / "AGENTS.md").write_bytes(b"caf\xe9 not utf-8")
+            result = self.cli("--target", str(target), "--profile", "minimal")
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("not valid UTF-8", result.stderr)
+            self.assertEqual((target / "AGENTS.md").read_bytes(), b"caf\xe9 not utf-8")
+            self.assertFalse((target / ".repo-seed-state.json").exists())
+            self.assertFalse((target / "CLAUDE.md").exists())
+
+    def test_overwrite_without_baseline_shows_a_diff_and_a_note(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            (target / "AGENTS.md").write_text("my own rules\n", encoding="utf-8")
+            dry = self.cli("--target", str(target), "--profile", "minimal", "--dry-run", "--diff")
+            self.assertEqual(dry.returncode, 0, dry.stderr)
+            self.assertIn("no recorded baseline", dry.stdout)
+            self.assertIn("+my own rules", dry.stdout)
+            self.assertIn("NOTE:", dry.stdout)
+            self.assertEqual((target / "AGENTS.md").read_text(encoding="utf-8"), "my own rules\n")
+            real = self.cli("--target", str(target), "--profile", "minimal")
+            self.assertIn("NOTE:", real.stdout)
+            self.assertIn("without a recorded baseline", real.stdout)
+
+    def test_audit_reports_non_utf8_managed_file_as_drift(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "minimal")
+            (target / "AGENTS.md").write_bytes(b"\xff\xfe bad")
+            result = self.cli("--target", str(target), "--audit")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("drift: AGENTS.md is not valid UTF-8", result.stdout)
+
+    def test_state_that_is_not_an_object_or_too_deep_is_rejected_cleanly(self):
+        for content in ("[1, 2]", "[" * 100000):
+            with self.subTest(content[:5]), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                (target / ".repo-seed-state.json").write_text(content, encoding="utf-8")
+                result = self.cli("--target", str(target), "--profile", "minimal", "--dry-run")
+                self.assertEqual(result.returncode, 2)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_discovery_requires_the_sync_script(self):
+        with tempfile.TemporaryDirectory() as temp:
+            pack = Path(temp) / "pack"
+            shutil.copytree(PACK_ROOT, pack)
+            (pack / "files" / "scripts" / "sync-docs.py").unlink()
+            with self.assertRaises((ValueError, FileNotFoundError)):
+                sync.load_manifest(pack)
+
     def test_matching_managed_files_are_unchanged_without_rewriting(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
