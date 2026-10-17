@@ -1169,6 +1169,35 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("drift: AGENTS.md is not valid UTF-8", result.stdout)
 
+    def test_audit_reports_the_direction_of_version_drift(self):
+        major, minor, patch = (int(part) for part in PACK_VERSION.split("."))
+        cases = {
+            "older": (f"{major}.{minor - 1}.{patch}" if minor else f"{major - 1}.0.0", "behind"),
+            "older numerically, later as text": ("5.9.0", "behind"),
+            "newer": (f"{major}.{minor}.{patch + 1}", "ahead of"),
+            "newer numerically, earlier as text": (f"{major}.{minor + 100}.0", "ahead of"),
+            "same": (PACK_VERSION, None),
+        }
+        for name, (recorded, direction) in cases.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                sync.synchronize(PACK_ROOT, target, "minimal")
+                state_path = target / ".repo-seed-state.json"
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+                state["pack_version"] = recorded
+                state_path.write_text(json.dumps(state), encoding="utf-8")
+                before = state_path.read_bytes()
+                result = self.cli("--target", str(target), "--audit")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(state_path.read_bytes(), before)
+                self.assertIn(f"pack version (target): {recorded}", result.stdout)
+                drift = [line for line in result.stdout.splitlines() if "target pack version" in line]
+                if direction is None:
+                    self.assertEqual(drift, [])
+                    self.assertIn("no drift detected", result.stdout)
+                else:
+                    self.assertEqual(drift, [f"drift: target pack version is {direction} the source pack"])
+
     def test_state_that_is_not_an_object_or_too_deep_is_rejected_cleanly(self):
         for content in ("[1, 2]", "[" * 100000):
             with self.subTest(content[:5]), tempfile.TemporaryDirectory() as temp:
