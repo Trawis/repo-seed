@@ -49,5 +49,61 @@ class AuditWorkflowTests(unittest.TestCase):
         self.assertIn("issues: write", readme)
 
 
+SYNC_WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "sync.yml"
+SYNC_TEMPLATE = REPOSITORY_ROOT / "pack" / "files" / "docs" / "templates" / ".github" / "repo-seed-sync.template.yml"
+
+
+class SyncWorkflowTests(unittest.TestCase):
+    def setUp(self):
+        self.text = SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+    def test_it_is_only_a_reusable_workflow(self):
+        block = re.search(r"(?ms)^on:\n(.*?)^\S", self.text + "\nx")
+        self.assertIsNotNone(block)
+        self.assertEqual(re.findall(r"^  (\w+):", block.group(1), re.M), ["workflow_call"])
+        self.assertNotIn("pull_request_target", self.text)
+
+    def test_permissions_are_limited_to_contents_and_pull_requests(self):
+        granted = set(re.findall(r"^\s+(\w[\w-]*): (read|write)$", self.text, re.M))
+        self.assertEqual(granted, {("contents", "read"), ("contents", "write"), ("pull-requests", "write")})
+
+    def test_the_download_is_verified_and_no_scaffold_or_selection_flag_is_passed(self):
+        self.assertIn("sha256sum --check", self.text)
+        self.assertEqual(self.text.count('/sync-docs.py"'), 2)
+        for flag in ("--scaffold", "--profile", "--conventions"):
+            self.assertNotIn(flag + " ", self.text.replace("# Neither step passes", ""))
+
+    def test_the_script_never_runs_with_the_write_token(self):
+        checkout = re.search(r"uses: actions/checkout@\S+\n((?:\s+.+\n)+)", self.text)
+        self.assertIn("persist-credentials: false", checkout.group(1))
+        run_step = re.search(r"- name: Preview and apply the sync\n(.*?)\n      - name:", self.text, re.S).group(1)
+        self.assertNotIn("GH_TOKEN", run_step)
+        self.assertIn("secrets.token || github.token", self.text)
+
+    def test_it_owns_one_branch_and_never_duplicates_the_pull_request(self):
+        self.assertIn("SYNC_BRANCH: chore/repo-seed-sync", self.text)
+        self.assertIn("gh pr list --head", self.text)
+        self.assertIn("gh pr edit", self.text)
+        self.assertIn("gh pr create", self.text)
+        self.assertIn("gh pr close", self.text)
+        self.assertRegex(self.text, r"(?m)^concurrency:\n  group: .*github\.repository.*\n  cancel-in-progress: false$")
+
+    def test_a_repository_without_state_or_off_the_default_branch_is_skipped(self):
+        self.assertIn("-f .repo-seed-state.json", self.text)
+        self.assertIn("defaultBranchRef", self.text)
+
+    def test_the_pinned_version_is_validated_before_use(self):
+        self.assertIn("PACK_VERSION_INPUT", self.text)
+        self.assertIn("[0-9]+\\.[0-9]+\\.[0-9]+", self.text)
+
+    def test_the_caller_template_matches_the_workflow(self):
+        template = SYNC_TEMPLATE.read_text(encoding="utf-8")
+        self.assertIn("Trawis/repo-seed/.github/workflows/sync.yml@v__PACK_VERSION__", template)
+        self.assertIn("contents: write", template)
+        self.assertIn("pull-requests: write", template)
+        readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Trawis/repo-seed/.github/workflows/sync.yml@v", readme)
+
+
 if __name__ == "__main__":
     unittest.main()
