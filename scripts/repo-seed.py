@@ -138,14 +138,15 @@ def check_entry(entry: object, index: int, pack_root: Path, manifest: dict, erro
         errors.append(f"{context}: source_revision must be a full 40-character lowercase commit SHA")
         revision = None
     license_id = entry.get("license")
-    if license_id not in ALLOWED_LICENSES:
+    if not isinstance(license_id, str) or license_id not in ALLOWED_LICENSES:
         errors.append(
             f"{context}: license {license_id!r} is not an allowed redistributable license "
             f"({', '.join(sorted(ALLOWED_LICENSES))}); unlicensed or incompatible sources are rejected"
         )
         license_id = None
     posix_path(entry.get("license_evidence"), f"{context}: license_evidence", errors)
-    if entry.get("adaptation") not in ADAPTATIONS:
+    adaptation = entry.get("adaptation")
+    if not isinstance(adaptation, str) or adaptation not in ADAPTATIONS:
         errors.append(f"{context}: adaptation must be one of {', '.join(sorted(ADAPTATIONS))}")
     reviewed = entry.get("reviewed")
     if not isinstance(reviewed, str) or not DATE_PATTERN.fullmatch(reviewed):
@@ -156,8 +157,13 @@ def check_entry(entry: object, index: int, pack_root: Path, manifest: dict, erro
 
     declared_raw = entry.get("distributed_files")
     declared: set[str] = set()
-    if not isinstance(declared_raw, list) or not declared_raw or len(declared_raw) != len(set(declared_raw)):
-        errors.append(f"{context}: distributed_files must be a non-empty list without duplicates")
+    if (
+        not isinstance(declared_raw, list)
+        or not declared_raw
+        or not all(isinstance(item, str) for item in declared_raw)
+        or len(declared_raw) != len(set(declared_raw))
+    ):
+        errors.append(f"{context}: distributed_files must be a non-empty list of strings without duplicates")
     else:
         for item in declared_raw:
             if posix_path(item, f"{context}: distributed_files entry", errors):
