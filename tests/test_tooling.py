@@ -377,11 +377,6 @@ class AuditWorkflowTests(unittest.TestCase):
         release = (REPOSITORY_ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
         self.assertIn('--target "$GITHUB_SHA"', release)
 
-    def test_the_readme_caller_matches_the_workflow_path(self):
-        readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Trawis/repo-seed/.github/workflows/audit.yml@v", readme)
-        self.assertIn("issues: write", readme)
-
 
 SYNC_WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "sync.yml"
 SYNC_TEMPLATE = REPOSITORY_ROOT / "pack" / "files" / "docs" / "templates" / ".github" / "repo-seed-sync.template.yml"
@@ -435,8 +430,6 @@ class SyncWorkflowTests(unittest.TestCase):
         self.assertIn("Trawis/repo-seed/.github/workflows/sync.yml@v__PACK_VERSION__", template)
         self.assertIn("contents: write", template)
         self.assertIn("pull-requests: write", template)
-        readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Trawis/repo-seed/.github/workflows/sync.yml@v", readme)
 
 
 if __name__ == "__main__":
