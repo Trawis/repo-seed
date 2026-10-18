@@ -19,26 +19,6 @@
       "name": "type: chore",
       "description": "Upkeep of tooling and files around the code: dependencies, CI, build, config, or docs.",
       "color": "c5def5"
-    },
-    {
-      "name": "priority: critical",
-      "description": "Optional. Requires urgent attention.",
-      "color": "b60205"
-    },
-    {
-      "name": "priority: high",
-      "description": "Optional. Should be addressed soon.",
-      "color": "d93f0b"
-    },
-    {
-      "name": "priority: medium",
-      "description": "Optional. Normal priority.",
-      "color": "fef2c0"
-    },
-    {
-      "name": "priority: low",
-      "description": "Optional. Can wait.",
-      "color": "c2e0c6"
     }
   ]
 }

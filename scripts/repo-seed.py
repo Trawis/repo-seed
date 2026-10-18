@@ -255,14 +255,22 @@ LEGACY_LABELS = {
     "bug": "type: bug",
     "enhancement": "type: feature",
     "feature": "type: feature",
-    "critical": "priority: critical",
-    "high": "priority: high",
-    "medium": "priority: medium",
-    "low": "priority: low",
-    "lowest": "priority: low",
+    "critical": None,
+    "high": None,
+    "medium": None,
+    "low": None,
+    "lowest": None,
+    "priority: critical": None,
+    "priority: high": None,
+    "priority: medium": None,
+    "priority: low": None,
     "type: decision": RETIRED_TYPE_REPLACEMENT,
     "type: idea": RETIRED_TYPE_REPLACEMENT,
 }
+
+
+def legacy_hint(replacement: str | None) -> str:
+    return "retired, no replacement" if replacement is None else f"replace with '{replacement}'"
 
 
 def load_catalog(path: Path) -> list[dict]:
@@ -363,7 +371,7 @@ def audit(catalog: list[dict], hosted: list[dict]) -> list[str]:
             findings.append(f"drift: {name} differs from the canonical catalog")
     for legacy_name, replacement in LEGACY_LABELS.items():
         if legacy_name.lower() in hosted_by_name:
-            findings.append(f"legacy label: '{legacy_name}' is still hosted (replace with '{replacement}')")
+            findings.append(f"legacy label: '{legacy_name}' is still hosted ({legacy_hint(replacement)})")
     return findings
 
 
@@ -380,7 +388,7 @@ def apply_catalog(gh: str, repo: str | None, catalog: list[dict], hosted: list[d
             report.append(f"updated: {label['name']}")
     for legacy_name, replacement in LEGACY_LABELS.items():
         if legacy_name.lower() in hosted_by_name:
-            report.append(f"legacy label present, not removed: '{legacy_name}' (replace with '{replacement}')")
+            report.append(f"legacy label present, not removed: '{legacy_name}' ({legacy_hint(replacement)})")
     return report
 
 

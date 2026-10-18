@@ -59,8 +59,8 @@ ownership.
 ## Hosted GitHub Labels
 
 `pack/github-labels.json` and `scripts/repo-seed.py labels` are maintainer
-tools. They are not synced into targets. The catalog defines the `type:*` and
-`priority:*` labels described in
+tools. They are not synced into targets. The catalog defines the `type:*`
+labels described in
 [Issue guidance](pack/files/.agents/guidelines/issues.md).
 
 The tool is optional and never runs during `sync-docs.py`. It needs the

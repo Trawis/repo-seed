@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.0 - 2026-10-18
+
+Removed the four `priority:*` labels from the label catalog and the Priority Labels and Area Labels sections from the issue guidance, and dropped priority from the issue-authoring skill. Changed `repo-seed.py labels` to report hosted `priority:*` labels and the old `critical`, `high`, `medium`, `low`, and `lowest` labels as retired with no replacement. Hosted labels are still never deleted, and existing repositories keep any labels they have.
+
 ## 5.19.5 - 2026-10-17
 
 Fixed the repository-audit skill to run the source pack's `sync-docs.py` with `--source`, `--target`, and `--audit` instead of the target's possibly outdated copy. Fixed `--audit` to report a target pack version newer than the source as ahead instead of behind, comparing versions numerically; a matching version still reports no version drift.

@@ -2400,10 +2400,6 @@ class GitHubLabelToolTests(unittest.TestCase):
                 "type: feature",
                 "type: tech-debt",
                 "type: chore",
-                "priority: critical",
-                "priority: high",
-                "priority: medium",
-                "priority: low",
             },
         )
         guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
@@ -2435,6 +2431,25 @@ class GitHubLabelToolTests(unittest.TestCase):
         self.assertEqual(result, 2)
         self.assertIn("error: gh label create failed for", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_retired_priority_labels_are_reported_without_a_replacement(self):
+        catalog = tooling.load_catalog(GITHUB_LABELS_CATALOG)
+        hosted = [
+            {"name": entry["name"], "description": entry["description"], "color": entry["color"]}
+            for entry in catalog
+        ] + [
+            {"name": "priority: high", "description": "x", "color": "ffffff"},
+            {"name": "critical", "description": "x", "color": "ffffff"},
+        ]
+        findings = tooling.audit(catalog, hosted)
+        self.assertEqual(
+            findings,
+            [
+                "legacy label: 'critical' is still hosted (retired, no replacement)",
+                "legacy label: 'priority: high' is still hosted (retired, no replacement)",
+            ],
+        )
+        self.assertFalse(any(entry["name"].startswith("priority:") for entry in catalog))
 
     def test_audit_reports_missing_drift_and_legacy_labels(self):
         catalog = [
