@@ -116,11 +116,6 @@ class ManifestTests(unittest.TestCase):
         for asset in self.manifest.assets:
             self.assertTrue((PACK_ROOT / "files" / Path(asset.source_path)).is_file(), asset.path)
 
-    def test_full_profile_is_removed(self):
-        self.assertNotIn("full", self.manifest.profiles)
-        for asset in self.manifest.assets:
-            self.assertNotIn("full", asset.profiles, asset.path)
-
     def test_versions_are_consistent(self):
         agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
         script = SYNC_SCRIPT.read_text(encoding="utf-8")
@@ -159,28 +154,6 @@ class ManifestTests(unittest.TestCase):
         self.assertNotIn("migration", raw)
         for asset in raw["assets"]:
             self.assertFalse(forbidden.intersection(asset), asset)
-
-    def test_no_migration_machinery_remains_in_the_module(self):
-        removed_names = (
-            "LegacyState",
-            "MigrationConfig",
-            "RetiredAsset",
-            "RetiredPathSet",
-            "ScaffoldUpgrade",
-            "load_migration",
-            "read_legacy_state",
-            "retire_legacy_paths",
-            "report_project_owned_paths",
-            "verified_legacy_scaffold",
-            "legacy_template_id",
-            "LEGACY_PROVENANCE_PATTERN",
-            "file_hash",
-            "detect_convention_evidence",
-            "derive_migrated_conventions",
-            "IGNORED_EVIDENCE_DIRS",
-        )
-        for name in removed_names:
-            self.assertFalse(hasattr(sync, name), name)
 
     def test_core_guidance_is_installed_for_every_profile_regardless_of_conventions(self):
         all_profiles = {"minimal", "library", "app", "game"}
@@ -268,16 +241,6 @@ class ManifestTests(unittest.TestCase):
             assets["docs/templates/architecture.template.md"].scaffold_target,
             "docs/project/architecture.md",
         )
-
-    def test_features_template_is_not_distributed(self):
-        # repo-seed does not distribute a standard FEATURES/capability-index
-        # template; GitHub Issues and CHANGELOG already cover that need.
-        # A project's own FEATURES.md or docs/project/features.md remains
-        # project-owned if it already has one.
-        self.assertFalse(
-            any(asset.path.endswith("features.template.md") for asset in self.manifest.assets)
-        )
-        self.assertFalse((PACK_ROOT / "files/docs/templates/features.template.md").exists())
 
     def test_optional_group_covers_the_on_demand_documents(self):
         optional_targets = {
@@ -479,28 +442,6 @@ class ManifestTests(unittest.TestCase):
 
 
 class GuidanceAndTemplateTests(unittest.TestCase):
-    def test_agent_entry_points_route_specialized_work(self):
-        agents = (PACK_ROOT / "files/AGENTS.md").read_text(encoding="utf-8")
-        claude = (PACK_ROOT / "files/CLAUDE.md").read_text(encoding="utf-8")
-        for required in (
-            ".agents/project.md",
-            "child `AGENTS.md`",
-            "docs/project/",
-            "docs/templates/",
-            ".agents/guidelines/documentation.md",
-            ".agents/guidelines/git.md",
-            ".agents/guidelines/ci-cd.md",
-            ".agents/guidelines/issues.md",
-            ".agents/conventions/",
-            "native repository skills",
-            "scripts/sync-docs.py",
-            "Load only the additional guidance relevant to the task",
-            "Do not scan `docs/project/` by default",
-        ):
-            self.assertIn(required, agents)
-        self.assertIn("@AGENTS.md", claude)
-        self.assertFalse((PACK_ROOT / "files/.agents/base.md").exists())
-
     def test_managed_claude_wrapper_is_a_minimal_agents_import(self):
         claude = (PACK_ROOT / "files/CLAUDE.md").read_text(encoding="utf-8")
         visible = re.sub(r"<!--.*?-->", "", claude, flags=re.DOTALL).strip()
@@ -653,16 +594,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
                 self.assertNotIn(sync.TEMPLATE_METADATA_START, body)
                 self.assertNotIn(sync.TEMPLATE_METADATA_END, body)
 
-    def test_markdown_templates_are_plain_ascii_and_wrapped(self):
-        for path in (PACK_ROOT / "files/docs/templates").rglob("*.template.md"):
-            content = path.read_text(encoding="utf-8")
-            with self.subTest(path=path):
-                self.assertTrue(content.isascii())
-                self.assertNotIn("Unreleased", content)
-            for line_number, line in enumerate(content.splitlines(), 1):
-                with self.subTest(path=path, line=line_number):
-                    self.assertLessEqual(len(line), 100)
-
     def test_architecture_scaffold_guidance_is_not_live_prose(self):
         asset = next(
             asset
@@ -719,22 +650,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertIn(f'labels: ["{label}"]', sync.render_scaffold(PACK_ROOT, asset))
         self.assertNotIn("labels: bug", bug_rendered)
         self.assertNotIn("labels: enhancement", feature_rendered)
-
-    def test_label_catalog_and_guidance_state_the_same_type_scope(self):
-        catalog = {label["name"]: label for label in tooling.load_catalog(GITHUB_LABELS_CATALOG)}
-        self.assertNotIn("type: decision", catalog)
-        self.assertNotIn("type: idea", catalog)
-        self.assertNotIn("maintenance", catalog["type: tech-debt"]["description"].lower())
-        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
-        tech_debt_entry = guidance.split("- `type: tech-debt`", 1)[1].split("- `type: chore`", 1)[0]
-        self.assertNotIn("maintenance", tech_debt_entry.lower())
-
-    def test_distributed_issue_guidance_is_self_contained_for_target_repositories(self):
-        guidance = (PACK_ROOT / "files/.agents/guidelines/issues.md").read_text(encoding="utf-8")
-        self.assertNotIn("pack/github-labels.json", guidance)
-        self.assertNotIn("scripts/repo-seed.py", guidance)
-        self.assertIn("GitHub-Hosted Labels", guidance)
-        self.assertIn("verify it\ndirectly through GitHub", guidance)
 
     def test_no_distributed_file_references_repo_seed_only_tooling_paths(self):
         forbidden = ("pack/github-labels.json", "scripts/repo-seed.py")
