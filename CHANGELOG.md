@@ -11,7 +11,7 @@ Use newest entries first. Do not dump raw git commits here.
 
 ## 6.0.0 - 2026-10-18
 
-Removed the four `priority:*` labels from the label catalog and the Priority Labels and Area Labels sections from the issue guidance, and dropped priority from the issue-authoring skill. Changed `repo-seed.py labels` to report hosted `priority:*` labels and the old `critical`, `high`, `medium`, `low`, and `lowest` labels as retired with no replacement. Hosted labels are still never deleted, and existing repositories keep any labels they have.
+Removed the four `priority:*` labels from the label catalog and the Priority Labels and Area Labels sections from the issue guidance, and dropped priority from the issue-authoring skill. Changed `repo-seed.py labels` to report hosted `priority:*` labels and the old `critical`, `high`, `medium`, `low`, and `lowest` labels as retired with no replacement. Hosted labels are still never deleted, and existing repositories keep any labels they have. Raised the minimum supported Python to 3.14, the only version CI tests, and moved the reusable audit and sync workflows to Python 3.14.
 
 ## 5.19.5 - 2026-10-17
 
