@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.1 - 2026-10-18
+
+Fixed `--audit` to report a tombstoned path that is a symbolic link, including a dangling one, instead of reporting no drift. Fixed the reusable audit workflow to edit or close only drift issues whose body starts with its `<!-- repo-seed-audit -->` marker, so an unrelated issue with the same title is left alone. An open drift issue created by an earlier release has no marker, so close it manually once the workflow opens its marked replacement.
+
 ## 6.0.0 - 2026-10-18
 
 Removed the four `priority:*` labels from the label catalog and the Priority Labels and Area Labels sections from the issue guidance, and dropped priority from the issue-authoring skill. Changed `repo-seed.py labels` to report hosted `priority:*` labels and the old `critical`, `high`, `medium`, `low`, and `lowest` labels as retired with no replacement. Hosted labels are still never deleted, and existing repositories keep any labels they have. Raised the minimum supported Python to 3.14, the only version CI tests, and moved the reusable audit and sync workflows to Python 3.14.

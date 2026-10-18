@@ -4,7 +4,9 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -372,6 +374,34 @@ class AuditWorkflowTests(unittest.TestCase):
         self.assertIn("-f .repo-seed-state.json", self.text)
         self.assertIn("hasIssuesEnabled", self.text)
         self.assertIn("--limit 1000", self.text)
+
+    def test_only_issues_carrying_the_marker_are_selected_for_edit_or_close(self):
+        if shutil.which("jq") is None:
+            self.skipTest("jq is not installed")
+        jq_filter = re.search(r"--jq '(\.\[\] \| select\(.*?\) \| \.number)'", self.text)
+        self.assertIsNotNone(jq_filter, "audit.yml has no owned-issue selection")
+        title = re.search(r'ISSUE_TITLE: "(.+)"', self.text).group(1)
+        marker = re.search(r'ISSUE_MARKER: "(.+)"', self.text).group(1)
+        issues = [
+            {"number": 1, "title": title, "body": "written by a person"},
+            {"number": 2, "title": title, "body": f"{marker}\nreport"},
+            {"number": 3, "title": "another title", "body": marker},
+            {"number": 4, "title": title, "body": None},
+        ]
+        result = subprocess.run(
+            ["jq", "-r", jq_filter.group(1)],
+            input=json.dumps(issues),
+            capture_output=True,
+            text=True,
+            check=True,
+            env={"ISSUE_TITLE": title, "ISSUE_MARKER": marker, "PATH": os.environ["PATH"]},
+        )
+        self.assertEqual(result.stdout.split(), ["2"])
+
+    def test_the_issue_body_is_written_with_the_ownership_marker(self):
+        body = re.search(r'\{\n\s+echo "\$ISSUE_MARKER"\n', self.text)
+        self.assertIsNotNone(body, "the generated body does not start with the marker")
+        self.assertLess(body.start(), self.text.index("gh issue edit"))
 
     def test_the_release_is_tagged_at_the_tested_commit(self):
         release = (REPOSITORY_ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")

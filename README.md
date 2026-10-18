@@ -246,7 +246,10 @@ Pin `@` to a release tag. Dependabot can keep it current, but only if the reposi
 latest release, checks its SHA-256, and runs `sync-docs.py --audit` against the
 repository. While the audit reports drift, exactly one open issue titled
 `repo-seed: managed files are out of date` carries the audit output, and it
-closes itself once the audit is clean. The job fails only when the tooling
+closes itself once the audit is clean. The workflow only edits or closes issues
+whose body starts with its hidden `<!-- repo-seed-audit -->` marker. An open issue with the same title
+but no marker, such as one created by an earlier release or by hand, is left alone, and a new issue is
+opened; close the old one manually. The job fails only when the tooling
 itself fails, such as a checksum mismatch, not when drift is found. It needs
 `issues: write` and network access to GitHub. It changes no file; apply updates
 with the steps above.

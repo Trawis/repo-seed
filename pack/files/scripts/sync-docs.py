@@ -996,7 +996,7 @@ def audit_target(
         except ValueError:
             lines.append(f"tombstone: {path} (resolves outside the repository; review manually)")
             continue
-        if target.is_file():
+        if target.is_file() or target.is_symlink():
             lines.append(f"tombstone: {path} (preserved stale managed content requires review)")
 
     findings = [

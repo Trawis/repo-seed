@@ -1864,6 +1864,28 @@ class SyncBehaviorTests(unittest.TestCase):
             self.assertTrue(any("finding(s) reported above" in line for line in report))
             self.assertEqual(state_path.read_bytes(), state_before)
 
+    def test_audit_reports_a_tombstoned_dangling_symbolic_link(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "app")
+            link = target / "docs/old.md"
+            try:
+                link.symlink_to("missing-destination.md")
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are not available")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["tombstones"] = {"docs/old.md": "a" * 64}
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            state_before = state_path.read_bytes()
+
+            report = sync.audit_target(PACK_ROOT, target, "app")
+
+            self.assertIn("tombstone: docs/old.md (preserved stale managed content requires review)", report)
+            self.assertFalse(any(line.endswith("no drift detected") for line in report))
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(state_path.read_bytes(), state_before)
+
     def test_audit_reports_a_historical_managed_path_not_yet_tombstoned(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
