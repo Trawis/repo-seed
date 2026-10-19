@@ -14,7 +14,7 @@ This document defines ownership only. Usage belongs in `README.md`.
 | Package-only | `pack/README.md`, `pack/LICENSE`, `pack/github-labels.json`, and `pack/skill-sources.json` | Included in releases; never synced |
 | Managed | Listed path under `pack/files/` | Updated when pack content differs |
 | Managed template | `pack/files/docs/templates/` | Updated as a read-only reference when content differs |
-| Managed state | `.repo-seed-state.json` in a target | Records active managed hashes and unresolved tombstones |
+| Managed state | `.repo-seed-state.json` in a target | Records active managed hashes and unresolved tombstones; a recorded path is deleted only if unchanged and under a pack-owned tree |
 | Project-owned scaffold | Template destination | Created when missing; verified unchanged Markdown scaffolds may be upgraded |
 | Unmapped | Any unlisted target path | Never touched |
 
@@ -34,6 +34,12 @@ This document defines ownership only. Usage belongs in `README.md`.
 - `docs/project/`
 - scaffolded GitHub issue files, `.github/pull_request_template.md`, and the optional
   `.github/workflows/repo-seed-audit.yml` and `.github/workflows/repo-seed-sync.yml` once created
+
+A managed path that a release removes from the manifest is deleted from a target only
+when the file still matches its recorded hash and lies under `.agents/guidelines/`,
+`.agents/conventions/`, `.agents/skills/`, `.claude/skills/`, or `docs/templates/`
+(`RETIRABLE_TREES` in `sync-docs.py`). Anything else recorded in state is kept and
+tombstoned, because state alone does not prove a path is safe to delete.
 
 `pack/manifest.json` is the sole distributed inventory. Template files remain read-only references; agents update the corresponding project-owned document instead.
 

@@ -46,8 +46,8 @@ request with the changes; needs `contents: write` and `pull-requests: write`).
 Both are request-only; delete a file to turn it off.
 
 Commit the generated `.repo-seed-state.json`. It lets a smaller profile or a
-changed convention selection remove unchanged stale files and keep modified ones
-as tombstones for review.
+changed convention selection, or a release that drops a file, remove unchanged
+stale files and keep modified ones as tombstones for review.
 
 ## Update an Existing Project
 

@@ -910,16 +910,15 @@ class ConventionSelectionTests(unittest.TestCase):
             self.assertEqual(new_state["conventions"], ["csharp"])
 
             # The removed convention's managed file is no longer a manifest
-            # asset at all: the existing historical-managed-path mechanism
-            # preserves and tombstones it, exactly like any other retired
-            # managed asset, with no convention-specific migration logic.
-            self.assertTrue(old_tool.is_file())
-            self.assertIn(".agents/conventions/old-tool.md", new_state["tombstones"])
+            # asset at all. It sits in a pack-owned tree and still matches its
+            # recorded hash, so the generic retirement path removes it, with no
+            # convention-specific migration logic.
+            self.assertFalse(old_tool.exists())
+            self.assertNotIn(".agents/conventions/old-tool.md", new_state["tombstones"])
             self.assertTrue(
                 any(
-                    action.action == "preserve"
+                    action.action == "remove"
                     and action.path == ".agents/conventions/old-tool.md"
-                    and "no longer in the manifest" in action.detail
                     for action in actions
                 )
             )
@@ -1671,7 +1670,7 @@ class SyncBehaviorTests(unittest.TestCase):
             final_state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
             self.assertNotIn("src/important.py", final_state["tombstones"])
 
-    def test_a_future_manifest_that_removes_a_managed_asset_preserves_its_historical_file(self):
+    def test_a_future_manifest_that_removes_a_managed_asset_removes_its_unchanged_historical_file(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             target = root / "target"
@@ -1695,24 +1694,18 @@ class SyncBehaviorTests(unittest.TestCase):
             actions = sync.synchronize(future_pack, target, "app", conventions=frozenset({"csharp"}))
 
             # The state remains readable, sync proceeds normally, and the removed
-            # asset's historical file is preserved rather than auto-deleted.
-            self.assertTrue((target / ".agents/guidelines/ci-cd.md").is_file())
+            # asset's unchanged historical file is deleted.
+            self.assertFalse((target / ".agents/guidelines/ci-cd.md").exists())
             self.assertTrue((target / "AGENTS.md").is_file())
             self.assertTrue(
                 any(
-                    action.action == "preserve"
-                    and action.path == ".agents/guidelines/ci-cd.md"
-                    and "no longer in the manifest" in action.detail
+                    action.action == "remove" and action.path == ".agents/guidelines/ci-cd.md"
                     for action in actions
                 )
             )
             new_state = json.loads(state_path.read_text(encoding="utf-8"))
-            self.assertIn(".agents/guidelines/ci-cd.md", new_state["tombstones"])
-
-            (target / ".agents/guidelines/ci-cd.md").unlink()
-            sync.synchronize(future_pack, target, "app", conventions=frozenset({"csharp"}))
-            final_state = json.loads(state_path.read_text(encoding="utf-8"))
-            self.assertNotIn(".agents/guidelines/ci-cd.md", final_state["tombstones"])
+            self.assertNotIn(".agents/guidelines/ci-cd.md", new_state["tombstones"])
+            self.assertNotIn(".agents/guidelines/ci-cd.md", new_state["managed_files"])
 
     def test_fresh_sync_with_no_state_never_infers_ownership_of_a_matching_file(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2656,7 +2649,9 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             dry_run = self.run_sync(newer, target, "--dry-run")
             self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
             self.assertIn(f"remove         {deselected_unchanged}", dry_run.stdout)
+            self.assertIn(f"remove         {dropped_from_manifest}", dry_run.stdout)
             self.assertTrue((target / deselected_unchanged).is_file())
+            self.assertTrue((target / dropped_from_manifest).is_file())
 
             applied = self.run_sync(newer, target)
             self.assertEqual(applied.returncode, 0, applied.stderr)
@@ -2664,18 +2659,198 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             self.assertEqual(
                 (target / deselected_modified).read_text(encoding="utf-8"), "local architecture template edits\n"
             )
-            self.assertTrue((target / dropped_from_manifest).is_file())
+            self.assertFalse((target / dropped_from_manifest).exists())
             self.assertEqual(project_readme.read_text(encoding="utf-8"), "project readme\n")
             state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
             self.assertIn(deselected_modified, state["tombstones"])
-            self.assertIn(dropped_from_manifest, state["tombstones"])
+            self.assertNotIn(dropped_from_manifest, state["tombstones"])
             self.assertNotIn(deselected_unchanged, state["tombstones"])
             self.assertEqual(state["profile"], "app")
             self.assertEqual(state["conventions"], ["python"])
 
             audit = self.run_sync(newer, target, "--audit")
             self.assertIn(f"tombstone: {deselected_modified}", audit.stdout)
-            self.assertIn(f"tombstone: {dropped_from_manifest}", audit.stdout)
+            self.assertNotIn(f"tombstone: {dropped_from_manifest}", audit.stdout)
+
+    @staticmethod
+    def skill_paths(pack: Path, skill: str) -> tuple[str, ...]:
+        manifest = json.loads((pack / "manifest.json").read_text(encoding="utf-8"))
+        prefix = f".agents/skills/{skill}/"
+        return tuple(a["path"] for a in manifest["assets"] if a["path"].startswith(prefix))
+
+    def test_an_obsolete_skill_is_removed_from_both_agent_surfaces(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            custom = target / ".agents/skills/my-own/SKILL.md"
+            custom.parent.mkdir(parents=True)
+            custom.write_text("my own skill\n", encoding="utf-8")
+            claude_custom = target / ".claude/skills/my-own/SKILL.md"
+            claude_custom.parent.mkdir(parents=True)
+            claude_custom.write_text("my own skill\n", encoding="utf-8")
+            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            self.assertTrue(skill_files)
+            newer = self.newer_pack(root, remove=skill_files)
+
+            dry_run = self.run_sync(newer, target, "--dry-run")
+            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            before = self.snapshot(target)
+            for path in skill_files:
+                generated = ".claude/skills/" + path[len(".agents/skills/") :]
+                self.assertIn(f"remove         {path}", dry_run.stdout)
+                self.assertIn(f"remove         {generated}", dry_run.stdout)
+                self.assertTrue((target / path).is_file())
+                self.assertTrue((target / generated).is_file())
+            self.assertEqual(before, self.snapshot(target))
+
+            applied = self.run_sync(newer, target)
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            for path in skill_files:
+                self.assertFalse((target / path).exists())
+                self.assertFalse((target / (".claude/skills/" + path[len(".agents/skills/") :])).exists())
+            self.assertEqual(custom.read_text(encoding="utf-8"), "my own skill\n")
+            self.assertEqual(claude_custom.read_text(encoding="utf-8"), "my own skill\n")
+            self.assertTrue((target / ".agents/skills/bug-fix").parent.joinpath("code-review/SKILL.md").is_file())
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["tombstones"], {})
+            self.assertFalse([p for p in state["managed_files"] if "/bug-fix/" in p])
+
+            repeat = self.run_sync(newer, target, "--dry-run")
+            self.assertRegex(repeat.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
+            settled = self.snapshot(target)
+            self.assertEqual(self.run_sync(newer, target).returncode, 0)
+            self.assertEqual(settled, self.snapshot(target))
+
+    def test_an_obsolete_skill_file_with_local_edits_is_preserved_and_tombstoned(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            edited = skill_files[0]
+            generated = ".claude/skills/" + edited[len(".agents/skills/") :]
+            (target / edited).write_text("my edits\n", encoding="utf-8")
+            newer = self.newer_pack(root, remove=skill_files)
+
+            self.assertEqual(self.run_sync(newer, target).returncode, 0)
+
+            self.assertEqual((target / edited).read_text(encoding="utf-8"), "my edits\n")
+            self.assertFalse((target / generated).exists())
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(set(state["tombstones"]), {edited})
+
+    def test_a_recorded_path_outside_the_pack_owned_trees_is_never_removed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            for relative in ("src/app.py", ".agents/project.md", "docs/project/notes.md", "README.md"):
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(f"{relative} content\n", encoding="utf-8")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            for relative in ("src/app.py", ".agents/project.md", "docs/project/notes.md", "README.md"):
+                state["managed_files"][relative] = sync.managed_file_hash(target / relative)
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            applied = self.run_sync(PACK_ROOT, target)
+
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            new_state = json.loads(state_path.read_text(encoding="utf-8"))
+            for relative in ("src/app.py", ".agents/project.md", "docs/project/notes.md", "README.md"):
+                self.assertEqual((target / relative).read_text(encoding="utf-8"), f"{relative} content\n")
+                # A scaffold target is project-owned: kept, with no tombstone to review.
+                self.assertEqual(relative in new_state["tombstones"], relative != "README.md")
+
+    def test_unsafe_retired_paths_are_never_removed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            outside = root / "outside"
+            outside.mkdir()
+            (outside / "keep.md").write_text("outside content\n", encoding="utf-8")
+            link = target / ".agents/guidelines/retired-link.md"
+            directory = target / ".agents/guidelines/retired-dir.md"
+            directory.mkdir()
+            (directory / "inner.md").write_text("inner\n", encoding="utf-8")
+            dangling = target / ".agents/guidelines/retired-dangling.md"
+            try:
+                link.symlink_to(outside / "keep.md")
+                dangling.symlink_to("missing.md")
+                (target / ".agents/skills/escape").symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are not available")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            digest = "a" * 64
+            for relative in (
+                ".agents/guidelines/retired-link.md",
+                ".agents/guidelines/retired-dir.md",
+                ".agents/guidelines/retired-dangling.md",
+                ".agents/skills/escape/keep.md",
+            ):
+                state["managed_files"][relative] = digest
+            state["managed_files"][".agents/skills/escape/keep.md"] = sync.managed_file_hash(outside / "keep.md")
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            applied = self.run_sync(PACK_ROOT, target)
+
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertTrue(link.is_symlink())
+            self.assertTrue(dangling.is_symlink())
+            self.assertTrue((directory / "inner.md").is_file())
+            self.assertEqual((outside / "keep.md").read_text(encoding="utf-8"), "outside content\n")
+            new_state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                {
+                    ".agents/guidelines/retired-link.md",
+                    ".agents/guidelines/retired-dir.md",
+                    ".agents/guidelines/retired-dangling.md",
+                    ".agents/skills/escape/keep.md",
+                },
+                set(new_state["tombstones"]),
+            )
+
+    def test_a_retired_file_with_a_stale_tombstone_is_removed_once_it_matches_again(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root)
+            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            edited = skill_files[0]
+            original = (target / edited).read_text(encoding="utf-8")
+            (target / edited).write_text("my edits\n", encoding="utf-8")
+            newer = self.newer_pack(root, remove=skill_files)
+            self.assertEqual(self.run_sync(newer, target).returncode, 0)
+            self.assertTrue((target / edited).is_file())
+
+            (target / edited).write_text(original, encoding="utf-8")
+            self.assertEqual(self.run_sync(newer, target).returncode, 0)
+
+            self.assertFalse((target / edited).exists())
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["tombstones"], {})
+
+    def test_a_retired_path_that_becomes_project_owned_is_left_alone(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = self.installed(root, profile="app")
+            scaffold_target = None
+            manifest = json.loads((PACK_ROOT / "manifest.json").read_text(encoding="utf-8"))
+            for asset in manifest["assets"]:
+                if asset.get("scaffold_target", "").startswith("docs/project/"):
+                    scaffold_target = asset["scaffold_target"]
+                    break
+            self.assertIsNotNone(scaffold_target)
+            project_file = target / scaffold_target
+            project_file.parent.mkdir(parents=True, exist_ok=True)
+            project_file.write_text("project content\n", encoding="utf-8")
+            state_path = target / ".repo-seed-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["managed_files"][scaffold_target] = sync.managed_file_hash(project_file)
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            self.assertEqual(self.run_sync(PACK_ROOT, target).returncode, 0)
+
+            self.assertEqual(project_file.read_text(encoding="utf-8"), "project content\n")
 
 
 if __name__ == "__main__":
