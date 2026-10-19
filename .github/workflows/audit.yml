@@ -30,6 +30,8 @@ jobs:
       # The repository that publishes the pack. Not the caller.
       PACK_REPOSITORY: Trawis/repo-seed
       ISSUE_TITLE: "repo-seed: managed files are out of date"
+      # Only open issues whose body carries this marker are edited or closed.
+      ISSUE_MARKER: "<!-- repo-seed-audit -->"
 
     steps:
       - uses: actions/checkout@v7
@@ -91,12 +93,12 @@ jobs:
             echo "::notice::Issues are disabled in this repository, so drift is reported only in the job log."
             exit 0
           fi
-          numbers=$(gh issue list --state open --limit 1000 --json number,title \
-            --jq '.[] | "\(.number)\t\(.title)"' \
-            | awk -F '\t' -v title="$ISSUE_TITLE" '$2 == title { print $1 }')
+          numbers=$(gh issue list --state open --limit 1000 --json number,title,body \
+            --jq '.[] | select(.title == env.ISSUE_TITLE and ((.body // "") | contains(env.ISSUE_MARKER))) | .number')
           number=$(printf '%s\n' "$numbers" | head -n 1)
           if [ "$DRIFT" = "true" ]; then
             {
+              echo "$ISSUE_MARKER"
               echo "The latest repo-seed release is \`$PACK_TAG\`. \`sync-docs.py --audit\` reported:"
               echo
               echo '```text'
