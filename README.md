@@ -40,9 +40,14 @@ local changes are overwritten on the next sync.
 Project-owned scaffolds are created only when missing. They are preserved unless
 their provenance proves they are unchanged and safe to upgrade.
 
-When a profile or convention change unselects a managed file, repo-seed removes
-it only if it still matches the recorded hash. A modified file is kept and
-tombstoned for review.
+When a profile or convention change unselects a managed file, or a newer release
+drops it from the manifest, repo-seed removes it only if it still matches the
+recorded hash. A modified file is kept and tombstoned for review. This includes
+retired skills under `.agents/skills/` and `.claude/skills/`. A file the manifest no
+longer lists is removed automatically only under the pack-owned trees
+`.agents/guidelines/`, `.agents/conventions/`, `.agents/skills/`, `.claude/skills/`,
+and `docs/templates/`. Recorded paths anywhere else, symbolic links, directories,
+and paths that resolve outside the repository are kept and tombstoned.
 
 Run `--dry-run` first and commit or back up the target. The dry run marks a
 managed overwrite that would discard local edits with `and discard local

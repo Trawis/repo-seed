@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.2 - 2026-10-19
+
+Fixed `sync-docs.py` so a managed file that a release removes from the manifest, such as a retired skill under `.agents/skills/` and `.claude/skills/`, is deleted from the target when it still matches its recorded hash. Previously every such file was kept and tombstoned. A modified file is still kept and tombstoned, and a recorded path outside `.agents/guidelines/`, `.agents/conventions/`, `.agents/skills/`, `.claude/skills/`, and `docs/templates/` is never deleted, nor is a symbolic link, directory, or path outside the repository. Existing tombstones for files that now match again are cleared on the next sync.
+
 ## 6.0.1 - 2026-10-18
 
 Fixed `--audit` to report a tombstoned path that is a symbolic link, including a dangling one, instead of reporting no drift. Fixed the reusable audit workflow to edit or close only drift issues whose body starts with its `<!-- repo-seed-audit -->` marker, so an unrelated issue with the same title is left alone. An open drift issue created by an earlier release has no marker, so close it manually once the workflow opens its marked replacement.
