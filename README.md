@@ -24,12 +24,12 @@ Reusable coding-agent guidance and project-document templates with a small sync 
 
 ## Requirements
 
-- Python 3.11 or newer;
+- Python 3.14 or newer;
 - a writable target repository;
 - Windows, Linux, or macOS.
 
 The scripts use only the Python standard library. CI runs Python 3.14 on Linux
-and Windows only. Older Python versions and macOS are not tested.
+and Windows only. Older Python versions are not supported, and macOS is not tested.
 
 ## Safety
 
@@ -59,8 +59,8 @@ ownership.
 ## Hosted GitHub Labels
 
 `pack/github-labels.json` and `scripts/repo-seed.py labels` are maintainer
-tools. They are not synced into targets. The catalog defines the `type:*` and
-`priority:*` labels described in
+tools. They are not synced into targets. The catalog defines the `type:*`
+labels described in
 [Issue guidance](pack/files/.agents/guidelines/issues.md).
 
 The tool is optional and never runs during `sync-docs.py`. It needs the
