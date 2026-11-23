@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.3 - 2026-11-21
+
+Extended the `bug-fix` skill to cover visual defects, such as layout overlap, rendering problems, and an incorrectly presented state. A capture of the wrong state is now a usable reproduction signal, and a missing viewport size, resolution, zoom, theme, or application state is requested when it changes the result. The before and after comparison must reproduce the same conditions, and a successful build or a passing test that never renders the affected view does not show that a visual defect is corrected. The agent now reports what it could not verify visually, and non-visual fixes stay free of screenshot, recording, and visual-tooling requirements. The existing reproduction, root-cause, regression, and secret-redaction rules are unchanged.
+
 ## 6.0.2 - 2026-10-19
 
 Fixed `sync-docs.py` so a managed file that a release removes from the manifest, such as a retired skill under `.agents/skills/` and `.claude/skills/`, is deleted from the target when it still matches its recorded hash. Previously every such file was kept and tombstoned. A modified file is still kept and tombstoned, and a recorded path outside `.agents/guidelines/`, `.agents/conventions/`, `.agents/skills/`, `.claude/skills/`, and `docs/templates/` is never deleted, nor is a symbolic link, directory, or path outside the repository. Existing tombstones for files that now match again are cleared on the next sync.
