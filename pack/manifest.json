@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.5.0",
+  "pack_version": "6.6.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -224,6 +224,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "sql"
+    },
+    {
+      "path": ".agents/conventions/java.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "java"
+    },
+    {
+      "path": ".agents/conventions/springboot.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "springboot"
     },
     {
       "path": "docs/templates/readme.template.md",
