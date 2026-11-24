@@ -209,6 +209,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/conventions/react.md": "react",
             ".agents/conventions/scripts.md": "scripts",
             ".agents/conventions/shell.md": "shell",
+            ".agents/conventions/sql.md": "sql",
             ".agents/conventions/typescript.md": "typescript",
             ".agents/conventions/unity.md": "unity",
         }
@@ -220,7 +221,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"csharp", "css", "html", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "scripts", "shell", "typescript", "unity"}),
+            frozenset({"csharp", "css", "html", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "scripts", "shell", "sql", "typescript", "unity"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):

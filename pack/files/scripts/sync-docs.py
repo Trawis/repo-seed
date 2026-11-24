@@ -1160,7 +1160,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Comma-separated convention ids to install, e.g. 'csharp,unity' (known: csharp, "
             "css, html, javascript, laravel, nextjs, nodejs, php, python, react, scripts, "
-            "shell, typescript, unity). Later syncs reuse the recorded selection."
+            "shell, sql, typescript, unity). Later syncs reuse the recorded selection."
         ),
     )
     parser.add_argument(

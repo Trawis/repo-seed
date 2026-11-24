@@ -16,8 +16,8 @@ python pack/files/scripts/sync-docs.py \
 
 Choose `minimal`, `library`, `app`, or `game`. Use `--conventions` for the
 languages and tools you use (`csharp`, `css`, `html`, `javascript`, `laravel`,
-`nextjs`, `nodejs`, `php`, `python`, `react`, `scripts`, `shell`, `typescript`,
-`unity`).
+`nextjs`, `nodejs`, `php`, `python`, `react`, `scripts`, `shell`, `sql`,
+`typescript`, `unity`).
 A fresh sync installs none by default.
 
 Every profile installs Codex and Claude Code skills for code review, bug fixing,
