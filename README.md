@@ -110,7 +110,7 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 ### Conventions
 
-Pick `csharp`, `css`, `html`, `java`, `javascript`, `laravel`, `nextjs`,
+Pick `csharp`, `css`, `go`, `html`, `java`, `javascript`, `laravel`, `nextjs`,
 `nodejs`, `php`, `python`, `react`, `scripts`, `shell`, `springboot`, `sql`,
 `typescript`, or `unity` with `--conventions`.
 The choice is saved in `.repo-seed-state.json`:
