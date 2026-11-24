@@ -16,9 +16,9 @@ python pack/files/scripts/sync-docs.py \
 
 Choose `minimal`, `library`, `app`, or `game`. Use `--conventions` for the
 languages and tools you use (`angular`, `c`, `cpp`, `csharp`, `css`, `dart`,
-`flutter`, `go`, `html`, `java`, `javascript`, `kotlin`, `laravel`, `nextjs`,
-`nodejs`, `php`, `powershell`, `python`, `react`, `rust`, `scripts`, `shell`,
-`springboot`, `sql`, `swift`, `typescript`, `unity`, `vue`).
+`django`, `fastapi`, `flutter`, `go`, `html`, `java`, `javascript`, `kotlin`,
+`laravel`, `nextjs`, `nodejs`, `php`, `powershell`, `python`, `react`, `rust`,
+`scripts`, `shell`, `springboot`, `sql`, `swift`, `typescript`, `unity`, `vue`).
 A fresh sync installs none by default.
 
 Every profile installs Codex and Claude Code skills for code review, bug fixing,
