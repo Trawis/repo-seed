@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.15.0",
+  "pack_version": "6.16.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -314,6 +314,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "fastapi"
+    },
+    {
+      "path": ".agents/conventions/ruby.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "ruby"
+    },
+    {
+      "path": ".agents/conventions/rails.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "rails"
     },
     {
       "path": "docs/templates/readme.template.md",

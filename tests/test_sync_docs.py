@@ -217,7 +217,9 @@ class ManifestTests(unittest.TestCase):
             ".agents/conventions/php.md": "php",
             ".agents/conventions/powershell.md": "powershell",
             ".agents/conventions/python.md": "python",
+            ".agents/conventions/rails.md": "rails",
             ".agents/conventions/react.md": "react",
+            ".agents/conventions/ruby.md": "ruby",
             ".agents/conventions/rust.md": "rust",
             ".agents/conventions/scripts.md": "scripts",
             ".agents/conventions/shell.md": "shell",
@@ -236,7 +238,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"angular", "c", "cpp", "csharp", "css", "dart", "django", "fastapi", "flutter", "go", "html", "java", "javascript", "kotlin", "laravel", "nextjs", "nodejs", "php", "powershell", "python", "react", "rust", "scripts", "shell", "springboot", "sql", "swift", "typescript", "unity", "vue"}),
+            frozenset({"angular", "c", "cpp", "csharp", "css", "dart", "django", "fastapi", "flutter", "go", "html", "java", "javascript", "kotlin", "laravel", "nextjs", "nodejs", "php", "powershell", "python", "rails", "react", "ruby", "rust", "scripts", "shell", "springboot", "sql", "swift", "typescript", "unity", "vue"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
