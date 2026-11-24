@@ -244,7 +244,7 @@ class ManifestTests(unittest.TestCase):
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
-        common = {"changelog.template.md", "readme.template.md"}
+        common = {"changelog.template.md", "handoff.template.md", "readme.template.md"}
         expected = {
             "minimal": common,
             "library": common | {"architecture.template.md", "tsd.template.md"},
@@ -266,6 +266,7 @@ class ManifestTests(unittest.TestCase):
     def test_reference_only_templates_have_no_scaffold_destination(self):
         assets = {asset.path: asset for asset in self.manifest.assets}
         self.assertIsNone(assets["docs/templates/tsd.template.md"].scaffold_target)
+        self.assertIsNone(assets["docs/templates/handoff.template.md"].scaffold_target)
         self.assertEqual(
             assets["docs/templates/architecture.template.md"].scaffold_target,
             "docs/project/architecture.md",

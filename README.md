@@ -95,7 +95,7 @@ scaffolds    = optional project documents, created only when needed
 
 | Profile | Reference templates available |
 |---|---|
-| `minimal` | README and changelog only |
+| `minimal` | README, changelog, and an on-demand session handoff reference |
 | `library` | Minimal plus architecture and an on-demand TSD reference |
 | `app` | Library plus FSD and user-guide templates |
 | `game` | Library plus a GDD template |
@@ -167,6 +167,8 @@ Each document has one job:
 - FSD or GDD: accepted product or gameplay behavior;
 - architecture: the verified current technical system;
 - TSD under `docs/project/designs/`: one substantial change;
+- session handoff, outside `docs/project/`: temporary, non-authoritative state for
+  continuing unfinished work in a new agent session;
 - user guide: current user workflows.
 
 Top-level documents become short indexes as detail documents are added.
