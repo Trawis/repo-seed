@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.4.0",
+  "pack_version": "6.5.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -218,6 +218,12 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "nextjs"
+    },
+    {
+      "path": ".agents/conventions/sql.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "sql"
     },
     {
       "path": "docs/templates/readme.template.md",
