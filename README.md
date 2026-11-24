@@ -112,9 +112,9 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 Pick `angular`, `c`, `cpp`, `csharp`, `css`, `dart`, `django`, `fastapi`,
 `flutter`, `go`, `html`, `java`, `javascript`, `kotlin`, `laravel`, `nextjs`,
-`nodejs`, `php`, `powershell`, `python`, `react`, `rust`, `scripts`, `shell`,
-`springboot`, `sql`, `swift`, `typescript`, `unity`, or `vue` with
-`--conventions`.
+`nodejs`, `php`, `powershell`, `python`, `rails`, `react`, `ruby`, `rust`,
+`scripts`, `shell`, `springboot`, `sql`, `swift`, `typescript`, `unity`, or
+`vue` with `--conventions`.
 The choice is saved in `.repo-seed-state.json`:
 
 ```bash
@@ -141,6 +141,7 @@ Android Kotlin app:         profile app,     conventions kotlin
 Flutter mobile app:         profile app,     conventions dart,flutter
 Angular web application:    profile app,     conventions javascript,typescript,angular
 FastAPI service:            profile app,     conventions python,fastapi
+Rails web application:      profile app,     conventions ruby,rails
 ```
 
 A pre-5.0 state file is no longer converted. Sync once with the
