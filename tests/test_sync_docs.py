@@ -197,6 +197,7 @@ class ManifestTests(unittest.TestCase):
     def test_convention_catalog_is_independent_of_profile(self):
         all_profiles = {"minimal", "library", "app", "game"}
         expected = {
+            ".agents/conventions/angular.md": "angular",
             ".agents/conventions/c.md": "c",
             ".agents/conventions/cpp.md": "cpp",
             ".agents/conventions/csharp.md": "csharp",
@@ -223,6 +224,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/conventions/swift.md": "swift",
             ".agents/conventions/typescript.md": "typescript",
             ".agents/conventions/unity.md": "unity",
+            ".agents/conventions/vue.md": "vue",
         }
         convention_assets_by_path = {
             asset.path: asset for asset in self.manifest.assets if asset.convention is not None
@@ -232,7 +234,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"c", "cpp", "csharp", "css", "dart", "flutter", "go", "html", "java", "javascript", "kotlin", "laravel", "nextjs", "nodejs", "php", "powershell", "python", "react", "rust", "scripts", "shell", "springboot", "sql", "swift", "typescript", "unity"}),
+            frozenset({"angular", "c", "cpp", "csharp", "css", "dart", "flutter", "go", "html", "java", "javascript", "kotlin", "laravel", "nextjs", "nodejs", "php", "powershell", "python", "react", "rust", "scripts", "shell", "springboot", "sql", "swift", "typescript", "unity", "vue"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):

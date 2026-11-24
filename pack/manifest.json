@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.13.0",
+  "pack_version": "6.14.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -290,6 +290,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "flutter"
+    },
+    {
+      "path": ".agents/conventions/vue.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "vue"
+    },
+    {
+      "path": ".agents/conventions/angular.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "angular"
     },
     {
       "path": "docs/templates/readme.template.md",
