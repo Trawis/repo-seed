@@ -110,9 +110,10 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 ### Conventions
 
-Pick `c`, `cpp`, `csharp`, `css`, `go`, `html`, `java`, `javascript`, `laravel`,
-`nextjs`, `nodejs`, `php`, `powershell`, `python`, `react`, `rust`, `scripts`,
-`shell`, `springboot`, `sql`, `typescript`, or `unity` with `--conventions`.
+Pick `c`, `cpp`, `csharp`, `css`, `go`, `html`, `java`, `javascript`, `kotlin`,
+`laravel`, `nextjs`, `nodejs`, `php`, `powershell`, `python`, `react`, `rust`,
+`scripts`, `shell`, `springboot`, `sql`, `typescript`, or `unity` with
+`--conventions`.
 The choice is saved in `.repo-seed-state.json`:
 
 ```bash
@@ -135,6 +136,7 @@ Spring Boot service:        profile app,     conventions java,springboot
 native C++ library:         profile library, conventions cpp
 Rust command-line tool:     profile minimal, conventions rust,scripts
 PowerShell automation:      profile minimal, conventions scripts,powershell
+Android Kotlin app:         profile app,     conventions kotlin
 ```
 
 A pre-5.0 state file is no longer converted. Sync once with the
