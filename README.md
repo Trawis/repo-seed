@@ -110,8 +110,9 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 ### Conventions
 
-Pick `csharp`, `css`, `html`, `javascript`, `laravel`, `nodejs`, `php`,
-`python`, `scripts`, `shell`, `typescript`, or `unity` with `--conventions`.
+Pick `csharp`, `css`, `html`, `javascript`, `laravel`, `nextjs`, `nodejs`,
+`php`, `python`, `react`, `scripts`, `shell`, `typescript`, or `unity` with
+`--conventions`.
 The choice is saved in `.repo-seed-state.json`:
 
 ```bash
@@ -129,6 +130,7 @@ small Python utility:       profile minimal, conventions python
 Laravel web application:    profile app,     conventions php,laravel
 Node.js TypeScript service: profile app,     conventions javascript,typescript,nodejs
 static website:             profile minimal, conventions html,css
+Next.js web application:    profile app,     conventions javascript,typescript,react,nextjs
 ```
 
 A pre-5.0 state file is no longer converted. Sync once with the

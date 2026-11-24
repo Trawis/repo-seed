@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.3.0",
+  "pack_version": "6.4.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -206,6 +206,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "css"
+    },
+    {
+      "path": ".agents/conventions/react.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "react"
+    },
+    {
+      "path": ".agents/conventions/nextjs.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "nextjs"
     },
     {
       "path": "docs/templates/readme.template.md",
