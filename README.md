@@ -110,8 +110,8 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 ### Conventions
 
-Pick `csharp`, `laravel`, `php`, `python`, `scripts`, `shell`, or `unity` with
-`--conventions`.
+Pick `csharp`, `javascript`, `laravel`, `nodejs`, `php`, `python`, `scripts`,
+`shell`, `typescript`, or `unity` with `--conventions`.
 The choice is saved in `.repo-seed-state.json`:
 
 ```bash
@@ -123,10 +123,11 @@ A fresh sync with no `--conventions` installs none. Changing the selection
 removes unchanged unselected files and keeps modified ones.
 
 ```text
-C# desktop application:  profile app,     conventions csharp
-Unity game:              profile game,    conventions csharp,unity
-small Python utility:    profile minimal, conventions python
-Laravel web application: profile app,     conventions php,laravel
+C# desktop application:     profile app,     conventions csharp
+Unity game:                 profile game,    conventions csharp,unity
+small Python utility:       profile minimal, conventions python
+Laravel web application:    profile app,     conventions php,laravel
+Node.js TypeScript service: profile app,     conventions javascript,typescript,nodejs
 ```
 
 A pre-5.0 state file is no longer converted. Sync once with the

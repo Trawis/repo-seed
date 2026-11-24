@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.1.0",
+  "pack_version": "6.2.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -176,6 +176,24 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "laravel"
+    },
+    {
+      "path": ".agents/conventions/javascript.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "javascript"
+    },
+    {
+      "path": ".agents/conventions/typescript.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "typescript"
+    },
+    {
+      "path": ".agents/conventions/nodejs.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "nodejs"
     },
     {
       "path": "docs/templates/readme.template.md",
