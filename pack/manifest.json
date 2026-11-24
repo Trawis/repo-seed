@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.12.0",
+  "pack_version": "6.13.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -278,6 +278,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "swift"
+    },
+    {
+      "path": ".agents/conventions/dart.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "dart"
+    },
+    {
+      "path": ".agents/conventions/flutter.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "flutter"
     },
     {
       "path": "docs/templates/readme.template.md",
