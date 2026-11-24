@@ -112,7 +112,7 @@ The first sync needs `--profile`. Later syncs reuse the recorded profile.
 
 Pick `c`, `cpp`, `csharp`, `css`, `go`, `html`, `java`, `javascript`, `kotlin`,
 `laravel`, `nextjs`, `nodejs`, `php`, `powershell`, `python`, `react`, `rust`,
-`scripts`, `shell`, `springboot`, `sql`, `typescript`, or `unity` with
+`scripts`, `shell`, `springboot`, `sql`, `swift`, `typescript`, or `unity` with
 `--conventions`.
 The choice is saved in `.repo-seed-state.json`:
 

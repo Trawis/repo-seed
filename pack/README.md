@@ -17,7 +17,7 @@ python pack/files/scripts/sync-docs.py \
 Choose `minimal`, `library`, `app`, or `game`. Use `--conventions` for the
 languages and tools you use (`c`, `cpp`, `csharp`, `css`, `go`, `html`, `java`,
 `javascript`, `kotlin`, `laravel`, `nextjs`, `nodejs`, `php`, `powershell`,
-`python`, `react`, `rust`, `scripts`, `shell`, `springboot`, `sql`,
+`python`, `react`, `rust`, `scripts`, `shell`, `springboot`, `sql`, `swift`,
 `typescript`, `unity`).
 A fresh sync installs none by default.
 
