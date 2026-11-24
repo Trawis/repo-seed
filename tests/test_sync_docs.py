@@ -198,6 +198,8 @@ class ManifestTests(unittest.TestCase):
         all_profiles = {"minimal", "library", "app", "game"}
         expected = {
             ".agents/conventions/csharp.md": "csharp",
+            ".agents/conventions/css.md": "css",
+            ".agents/conventions/html.md": "html",
             ".agents/conventions/javascript.md": "javascript",
             ".agents/conventions/laravel.md": "laravel",
             ".agents/conventions/nodejs.md": "nodejs",
@@ -216,7 +218,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"csharp", "javascript", "laravel", "nodejs", "php", "python", "scripts", "shell", "typescript", "unity"}),
+            frozenset({"csharp", "css", "html", "javascript", "laravel", "nodejs", "php", "python", "scripts", "shell", "typescript", "unity"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
