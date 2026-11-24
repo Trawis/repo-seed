@@ -198,8 +198,10 @@ class ManifestTests(unittest.TestCase):
         all_profiles = {"minimal", "library", "app", "game"}
         expected = {
             ".agents/conventions/csharp.md": "csharp",
-            ".agents/conventions/scripts.md": "scripts",
+            ".agents/conventions/laravel.md": "laravel",
+            ".agents/conventions/php.md": "php",
             ".agents/conventions/python.md": "python",
+            ".agents/conventions/scripts.md": "scripts",
             ".agents/conventions/shell.md": "shell",
             ".agents/conventions/unity.md": "unity",
         }
@@ -211,7 +213,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"csharp", "python", "scripts", "shell", "unity"}),
+            frozenset({"csharp", "laravel", "php", "python", "scripts", "shell", "unity"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
@@ -753,7 +755,8 @@ class ConventionSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             sync.synchronize(PACK_ROOT, target, "app")
-            for name in ("csharp", "python", "scripts", "shell", "unity"):
+            manifest = sync.load_manifest(PACK_ROOT)
+            for name in sync.known_conventions(manifest):
                 self.assertFalse((target / f".agents/conventions/{name}.md").exists(), name)
             state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["schema_version"], 2)
@@ -767,6 +770,30 @@ class ConventionSelectionTests(unittest.TestCase):
             self.assertFalse((target / ".agents/conventions/python.md").exists())
             state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["conventions"], ["csharp"])
+
+    def test_each_convention_is_independently_selectable_under_every_profile(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        conventions = sorted(sync.known_conventions(manifest))
+        for profile in manifest.profiles:
+            for name in conventions:
+                with self.subTest(profile=profile, convention=name), tempfile.TemporaryDirectory() as temp:
+                    target = Path(temp)
+                    sync.synchronize(PACK_ROOT, target, profile, conventions=frozenset({name}))
+                    installed = sorted(path.stem for path in (target / ".agents/conventions").glob("*.md"))
+                    self.assertEqual(installed, [name])
+                    state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+                    self.assertEqual(state["conventions"], [name])
+
+    def test_multiple_conventions_can_be_selected_together(self):
+        manifest = sync.load_manifest(PACK_ROOT)
+        conventions = frozenset(sync.known_conventions(manifest))
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp)
+            sync.synchronize(PACK_ROOT, target, "app", conventions=conventions)
+            installed = {path.stem for path in (target / ".agents/conventions").glob("*.md")}
+            self.assertEqual(installed, set(conventions))
+            state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["conventions"], sorted(conventions))
 
     def test_conventions_available_even_under_the_minimal_profile(self):
         with tempfile.TemporaryDirectory() as temp:
