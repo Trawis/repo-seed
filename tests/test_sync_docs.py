@@ -197,6 +197,8 @@ class ManifestTests(unittest.TestCase):
     def test_convention_catalog_is_independent_of_profile(self):
         all_profiles = {"minimal", "library", "app", "game"}
         expected = {
+            ".agents/conventions/c.md": "c",
+            ".agents/conventions/cpp.md": "cpp",
             ".agents/conventions/csharp.md": "csharp",
             ".agents/conventions/css.md": "css",
             ".agents/conventions/go.md": "go",
@@ -224,7 +226,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"csharp", "css", "go", "html", "java", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "scripts", "shell", "springboot", "sql", "typescript", "unity"}),
+            frozenset({"c", "cpp", "csharp", "css", "go", "html", "java", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "scripts", "shell", "springboot", "sql", "typescript", "unity"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
