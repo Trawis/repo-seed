@@ -863,7 +863,7 @@ class ConventionSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             with self.assertRaisesRegex(ValueError, "Unknown convention"):
-                sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"rust"}))
+                sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"not-a-convention"}))
             self.assertEqual(list(target.iterdir()), [])
 
     def test_pre_5_0_state_is_rejected_with_the_last_converting_release_and_writes_nothing(self):
@@ -1043,7 +1043,7 @@ class ConventionSelectionTests(unittest.TestCase):
                     "--profile",
                     "app",
                     "--conventions",
-                    "rust",
+                    "not-a-convention",
                 ],
                 capture_output=True,
                 text=True,
