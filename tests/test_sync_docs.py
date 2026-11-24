@@ -211,6 +211,7 @@ class ManifestTests(unittest.TestCase):
             ".agents/conventions/php.md": "php",
             ".agents/conventions/python.md": "python",
             ".agents/conventions/react.md": "react",
+            ".agents/conventions/rust.md": "rust",
             ".agents/conventions/scripts.md": "scripts",
             ".agents/conventions/shell.md": "shell",
             ".agents/conventions/springboot.md": "springboot",
@@ -226,7 +227,7 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(set(asset.profiles), all_profiles, path)
         self.assertEqual(
             sync.known_conventions(self.manifest),
-            frozenset({"c", "cpp", "csharp", "css", "go", "html", "java", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "scripts", "shell", "springboot", "sql", "typescript", "unity"}),
+            frozenset({"c", "cpp", "csharp", "css", "go", "html", "java", "javascript", "laravel", "nextjs", "nodejs", "php", "python", "react", "rust", "scripts", "shell", "springboot", "sql", "typescript", "unity"}),
         )
 
     def test_profiles_select_only_relevant_project_templates(self):
@@ -862,7 +863,7 @@ class ConventionSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             with self.assertRaisesRegex(ValueError, "Unknown convention"):
-                sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"rust"}))
+                sync.synchronize(PACK_ROOT, target, "app", conventions=frozenset({"not-a-convention"}))
             self.assertEqual(list(target.iterdir()), [])
 
     def test_pre_5_0_state_is_rejected_with_the_last_converting_release_and_writes_nothing(self):
@@ -1042,7 +1043,7 @@ class ConventionSelectionTests(unittest.TestCase):
                     "--profile",
                     "app",
                     "--conventions",
-                    "rust",
+                    "not-a-convention",
                 ],
                 capture_output=True,
                 text=True,
