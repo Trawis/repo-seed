@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.2.0",
+  "pack_version": "6.3.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -194,6 +194,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "nodejs"
+    },
+    {
+      "path": ".agents/conventions/html.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "html"
+    },
+    {
+      "path": ".agents/conventions/css.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "css"
     },
     {
       "path": "docs/templates/readme.template.md",
