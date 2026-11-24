@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.11.0",
+  "pack_version": "6.12.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -272,6 +272,12 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "kotlin"
+    },
+    {
+      "path": ".agents/conventions/swift.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "swift"
     },
     {
       "path": "docs/templates/readme.template.md",
