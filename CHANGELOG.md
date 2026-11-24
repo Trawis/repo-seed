@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.4 - 2026-11-24
+
+Refined the `scripts` convention with language-independent command-line practice. It now treats an existing script's documented arguments, output, and exit codes as a contract that new defaults do not retrofit. It also covers `-h` and `--help` content, named and long-form options, never accepting secrets as option values, result output on standard output with diagnostics on standard error, stable machine-readable output, no color or progress output when not writing to a terminal, actionable error messages, and documented exit codes. The convention now requires prompting only on a terminal with a noninteractive alternative, bounded timeouts, confirmation before destructive actions, and safe reruns after interruption. It also covers validating failure paths and noninteractive runs, and links to the Command Line Interface Guidelines, POSIX utility conventions, and NO_COLOR. The convention ID, path, and selection are unchanged.
+
 ## 6.0.3 - 2026-11-21
 
 Extended the `bug-fix` skill to cover visual defects, such as layout overlap, rendering problems, and an incorrectly presented state. A capture of the wrong state is now a usable reproduction signal, and a missing viewport size, resolution, zoom, theme, or application state is requested when it changes the result. The before and after comparison must reproduce the same conditions, and a successful build or a passing test that never renders the affected view does not show that a visual defect is corrected. The agent now reports what it could not verify visually, and non-visual fixes stay free of screenshot, recording, and visual-tooling requirements. The existing reproduction, root-cause, regression, and secret-redaction rules are unchanged.
