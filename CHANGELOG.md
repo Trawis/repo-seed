@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.0.5 - 2026-11-24
+
+Expanded the `shell` convention for POSIX `sh` and Bash. It now treats the shebang as the dialect contract, lists common Bash-only constructs, and notes the oldest supported Bash version, such as 3.2 on macOS. It adds guidance on naming, `local` scope, and a `main "$@"` entry point. It also covers quoted expansions, preserving `"$@"`, building commands in arrays instead of strings, avoiding `eval`, and handling filenames safely. It replaces the bare `set -euo pipefail` recommendation with its limits: errexit is ignored in conditions and lists, `local var=$(cmd)` masks failures, command substitutions do not inherit errexit by default, `pipefail` is missing from dash, and `set -u` has empty-array behavior before Bash 4.4. Critical commands are now checked explicitly. It adds `mktemp` with cleanup traps, guards for destructive paths, and validation with the declared interpreter's syntax check, configured ShellCheck, shfmt, or Bats, and a strict POSIX shell. General help, output, and exit-code rules stay in `scripts`. The convention ID, path, and selection are unchanged.
+
 ## 6.0.4 - 2026-11-24
 
 Refined the `scripts` convention with language-independent command-line practice. It now treats an existing script's documented arguments, output, and exit codes as a contract that new defaults do not retrofit. It also covers `-h` and `--help` content, named and long-form options, never accepting secrets as option values, result output on standard output with diagnostics on standard error, stable machine-readable output, no color or progress output when not writing to a terminal, actionable error messages, and documented exit codes. The convention now requires prompting only on a terminal with a noninteractive alternative, bounded timeouts, confirmation before destructive actions, and safe reruns after interruption. It also covers validating failure paths and noninteractive runs, and links to the Command Line Interface Guidelines, POSIX utility conventions, and NO_COLOR. The convention ID, path, and selection are unchanged.
