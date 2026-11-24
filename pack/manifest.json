@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.16.0",
+  "pack_version": "6.17.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -326,6 +326,18 @@
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"],
       "convention": "rails"
+    },
+    {
+      "path": ".agents/conventions/lua.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "lua"
+    },
+    {
+      "path": ".agents/conventions/gdscript.md",
+      "type": "managed",
+      "profiles": ["minimal", "library", "app", "game"],
+      "convention": "gdscript"
     },
     {
       "path": "docs/templates/readme.template.md",
