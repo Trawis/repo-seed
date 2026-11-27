@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.19.3 - 2026-11-27
+
+Clarified reproducible build and release practices, immutable artifacts, runner selection and least-privilege automation without imposing product-specific workflows.
+
 ## 6.19.2 - 2026-11-27
 
 Clarified Laravel 13 runtime requirements, native framework services and optional shared PHP component ownership without changing vanilla PHP compatibility.
