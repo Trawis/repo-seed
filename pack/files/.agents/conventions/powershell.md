@@ -65,8 +65,8 @@ take precedence. POSIX shell and Bash belong to `.agents/conventions/shell.md`.
 
 ## Documentation and Validation
 
-- Give reusable functions and scripts comment-based help with `.SYNOPSIS`,
-  `.DESCRIPTION`, `.PARAMETER`, and `.EXAMPLE`.
+- Provide comment-based help for user-facing commands when needed by `Get-Help`.
+  Use relevant `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, and `.EXAMPLE` sections.
 - Run `Invoke-ScriptAnalyzer` with the project's settings and the configured
   Pester tests. Test with each supported edition when practical.
 

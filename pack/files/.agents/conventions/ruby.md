@@ -49,7 +49,8 @@ Style Guide is an optional baseline.
 
 ## Documentation and Validation
 
-- Document public classes and methods with YARD or RDoc, as the project does.
+- Use YARD or RDoc for required API documentation or caller-relevant contracts
+  not evident from code.
 - Run the configured linter and tests, such as `bundle exec rubocop` and
   `bundle exec rspec` or `rake test`.
 

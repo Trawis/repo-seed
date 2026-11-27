@@ -61,8 +61,8 @@ precedence over these defaults.
 
 ## Documentation and Validation
 
-- Document exported functions and modules with JSDoc when the project uses it:
-  purpose, parameters, return value, and thrown errors.
+- Use JSDoc for required documentation or caller-relevant contracts not evident
+  from code.
 - Run the project's configured lint, format check, and test scripts from
   `package.json`. Do not add new tools or rules incidentally.
 

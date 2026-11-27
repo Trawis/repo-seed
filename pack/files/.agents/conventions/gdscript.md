@@ -56,8 +56,8 @@ syntax and APIs, so check the documentation for the installed version.
 
 ## Documentation and Validation
 
-- Document public classes, functions, and signals with `##` documentation
-  comments.
+- Use `##` comments for required API documentation or caller-relevant contracts
+  not evident from code.
 - Run the configured checks, such as gdlint and gdformat, and tests with GUT
   or gdUnit4, headless where the project supports it. Say which editor-only
   checks were not run.

@@ -56,8 +56,8 @@ swift-format or SwiftLint rules, and nearby code, take precedence.
 
 ## Documentation and Validation
 
-- Write documentation comments for public APIs using Markdown and DocC
-  conventions: summary, parameters, return value, and thrown errors.
+- Use Markdown and DocC conventions for required API documentation or
+  caller-relevant contracts not evident from signatures and code.
 - Run `swift build` and `swift test`, or the project's `xcodebuild` scheme, and
   the configured formatter and linter. Fix new compiler warnings.
 

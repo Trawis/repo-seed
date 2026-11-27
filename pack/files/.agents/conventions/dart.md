@@ -47,8 +47,8 @@ tools. Framework conventions, such as Flutter, add to this file. The project's
 
 ## Documentation and Validation
 
-- Write `///` doc comments for public APIs, starting with a one-sentence
-  summary, per Effective Dart.
+- Use `///` doc comments for required API documentation or caller-relevant
+  contracts, following Effective Dart.
 - Run `dart analyze`, `dart format --output=none --set-exit-if-changed`, and
   `dart test`, or the project's equivalents.
 

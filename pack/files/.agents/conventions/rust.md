@@ -62,8 +62,8 @@ and nearby code take precedence. For command-line tools, also use
 
 ## Documentation and Validation
 
-- Write rustdoc comments for public items, with `# Errors`, `# Panics`, and
-  `# Safety` sections where they apply, and runnable examples where useful.
+- Use rustdoc for required API documentation and caller-relevant contracts.
+  Include applicable `# Errors`, `# Panics`, and `# Safety` sections.
 - Run `cargo fmt --check`, `cargo clippy` with the project's targets and
   features, and `cargo test`, which includes doctests. Check the MSRV build
   when CI does.

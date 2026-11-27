@@ -45,8 +45,11 @@ If a change makes project-owned documentation inaccurate, update it.
   uncertainty.
 - Make the smallest safe change that satisfies the task. Do not reformat,
   rename, or clean up unrelated code.
-- Prefer source files over generated output. Keep comments focused on
-  constraints or non-obvious intent.
+- Prefer source files over generated output.
+- Write self-explanatory code. Do not add comments or docstrings unless they
+  convey essential information not apparent from code or are required by the
+  project. Never invent intent. Preserve required documentation, annotations,
+  directives, and license notices.
 - Add or update relevant tests for behavior changes when practical.
 - For review or diagnosis, report evidence without changing files unless a fix
   is requested.
@@ -99,7 +102,8 @@ check. Do not run irrelevant language or project checks.
 
 Before completion, review the final diff against the request for scope,
 correctness, applicable local conventions, ownership boundaries, and relevant
-validation. Check branch and pull-request requirements only when performing Git
+validation. Remove unnecessary added comments, docstrings, and documentation.
+Check branch and pull-request requirements only when performing Git
 or pull-request operations. Report what changed and was validated, plus
 skipped or blocked checks and remaining risks. Never claim an action or check
 succeeded unless it did.

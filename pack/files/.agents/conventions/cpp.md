@@ -61,8 +61,9 @@ precedence. Use `.agents/conventions/c.md` for C code.
 
 ## Documentation and Validation
 
-- Document public APIs in headers: ownership, lifetime, thread safety,
-  preconditions, and errors. Use Doxygen syntax when the project does.
+- Document public header contracts when ownership, lifetime, thread safety,
+  preconditions, or errors are not evident from code. Use Doxygen syntax
+  when required by the project.
 - Build with the project's warning flags and fix new warnings. Run tests,
   configured clang-tidy checks, and sanitizers (AddressSanitizer,
   UndefinedBehaviorSanitizer, ThreadSanitizer) when available.
