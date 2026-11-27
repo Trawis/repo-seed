@@ -48,7 +48,10 @@ If a change makes project-owned documentation inaccurate, update it.
   convey essential information not apparent from code or are required by the
   project. Never invent intent. Preserve required documentation, annotations,
   directives, and license notices.
-- Add or update relevant tests for behavior changes when practical.
+- Prefer existing checks or a focused smoke test. Add permanent automated tests
+  only for meaningful behavior or regression risks not already covered, or when
+  the project requires them. Do not test trivial code, prose, formatting, or
+  incidental implementation details just to increase coverage.
 - For review or diagnosis, report evidence without changing files unless a fix
   is requested.
 - Do not expose secrets or conceal failures.

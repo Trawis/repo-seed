@@ -75,8 +75,7 @@ For executable scripts:
 ## Validation
 
 Run the project's configured tests, linters, and type checkers on the affected
-code. Cover pure logic, error paths, and boundaries such as the filesystem,
-network, and time. For scripts, include the failure cases in `scripts.md`.
+code. Focus on relevant behavior and risks. For scripts, see `scripts.md`.
 
 ## References
 

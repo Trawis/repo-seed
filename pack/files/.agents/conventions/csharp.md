@@ -103,7 +103,6 @@ Never put `return`, `throw`, `break`, or `continue` on the same line as the cond
 
 ## Tests
 
-- Add focused tests for changed behavior, validation, mappings, parsing, and edge cases.
 - Keep tests deterministic. Report flaky or unavailable tests; do not hide them.
 - Validate with `dotnet build` and `dotnet test`, or the project's build
   scripts. Fix new analyzer and compiler warnings, and run `dotnet format` only

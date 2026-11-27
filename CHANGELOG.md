@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.19.1 - 2026-11-27
+
+Clarified that permanent tests should protect meaningful behavior not already covered. Prefer existing checks and focused verification over redundant test creation. Simplified bug-fix and issue-implementation guidance.
+
 ## 6.19.0 - 2026-11-27
 
 Added independent sync and audit workflow scaffolding while retaining the existing both-workflow option. Sync now avoids rewriting identical updates, checks branch ownership before replacing an update, protects writes with a lease, and reports residual audit findings. Existing project-owned callers are preserved.

@@ -604,18 +604,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertNotIn("would create", follow_up.stdout)
             self.assertNotIn("would remove", follow_up.stdout)
 
-    def test_skills_define_substantive_workflows(self):
-        for root in (".agents/skills",):
-            for skill in sorted((PACK_ROOT / "files" / root).glob("*/SKILL.md")):
-                content = skill.read_text(encoding="utf-8")
-                _, body = parse_skill_frontmatter(content)
-                relative = skill.relative_to(PACK_ROOT / "files")
-                workflow_steps = re.findall(r"(?m)^\d+\. ", body)
-                with self.subTest(skill=str(relative)):
-                    self.assertIn("## Workflow", body)
-                    self.assertGreaterEqual(len(workflow_steps), 3)
-                    self.assertIn("## Completion", body)
-
     def test_every_template_has_valid_metadata_and_a_body(self):
         for asset in sync.load_manifest(PACK_ROOT).assets:
             if asset.asset_type == "template":
@@ -635,16 +623,6 @@ class GuidanceAndTemplateTests(unittest.TestCase):
         self.assertIn("<!-- Remove this guidance", rendered)
         self.assertNotIn("Describe the verified current technical system", visible)
         self.assertIn("## Purpose, Scope, and Quality Goals", visible)
-
-    def test_document_field_blocks_render_as_lists(self):
-        bare_field_pattern = re.compile(
-            r"^\*\*(Project|Game|Change|Status|Basis|Owner|Audience|Last Updated)\*\*:",
-            re.MULTILINE,
-        )
-        for path in (PACK_ROOT / "files/docs/templates").rglob("*.template.md"):
-            body = sync.template_body(path)
-            with self.subTest(path=path):
-                self.assertIsNone(bare_field_pattern.search(body))
 
     def test_issue_forms_scaffold_verbatim_without_markdown_provenance(self):
         manifest = sync.load_manifest(PACK_ROOT)
