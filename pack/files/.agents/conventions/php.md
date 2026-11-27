@@ -13,6 +13,9 @@ code take precedence over these defaults.
 
 - Target the PHP versions in `composer.json` (`require.php`), CI, and the
   platform config. Do not use syntax or functions newer than the minimum.
+- PHP compatibility is independent of any framework. Keep framework-neutral
+  libraries and vanilla applications usable on their supported runtimes; do
+  not add Laravel or raise the minimum merely to match another project.
 - Manage dependencies with Composer. Change `composer.json` only when the task
   requires it, and commit the matching `composer.lock` when the project tracks
   it. Do not edit `vendor/`.
@@ -54,6 +57,16 @@ code take precedence over these defaults.
   `escapeshellarg` when a shell is unavoidable.
 - Use `password_hash` and `password_verify` for passwords and `random_bytes` or
   `random_int` for secrets and tokens.
+
+## Reusable Components
+
+Use [project-seeds](https://github.com/Trawis/project-seeds) for optional
+starter foundations and [project-plugins](https://github.com/Trawis/project-plugins)
+for optional components, when available. Select and verify compatible source
+versions at development or build time. The consuming application owns its
+routes, authentication, storage, configuration, installation and dependencies.
+Do not download executable components during installation or make these
+repositories runtime dependencies.
 
 ## Validation
 

@@ -7,7 +7,10 @@
 Apply this with `.agents/conventions/php.md`. Repository rules, the
 application's existing structure, and nearby code take precedence. Use the
 documentation for the Laravel version in `composer.lock`; APIs and the default
-application skeleton change between major versions.
+application skeleton change between major versions. Laravel 13 requires PHP
+8.3 or later; prefer PHP 8.4 for new Laravel 13 projects when supported by the
+hosting and dependencies. Keep existing projects on their declared supported
+versions unless an upgrade is requested.
 
 ## Structure
 
@@ -19,8 +22,14 @@ application skeleton change between major versions.
 - Resolve dependencies through constructor or method injection. Prefer
   injection over facades or `app()` in classes the project tests in isolation,
   unless nearby code uses facades.
+- Prefer native Laravel authentication, authorization, mail and notifications,
+  validation, configuration, migrations and scheduling. Use the existing
+  guards and providers; do not introduce a parallel authentication system.
 - Read configuration with `config()`. Call `env()` only in `config/` files,
   because cached configuration does not load `.env`.
+- Optional shared components must integrate with the application's native
+  services and ownership boundaries in `php.md`; do not replace them with a
+  second application framework.
 
 ## HTTP Layer
 
@@ -73,13 +82,14 @@ application skeleton change between major versions.
 - Run the project's test command, such as `php artisan test`, Pest, or PHPUnit.
   Use database refresh traits, factories, and fakes (`Queue::fake()`,
   `Event::fake()`, `Http::fake()`) as nearby tests do.
-- Cover authorization and validation failures as well as success paths.
+- Verify affected authorization and validation behavior, including meaningful
+  failure paths, using existing coverage where sufficient.
 - Run Pint with `--test` when the project configures it, and Larastan or PHPStan
   at the configured level when present.
 
 ## References
 
-- [Laravel documentation](https://laravel.com/docs)
+- [Laravel documentation](https://laravel.com/docs) and [Laravel 13 requirements](https://laravel.com/docs/13.x/releases)
 - [Authorization](https://laravel.com/docs/authorization) and [Validation](https://laravel.com/docs/validation)
 - [Eloquent relationships](https://laravel.com/docs/eloquent-relationships)
 - [Queues](https://laravel.com/docs/queues)
