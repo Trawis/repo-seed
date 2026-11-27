@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.18.3 - 2026-11-27
+
+Corrected sync pull-request approval guidance for GitHub's default workflow token and documented how to distinguish hosted job startup failures from sync-script failures.
+
 ## 6.18.2 - 2026-11-27
 
 Clarified scoped instruction loading and reduced repeated task-discovery guidance without changing the compatibility wrapper.

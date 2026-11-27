@@ -327,9 +327,13 @@ Setup the repository needs:
 
 - Settings, Actions, General: allow GitHub Actions to create and approve pull
   requests.
-- A pull request opened with the default token does not start other workflows,
-  so required checks do not run on it. To run them, store a personal access
-  token or GitHub App token as a secret and pass it as `secrets.token`.
+- Pull-request workflows triggered by `GITHUB_TOKEN` on opened, synchronize,
+  or reopened events require approval. For unattended checks, pass an appropriately
+  scoped personal access token or GitHub App token as `secrets.token`. See
+  [GitHub token behavior](https://docs.github.com/en/actions/concepts/security/github_token).
+- If a sync job fails before its first step, inspect the run annotations and
+  Actions settings or runner availability before diagnosing the sync script.
+  A missing check or log does not establish a script failure.
 
 The same trust model as the drift check applies: the script that runs comes from
 the release, and the checksum detects corruption, not a compromised publisher.
