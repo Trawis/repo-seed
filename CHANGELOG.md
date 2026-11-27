@@ -9,6 +9,9 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.18.0 - 2026-11-24
+
+Added a reference-only session handoff template, `docs/templates/handoff.template.md`, for every profile. When a user asks to hand off unfinished work to another agent session, the agent can copy it to a path or channel the user chooses, outside `docs/project/`. It records the governing task and scope, the branch, base commit, and pull request, working-tree changes including ones to preserve, completed and remaining work, validation status, blockers, the next action, and links to authoritative sources. The template states that a handoff is temporary and non-authoritative and never overrides current source, requirements, designs, or issues. The receiving session must verify the current repository state before acting on it, and secrets, conversation transcripts, and undecided choices stay out. Like the TSD reference, it has no scaffold target: sync never creates, updates, or deletes live handoffs, and no skill, flag, or required workflow is added.
 ## 6.17.1 - 2026-11-24
 
 Added an optional Gameplay Experiments table to the GDD template's Playtest Criteria section. A game project can record an uncertain mechanic as a hypothesis, the minimum playable experiment that tests it, the observable result, and a decision to accept, revise, or discard it. The template states that a hypothesis is not accepted gameplay intent, and that only accepted results move into the authoritative sections. It also notes that experiments need no production presentation or unrelated systems, and that development-only tuning controls help when a mechanic depends on values such as speed, timing, or cost. The existing structure, playtest criteria, and scaffold ownership are unchanged, and unchanged scaffolds upgrade as before.

@@ -85,8 +85,9 @@ neither of which needs network access.
 
 ## Scaffolds and State
 
-Some templates, such as the TSD, are reference-only with no scaffold target.
-Agents copy them to a project-owned path only when needed.
+Some templates, such as the TSD and the session handoff, are reference-only
+with no scaffold target. Agents copy them to a project-owned path only when
+needed; sync never creates, updates, or deletes the copies.
 
 `.editorconfig` and non-Markdown GitHub configuration are missing-only
 scaffolds. `.gitignore` is fully project-owned and not scaffolded. A Markdown

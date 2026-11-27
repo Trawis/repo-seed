@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.17.1",
+  "pack_version": "6.18.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -385,6 +385,11 @@
       "path": "docs/templates/tsd.template.md",
       "type": "template",
       "profiles": ["library", "app", "game"]
+    },
+    {
+      "path": "docs/templates/handoff.template.md",
+      "type": "template",
+      "profiles": ["minimal", "library", "app", "game"]
     },
     {
       "path": "docs/templates/gdd.template.md",
