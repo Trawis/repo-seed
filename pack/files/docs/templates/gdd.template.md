@@ -60,6 +60,20 @@ controls, and accessibility requirements that matter to the design.
 |---|---|---|
 | GDD-001 | | |
 
+### Gameplay Experiments
+
+Optional. Use this for uncertain mechanics. A hypothesis is not accepted
+gameplay intent: record the decision here, and move only accepted results into
+the sections above.
+
+| ID | Hypothesis | Minimum playable experiment | Observable result | Decision |
+|---|---|---|---|---|
+| EXP-001 | | | | Open / Accept / Revise / Discard |
+
+Build only what the experiment needs; placeholder presentation and unrelated
+systems can wait. Development-only tuning controls help when the mechanic
+depends on values such as speed, timing, or cost.
+
 ## Open Questions and References
 
 -
