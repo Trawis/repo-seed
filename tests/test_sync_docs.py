@@ -1611,6 +1611,34 @@ class SyncBehaviorTests(unittest.TestCase):
                 self.assertEqual((target / workflow).read_text(encoding="utf-8"), "name: mine\n")
                 self.assertTrue(any(a.path == workflow and a.action == "skip" for a in again))
 
+    def test_independent_workflow_scaffolds_are_opt_in_and_preserve_existing_callers(self):
+        names = {"repo-seed-sync.yml", "repo-seed-audit.yml"}
+        cases = (
+            (["--scaffold-sync-workflow"], {"repo-seed-sync.yml"}),
+            (["--scaffold-audit-workflow"], {"repo-seed-audit.yml"}),
+            (["--scaffold-sync-workflow", "--scaffold-audit-workflow"], names),
+            (["--scaffold-workflows"], names),
+        )
+        for flags, expected in cases:
+            with self.subTest(flags=flags), tempfile.TemporaryDirectory() as temp:
+                target = Path(temp)
+                workflows = target / ".github/workflows"
+                sync.synchronize(PACK_ROOT, target, "minimal")
+                command = ["--source", str(PACK_ROOT), "--target", temp, *flags]
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(sync.main([*command, "--dry-run"]), 0)
+                self.assertFalse(workflows.exists())
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(sync.main(command), 0)
+                self.assertEqual({path.name for path in workflows.iterdir()}, expected)
+                for name in expected:
+                    (workflows / name).write_text("name: mine\n", encoding="utf-8")
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(sync.main([*command, "--scaffold-workflows"]), 0)
+                self.assertEqual({path.name for path in workflows.iterdir()}, names)
+                for name in expected:
+                    self.assertEqual((workflows / name).read_text(encoding="utf-8"), "name: mine\n")
+
     def test_workflows_tree_is_still_never_managed_when_the_scaffold_is_requested(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
