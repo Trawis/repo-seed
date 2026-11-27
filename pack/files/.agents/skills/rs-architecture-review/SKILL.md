@@ -1,6 +1,6 @@
 ---
-name: architecture-review
-description: Reviews the architecture of an existing codebase and reports a small, ranked set of evidence-backed friction points, without designing a new system or changing files. Use when asked to review, audit, or assess a codebase's architecture, find coupling, shallow abstractions, weak test seams, or structure that makes routine changes spread. Use technical-design to design a specific proposed change.
+name: rs-architecture-review
+description: Reviews the architecture of an existing codebase and reports a small, ranked set of evidence-backed friction points, without designing a new system or changing files. Use when asked to review, audit, or assess a codebase's architecture, find coupling, shallow abstractions, weak test seams, or structure that makes routine changes spread. Use rs-technical-design to design a specific proposed change.
 ---
 
 # Architecture Review
@@ -11,7 +11,7 @@ Load the language conventions the repository provides for the code under review.
 This skill evaluates the system as it is. It is read-only: do not edit files,
 and do not implement a recommendation unless the user separately asks for it.
 It does not design a replacement. When a recommendation needs a substantial
-design, hand it to `technical-design`.
+design, hand it to `rs-technical-design`.
 
 ## Workflow
 
@@ -67,5 +67,5 @@ manufacturing findings.
 ## Completion
 
 State the scope reviewed, what was inspected, and what could not be verified.
-Name any finding that needs a `technical-design` before work starts. Do not
+Name any finding that needs a `rs-technical-design` before work starts. Do not
 create branches, commit, push, or change hosted state.

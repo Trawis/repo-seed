@@ -1,13 +1,13 @@
 ---
-name: repository-upgrade
-description: Upgrades a repository that already uses repo-seed to a newer pack using that pack's sync script, with a dry run first and verification afterwards. Use when asked to update, upgrade, migrate, or bring managed files to the latest pack. For first-time adoption use repository-bootstrap; for a read-only check use repository-audit.
+name: rs-repository-upgrade
+description: Upgrades a repository that already uses repo-seed to a newer pack using that pack's sync script, with a dry run first and verification afterwards. Use when asked to update, upgrade, migrate, or bring managed files to the latest pack. For first-time adoption use rs-repository-bootstrap; for a read-only check use rs-repository-audit.
 ---
 
 # Repository Upgrade
 
 Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
 This skill upgrades an existing repo-seed install. For a repository with no
-repo-seed state, use `repository-bootstrap` instead.
+repo-seed state, use `rs-repository-bootstrap` instead.
 
 Migration, ownership, and tombstone rules belong to the newer pack's manifest
 and `sync-docs.py`. Do not restate or reimplement them here, and do not move,
@@ -22,7 +22,7 @@ script lacks, report that rather than improvising.
 2. Inspect the installed state before changing anything: `.repo-seed-state.json`
    (its schema version, pack version, profile, conventions, managed files, and
    tombstones), and the working tree for uncommitted changes. If there is no
-   state file, stop and use `repository-bootstrap`.
+   state file, stop and use `rs-repository-bootstrap`.
 3. Use the newer pack's own `scripts/sync-docs.py` (the one under the pack's
    `files/`), not the older copy in the target. Recorded profile and conventions
    are reused when you omit `--profile` and `--conventions`; omit them for a

@@ -1,5 +1,5 @@
 ---
-name: bug-fix
+name: rs-bug-fix
 description: Diagnoses and fixes incorrect existing behavior with a root-cause-first workflow and regression validation. Use when asked to fix a bug, regression, crash, failing edge case, incorrect result, visual defect, or reproducible test failure.
 ---
 

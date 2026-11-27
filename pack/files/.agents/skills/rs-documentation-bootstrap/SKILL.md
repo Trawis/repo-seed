@@ -1,5 +1,5 @@
 ---
-name: documentation-bootstrap
+name: rs-documentation-bootstrap
 description: Bootstraps accurate live project documentation for an existing repository from repository evidence. Use when asked to document an existing codebase, populate repo-seed project docs, create initial architecture/FSD/GDD/user guidance, or replace untouched documentation scaffolds with verified project content.
 ---
 

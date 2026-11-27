@@ -103,8 +103,14 @@ scaffolds    = optional project documents, created only when needed
 All profiles get the same agent instructions, guidance, and core skills (code
 review, bug fixing, refactoring, dependency upgrades, issues, TDD, code
 simplification, repository audit, bootstrap, and upgrade). `library`, `app`, and
-`game` also get technical-design, documentation-bootstrap, and
-architecture-review. A profile never installs a language convention.
+`game` also get `rs-technical-design`, `rs-documentation-bootstrap`, and
+`rs-architecture-review`. A profile never installs a language convention.
+
+Since v7.0.0, all distributed skills use the `rs-` prefix, for example
+`rs-code-review` and `rs-bug-fix`. Replace old invocations and references by
+prepending `rs-`. Sync retires old recorded managed files when their hashes
+match; modified retired files are preserved and reported. Review those files
+before removing them. Unrecorded original skills at old paths are untouched.
 
 The first sync needs `--profile`. Later syncs reuse the recorded profile.
 

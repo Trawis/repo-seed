@@ -1,6 +1,6 @@
 ---
-name: code-simplification
-description: Simplifies working code for clarity while preserving its exact behavior. Use when asked to simplify, clean up, or reduce the complexity of code that works but is harder to read or maintain than necessary, such as deep nesting, nested ternaries, unclear names, duplication, dead code, or needless wrappers. Not for behavior changes, compatibility removal, or architecture redesign; use refactor for those.
+name: rs-code-simplification
+description: Simplifies working code for clarity while preserving its exact behavior. Use when asked to simplify, clean up, or reduce the complexity of code that works but is harder to read or maintain than necessary, such as deep nesting, nested ternaries, unclear names, duplication, dead code, or needless wrappers. Not for behavior changes, compatibility removal, or architecture redesign; use rs-refactor for those.
 ---
 
 # Code Simplification
@@ -9,9 +9,9 @@ Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
 Load the language conventions the repository provides before editing.
 
 The goal is code that is faster to understand, not fewer lines. Behavior stays
-identical. This differs from `refactor`, which may restructure boundaries,
+identical. This differs from `rs-refactor`, which may restructure boundaries,
 remove obsolete compatibility, or change internal design; if a change needs any
-of that, stop and use `refactor` or report it.
+of that, stop and use `rs-refactor` or report it.
 
 ## Workflow
 
@@ -67,5 +67,5 @@ change a test is a sign that behavior may have changed, so re-evaluate.
 
 Report what was simplified and why it preserves behavior, the tests and checks
 run, any simplification skipped because behavior could not be confirmed
-unchanged, and anything that needs `refactor`. Do not create branches, commit,
+unchanged, and anything that needs `rs-refactor`. Do not create branches, commit,
 push, or change hosted state unless that was separately requested.

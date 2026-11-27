@@ -1,13 +1,13 @@
 ---
-name: repository-bootstrap
-description: Applies repo-seed to a new or existing repository using its sync script, choosing only the applicable profile, conventions, and scaffolds and verifying the result. Use when asked to apply, set up, initialize, install, or bring a repository under repo-seed management. Not for populating project documentation; use documentation-bootstrap for that.
+name: rs-repository-bootstrap
+description: Applies repo-seed to a new or existing repository using its sync script, choosing only the applicable profile, conventions, and scaffolds and verifying the result. Use when asked to apply, set up, initialize, install, or bring a repository under repo-seed management. Not for populating project documentation; use rs-documentation-bootstrap for that.
 ---
 
 # Repository Bootstrap
 
 Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
 This skill is specific to repo-seed. It is not a general project generator, and
-it does not write project documentation; `documentation-bootstrap` does that
+it does not write project documentation; `rs-documentation-bootstrap` does that
 afterwards, from repository evidence.
 
 Use the pack's own `sync-docs.py` as the only mechanism. Do not copy managed
@@ -55,7 +55,7 @@ files, decide ownership, handle stale paths, or migrate state by hand.
    `--dry-run` is clean or every remaining line is explained.
 10. Do not invent project facts. Scaffolded documents are templates. Leave them
     as placeholders where the repository gives no evidence, and suggest
-    `documentation-bootstrap` for filling them in.
+    `rs-documentation-bootstrap` for filling them in.
 
 ## Completion
 

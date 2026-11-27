@@ -1,12 +1,12 @@
 ---
-name: repository-audit
-description: Audits a repository that uses or is expected to use repo-seed for drift from its installed state and reports an actionable findings list without changing anything. Use when asked to audit, check, validate, compare, or find drift in a repo-seed repository, including stale artifacts and competing agent guidance. To apply updates use repository-upgrade.
+name: rs-repository-audit
+description: Audits a repository that uses or is expected to use repo-seed for drift from its installed state and reports an actionable findings list without changing anything. Use when asked to audit, check, validate, compare, or find drift in a repo-seed repository, including stale artifacts and competing agent guidance. To apply updates use rs-repository-upgrade.
 ---
 
 # Repository Audit
 
 Follow the applicable `AGENTS.md` files and `.agents/project.md` when it exists.
-This skill covers repo-seed drift only. Use `code-review` for general code review
+This skill covers repo-seed drift only. Use `rs-code-review` for general code review
 and do not repeat the coding guidance in `AGENTS.md` or `.agents/guidelines/`.
 
 The audit is read-only. Do not edit files or run a writing sync unless the user

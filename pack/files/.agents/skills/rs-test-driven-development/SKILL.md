@@ -1,5 +1,5 @@
 ---
-name: test-driven-development
+name: rs-test-driven-development
 description: Builds or fixes behavior test-first with a red-green-refactor loop over public, observable behavior. Use only when the user explicitly asks for TDD, test-first development, or red-green-refactor, or when another workflow deliberately calls for it. Do not apply it to every implementation.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: dependency-upgrade
+name: rs-dependency-upgrade
 description: Upgrades project dependencies, frameworks, runtimes, or tooling with focused compatibility analysis and validation. Use when changing dependency versions, adopting a newer framework/runtime version, resolving an upgrade migration, or removing compatibility made obsolete by a new minimum version.
 ---
 
