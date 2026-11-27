@@ -1,5 +1,5 @@
 ---
-name: code-review
+name: rs-code-review
 description: Reviews diffs, pull requests, patches, or existing code for correctness, regressions, security, maintainability risks, and missing validation. Use when asked to review, audit, critique, inspect a change, find defects, or assess code without implementing fixes by default.
 ---
 

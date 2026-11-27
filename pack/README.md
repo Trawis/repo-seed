@@ -25,8 +25,14 @@ A fresh sync installs none by default.
 Every profile installs Codex and Claude Code skills for code review, bug fixing,
 refactoring, dependency upgrades, issues, TDD, code simplification, repository
 audit, bootstrap, and upgrade. `library`, `app`, and `game` also install
-technical-design, documentation-bootstrap, and architecture-review. Git, CI/CD,
+`rs-technical-design`, `rs-documentation-bootstrap`, and `rs-architecture-review`. Git, CI/CD,
 documentation, and language rules stay in `.agents/` guidance.
+
+Since v7.0.0, all distributed skills use the `rs-` prefix, for example
+`rs-code-review` and `rs-bug-fix`. Replace old invocations and references by
+prepending `rs-`. Sync retires old recorded managed files when their hashes
+match; modified retired files are preserved and reported. Review those files
+before removing them. Unrecorded original skills at old paths are untouched.
 
 Add only the scaffolding you need:
 

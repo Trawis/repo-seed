@@ -1,5 +1,5 @@
 ---
-name: issue-authoring
+name: rs-issue-authoring
 description: Drafts a repository-grounded issue from a request, defect, idea, or finding using the canonical issue guidance. Use when asked to create, write, draft, or file an issue, turn a finding into an issue, capture a bug, feature, tech-debt, or chore item, or make work implementation-ready.
 ---
 

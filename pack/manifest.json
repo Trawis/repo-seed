@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "pack_version": "6.19.3",
+  "pack_version": "7.0.0",
   "state_file": ".repo-seed-state.json",
   "profiles": [
     "minimal",
@@ -51,87 +51,87 @@
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/code-review/SKILL.md",
+      "path": ".agents/skills/rs-code-review/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/bug-fix/SKILL.md",
+      "path": ".agents/skills/rs-bug-fix/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/code-simplification/SKILL.md",
+      "path": ".agents/skills/rs-code-simplification/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/code-simplification/NOTICE.md",
+      "path": ".agents/skills/rs-code-simplification/NOTICE.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/refactor/SKILL.md",
+      "path": ".agents/skills/rs-refactor/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/dependency-upgrade/SKILL.md",
+      "path": ".agents/skills/rs-dependency-upgrade/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/issue-authoring/SKILL.md",
+      "path": ".agents/skills/rs-issue-authoring/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/issue-implementation/SKILL.md",
+      "path": ".agents/skills/rs-issue-implementation/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/repository-audit/SKILL.md",
+      "path": ".agents/skills/rs-repository-audit/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/repository-bootstrap/SKILL.md",
+      "path": ".agents/skills/rs-repository-bootstrap/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/repository-upgrade/SKILL.md",
+      "path": ".agents/skills/rs-repository-upgrade/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/test-driven-development/SKILL.md",
+      "path": ".agents/skills/rs-test-driven-development/SKILL.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/test-driven-development/NOTICE.md",
+      "path": ".agents/skills/rs-test-driven-development/NOTICE.md",
       "type": "managed",
       "profiles": ["minimal", "library", "app", "game"]
     },
     {
-      "path": ".agents/skills/architecture-review/SKILL.md",
+      "path": ".agents/skills/rs-architecture-review/SKILL.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
     },
     {
-      "path": ".agents/skills/architecture-review/NOTICE.md",
+      "path": ".agents/skills/rs-architecture-review/NOTICE.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
     },
     {
-      "path": ".agents/skills/technical-design/SKILL.md",
+      "path": ".agents/skills/rs-technical-design/SKILL.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
     },
     {
-      "path": ".agents/skills/documentation-bootstrap/SKILL.md",
+      "path": ".agents/skills/rs-documentation-bootstrap/SKILL.md",
       "type": "managed",
       "profiles": ["library", "app", "game"]
     },

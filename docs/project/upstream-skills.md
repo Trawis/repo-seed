@@ -11,6 +11,10 @@ contacts an upstream repository.
 
 ## Principles
 
+- Use the `rs-` prefix for the distributed skill directory and front-matter
+  name, including adapted skills. Keep upstream source names and attribution
+  unchanged in provenance records and notices.
+
 - Prefer adapting a proven workflow over copying it, and distribute only the
   files the skill needs. Do not import plugin wrappers, hooks, telemetry,
   installer configuration, or unrelated skills.

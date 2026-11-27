@@ -1,5 +1,5 @@
 ---
-name: issue-implementation
+name: rs-issue-implementation
 description: Implements a specific repository issue or ticket from current repository evidence through focused changes and explicit acceptance-condition validation. Use when asked to implement, work on, complete, address, or fix a numbered issue or ticket.
 ---
 
@@ -32,9 +32,9 @@ areas.
    missing, untestable, or depend on an unmade product or design decision, report
    what is missing rather than inventing it.
 4. Choose the specialized workflow that fits and follow it instead of restating
-   it here: a defect or regression uses `bug-fix`; internal restructuring uses
-   `refactor`; a dependency or toolchain change uses `dependency-upgrade`;
-   substantial unresolved design work uses `technical-design`, or is reported as
+   it here: a defect or regression uses `rs-bug-fix`; internal restructuring uses
+   `rs-refactor`; a dependency or toolchain change uses `rs-dependency-upgrade`;
+   substantial unresolved design work uses `rs-technical-design`, or is reported as
    not yet implementation-ready. If a named skill is unavailable, apply its
    intent with the repository's own guidance.
 5. Make the smallest coherent change that satisfies the issue. Do not add

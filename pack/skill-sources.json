@@ -2,7 +2,7 @@
   "schema_version": 1,
   "skills": [
     {
-      "name": "test-driven-development",
+      "name": "rs-test-driven-development",
       "upstream_repository": "https://github.com/mattpocock/skills",
       "source_path": "skills/engineering/tdd",
       "source_revision": "49dd158d1076134a641b33efb035946536778336",
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "name": "code-simplification",
+      "name": "rs-code-simplification",
       "upstream_repository": "https://github.com/addyosmani/agent-skills",
       "source_path": "skills/code-simplification",
       "source_revision": "aeac41d4d005999432bb7312f7ff06383a91d59d",
@@ -32,7 +32,7 @@
       ]
     },
     {
-      "name": "architecture-review",
+      "name": "rs-architecture-review",
       "upstream_repository": "https://github.com/mattpocock/skills",
       "source_path": "skills/engineering/improve-codebase-architecture",
       "source_revision": "49dd158d1076134a641b33efb035946536778336",

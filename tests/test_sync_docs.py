@@ -166,23 +166,23 @@ class ManifestTests(unittest.TestCase):
             ".agents/guidelines/git.md": all_profiles,
             ".agents/guidelines/ci-cd.md": all_profiles,
             ".agents/guidelines/issues.md": all_profiles,
-            ".agents/skills/code-review/SKILL.md": all_profiles,
-            ".agents/skills/bug-fix/SKILL.md": all_profiles,
-            ".agents/skills/code-simplification/SKILL.md": all_profiles,
-            ".agents/skills/code-simplification/NOTICE.md": all_profiles,
-            ".agents/skills/refactor/SKILL.md": all_profiles,
-            ".agents/skills/dependency-upgrade/SKILL.md": all_profiles,
-            ".agents/skills/issue-authoring/SKILL.md": all_profiles,
-            ".agents/skills/issue-implementation/SKILL.md": all_profiles,
-            ".agents/skills/repository-audit/SKILL.md": all_profiles,
-            ".agents/skills/repository-bootstrap/SKILL.md": all_profiles,
-            ".agents/skills/repository-upgrade/SKILL.md": all_profiles,
-            ".agents/skills/test-driven-development/SKILL.md": all_profiles,
-            ".agents/skills/test-driven-development/NOTICE.md": all_profiles,
-            ".agents/skills/technical-design/SKILL.md": library_profiles,
-            ".agents/skills/documentation-bootstrap/SKILL.md": library_profiles,
-            ".agents/skills/architecture-review/SKILL.md": library_profiles,
-            ".agents/skills/architecture-review/NOTICE.md": library_profiles,
+            ".agents/skills/rs-code-review/SKILL.md": all_profiles,
+            ".agents/skills/rs-bug-fix/SKILL.md": all_profiles,
+            ".agents/skills/rs-code-simplification/SKILL.md": all_profiles,
+            ".agents/skills/rs-code-simplification/NOTICE.md": all_profiles,
+            ".agents/skills/rs-refactor/SKILL.md": all_profiles,
+            ".agents/skills/rs-dependency-upgrade/SKILL.md": all_profiles,
+            ".agents/skills/rs-issue-authoring/SKILL.md": all_profiles,
+            ".agents/skills/rs-issue-implementation/SKILL.md": all_profiles,
+            ".agents/skills/rs-repository-audit/SKILL.md": all_profiles,
+            ".agents/skills/rs-repository-bootstrap/SKILL.md": all_profiles,
+            ".agents/skills/rs-repository-upgrade/SKILL.md": all_profiles,
+            ".agents/skills/rs-test-driven-development/SKILL.md": all_profiles,
+            ".agents/skills/rs-test-driven-development/NOTICE.md": all_profiles,
+            ".agents/skills/rs-technical-design/SKILL.md": library_profiles,
+            ".agents/skills/rs-documentation-bootstrap/SKILL.md": library_profiles,
+            ".agents/skills/rs-architecture-review/SKILL.md": library_profiles,
+            ".agents/skills/rs-architecture-review/NOTICE.md": library_profiles,
         }
         # Every skill is installed under both surfaces with the same profiles.
         for path in [path for path in expected if path.startswith(".agents/skills/")]:
@@ -588,7 +588,7 @@ class GuidanceAndTemplateTests(unittest.TestCase):
             self.assertEqual(state["profile"], "library")
             self.assertEqual(state["conventions"], ["python"])
             for surface in (".agents", ".claude"):
-                self.assertTrue((target / surface / "skills/repository-bootstrap/SKILL.md").is_file())
+                self.assertTrue((target / surface / "skills/rs-repository-bootstrap/SKILL.md").is_file())
             self.assertTrue((target / ".agents/conventions/python.md").is_file())
             self.assertFalse((target / ".agents/conventions/csharp.md").exists())
             # Project-owned files survive, including a customized README and the workflows tree.
@@ -1164,13 +1164,13 @@ class SyncBehaviorTests(unittest.TestCase):
                 if path.is_file():
                     mirror = target / ".claude/skills" / path.relative_to(target / ".agents/skills")
                     self.assertEqual(mirror.read_bytes(), path.read_bytes())
-            (target / ".claude/skills/bug-fix/SKILL.md").write_text("edited\n", encoding="utf-8")
+            (target / ".claude/skills/rs-bug-fix/SKILL.md").write_text("edited\n", encoding="utf-8")
             result = self.cli("--target", str(target), "--audit")
-            self.assertIn("drift: .claude/skills/bug-fix/SKILL.md differs", result.stdout)
+            self.assertIn("drift: .claude/skills/rs-bug-fix/SKILL.md differs", result.stdout)
             self.cli("--target", str(target))
             self.assertEqual(
-                (target / ".claude/skills/bug-fix/SKILL.md").read_bytes(),
-                (target / ".agents/skills/bug-fix/SKILL.md").read_bytes(),
+                (target / ".claude/skills/rs-bug-fix/SKILL.md").read_bytes(),
+                (target / ".agents/skills/rs-bug-fix/SKILL.md").read_bytes(),
             )
 
     def test_discovery_requires_the_sync_script(self):
@@ -2242,19 +2242,19 @@ class BundleAndCliTests(unittest.TestCase):
                 self.assertTrue((target / "AGENTS.md").is_file())
                 self.assertTrue((target / "scripts/sync-docs.py").is_file())
                 core_skills = {
-                    "code-review",
-                    "bug-fix",
-                    "code-simplification",
-                    "refactor",
-                    "dependency-upgrade",
-                    "repository-audit",
-                    "repository-bootstrap",
-                    "repository-upgrade",
-                    "issue-authoring",
-                    "issue-implementation",
-                    "test-driven-development",
+                    "rs-code-review",
+                    "rs-bug-fix",
+                    "rs-code-simplification",
+                    "rs-refactor",
+                    "rs-dependency-upgrade",
+                    "rs-repository-audit",
+                    "rs-repository-bootstrap",
+                    "rs-repository-upgrade",
+                    "rs-issue-authoring",
+                    "rs-issue-implementation",
+                    "rs-test-driven-development",
                 }
-                extended_skills = {"technical-design", "documentation-bootstrap", "architecture-review"}
+                extended_skills = {"rs-technical-design", "rs-documentation-bootstrap", "rs-architecture-review"}
                 expected_skills = core_skills
                 if profile != "minimal":
                     expected_skills |= extended_skills
@@ -2749,7 +2749,7 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
             claude_custom = target / ".claude/skills/my-own/SKILL.md"
             claude_custom.parent.mkdir(parents=True)
             claude_custom.write_text("my own skill\n", encoding="utf-8")
-            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            skill_files = self.skill_paths(PACK_ROOT, "rs-bug-fix")
             self.assertTrue(skill_files)
             newer = self.newer_pack(root, remove=skill_files)
 
@@ -2771,10 +2771,10 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
                 self.assertFalse((target / (".claude/skills/" + path[len(".agents/skills/") :])).exists())
             self.assertEqual(custom.read_text(encoding="utf-8"), "my own skill\n")
             self.assertEqual(claude_custom.read_text(encoding="utf-8"), "my own skill\n")
-            self.assertTrue((target / ".agents/skills/bug-fix").parent.joinpath("code-review/SKILL.md").is_file())
+            self.assertTrue((target / ".agents/skills/rs-bug-fix").parent.joinpath("rs-code-review/SKILL.md").is_file())
             state = json.loads((target / ".repo-seed-state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["tombstones"], {})
-            self.assertFalse([p for p in state["managed_files"] if "/bug-fix/" in p])
+            self.assertFalse([p for p in state["managed_files"] if "/rs-bug-fix/" in p])
 
             repeat = self.run_sync(newer, target, "--dry-run")
             self.assertRegex(repeat.stdout, r"Removals: 0\. Upgrades: 0\. Managed copies: 0\.")
@@ -2786,7 +2786,7 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             target = self.installed(root)
-            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            skill_files = self.skill_paths(PACK_ROOT, "rs-bug-fix")
             edited = skill_files[0]
             generated = ".claude/skills/" + edited[len(".agents/skills/") :]
             (target / edited).write_text("my edits\n", encoding="utf-8")
@@ -2875,7 +2875,7 @@ class RepositoryUpgradeScenarioTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             target = self.installed(root)
-            skill_files = self.skill_paths(PACK_ROOT, "bug-fix")
+            skill_files = self.skill_paths(PACK_ROOT, "rs-bug-fix")
             edited = skill_files[0]
             original = (target / edited).read_text(encoding="utf-8")
             (target / edited).write_text("my edits\n", encoding="utf-8")

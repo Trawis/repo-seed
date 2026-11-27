@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 7.0.0 - 2026-11-27
+
+All 14 distributed skills now use the `rs-` prefix. Update explicit skill invocations and references by prepending `rs-` (for example `code-review` becomes `rs-code-review`). Sync removes unchanged retired managed skill files on both agent surfaces; locally modified retired files remain for review, and unrecorded original skills are untouched. Upstream attribution is unchanged. No aliases or new migration machinery.
+
 ## 6.19.3 - 2026-11-27
 
 Clarified reproducible build and release practices, immutable artifacts, runner selection and least-privilege automation without imposing product-specific workflows.
