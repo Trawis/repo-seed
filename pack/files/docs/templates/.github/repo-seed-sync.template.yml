@@ -13,10 +13,9 @@
 # the sync off.
 #
 # Needs the repository setting "Allow GitHub Actions to create and approve pull
-# requests". A pull request opened with the default token does not start other
-# workflows, so required checks will not run on it. To run them, store a
-# personal access token or GitHub App token as a secret and uncomment the
-# secrets block below.
+# requests". Pull-request runs triggered by the default token require approval.
+# For unattended checks, pass an appropriately scoped personal access token or
+# GitHub App token using the optional secrets block below.
 name: repo-seed sync
 
 on:
