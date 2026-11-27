@@ -57,8 +57,8 @@ take precedence. Framework conventions, when selected, add to this file.
 
 ## Documentation and Validation
 
-- Write KDoc for public APIs: behavior, parameters, return values, and thrown
-  exceptions.
+- Use KDoc for required API documentation or caller-relevant contracts not
+  evident from signatures and code.
 - Run the build's compile, test, and configured lint tasks, such as
   ktlint or detekt, and fix new compiler warnings.
 

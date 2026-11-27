@@ -27,7 +27,8 @@ Configured linters, such as golangci-lint, and nearby code take precedence.
 - Name packages with short lowercase words, without `util` or `common`, and do
   not repeat the package name in exported names (`http.Client`, not
   `http.HTTPClient`).
-- Write doc comments for every exported identifier, starting with its name.
+- Follow Go's doc comment format for exported identifiers when required by
+  the project or needed to convey essential API contracts.
 
 ## Errors
 

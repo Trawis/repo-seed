@@ -56,8 +56,8 @@ take precedence; Lua has no universal formatting standard.
 
 ## Documentation and Validation
 
-- Document module APIs with LDoc or the annotation style the project uses,
-  such as LuaLS annotations.
+- Use LDoc for required API documentation and caller-relevant contracts.
+  Preserve project-required annotations, such as LuaLS types.
 - Run the configured formatter, linter, and tests, such as busted or the
   host's test runner.
 

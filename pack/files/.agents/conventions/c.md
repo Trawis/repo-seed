@@ -60,8 +60,9 @@ code take precedence. Use `.agents/conventions/cpp.md` for C++ code.
 
 ## Documentation and Validation
 
-- Document public functions in headers: preconditions, ownership, buffer
-  sizes, and error results. Use Doxygen syntax when the project does.
+- Document public header contracts when callers need information about
+  preconditions, ownership, buffer sizes, or errors not evident from code.
+  Use Doxygen syntax when required by the project.
 - Build with the project's warning flags and fix new warnings. Run tests, and
   run them under sanitizers (AddressSanitizer, UndefinedBehaviorSanitizer)
   and configured static analyzers when available.
