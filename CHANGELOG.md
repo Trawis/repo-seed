@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.18.2 - 2026-11-27
+
+Clarified scoped instruction loading and reduced repeated task-discovery guidance without changing the compatibility wrapper.
+
 ## 6.18.1 - 2026-11-27
 
 Clarified that comments and documentation are necessary only when they convey essential information or satisfy project requirements. Reduced redundant documentation guidance across language conventions.

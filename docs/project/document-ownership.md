@@ -59,11 +59,22 @@ created from a template. Usage and flags are in the
 
 ## Claude Code Wrapper
 
-`AGENTS.md` is the canonical instruction file. `CLAUDE.md` is only a wrapper
-(`@AGENTS.md`), because Claude Code loads `CLAUDE.md` in place of `AGENTS.md`
-when both exist. Do not add other `@` imports to it. They would load
-specialized guidance into every session. To verify, run `/context` in Claude
-Code and check that `CLAUDE.md` is listed under Memory files.
+`AGENTS.md` is canonical. Keep the `CLAUDE.md` wrapper (`@AGENTS.md`) for
+compatibility with older Claude Code versions and sessions that cannot load
+`AGENTS.md` directly. Newer versions can load both instruction formats; the
+default still prefers `CLAUDE.md` when present. Do not add imports that load
+specialized guidance into every session.
+
+Verify root and scoped instruction discovery using the agent's context or memory
+inspection and a task in a nested directory. In Claude Code, `/memory` and
+`/context all` show loaded files on supported versions; `claude-md-and-agents-md`
+is an optional user-level instruction setting. If a scoped file was not loaded,
+read it explicitly. Codex loads root-to-directory instructions according to its
+configured discovery rules. Do not assume discovery or compliance from file
+presence alone.
+
+References: [Claude Code instruction discovery](https://code.claude.com/docs/en/memory#agentsmd),
+[Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md).
 
 ## `.agents/project.md` Content
 
