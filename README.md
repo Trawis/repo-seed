@@ -319,11 +319,24 @@ jobs:
 Each run downloads the latest release (or the pinned one), checks its SHA-256,
 and runs `sync-docs.py` with the recorded profile and conventions and no
 `--scaffold-*` flag, so project-owned files are never touched. When managed
-files differ, it force-pushes the branch `chore/repo-seed-sync` and opens or
-updates one pull request that lists the dry-run output and flags any overwrite
-with no recorded baseline. When the files already match, it closes that pull
-request. It skips repositories without `.repo-seed-state.json` and runs from the
-default branch only.
+files differ, it opens or updates one pull request on `chore/repo-seed-sync`.
+Identical pending updates are left unchanged. The PR records its generated head;
+updates require that ownership record and use a force-with-lease. The PR lists
+the dry-run output, flags overwrites and includes residual audit findings.
+When the default branch already matches, the workflow closes its owned PR and
+leaves the branch available for a later update. It skips repositories without
+`.repo-seed-state.json` and runs from the default branch only.
+
+Use sync-only for automatic updates, or audit-only for drift issues. Sync reports
+remaining manual-review findings in its job summary even when there is no PR.
+Enabling both callers intentionally produces both reports. Existing callers are
+project-owned; remove the separate audit caller only if you want sync-only.
+
+An existing sync branch without a matching ownership record, including legacy
+sync PRs, requires maintainer review. Preserve unrelated work, then resolve or
+close the legacy update and remove its branch deliberately before retrying.
+If a run was interrupted between pushing and recording its head in the PR,
+review the branch and recover it manually rather than bypassing ownership.
 
 Setup the repository needs:
 
