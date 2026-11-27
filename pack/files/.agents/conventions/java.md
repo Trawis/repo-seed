@@ -61,8 +61,8 @@ code, take precedence over these defaults.
 
 ## Documentation and Validation
 
-- Write Javadoc for public types and members of libraries and shared APIs:
-  behavior, parameters, return values, and thrown exceptions.
+- Use Javadoc for required public API documentation or caller-relevant contracts
+  not evident from signatures and code.
 - Run the build's test and check tasks, such as `./mvnw verify` or
   `./gradlew check`, with JUnit or the configured framework. Fix new compiler
   warnings.

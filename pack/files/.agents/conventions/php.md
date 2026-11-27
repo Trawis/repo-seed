@@ -36,9 +36,9 @@ code take precedence over these defaults.
   supports them. Prefer `?Type` or union types to undocumented `mixed`.
 - Use `readonly` properties, enums, and constructor promotion only when
   supported and consistent with nearby code.
-- Use PHPDoc for what native types cannot express, such as array shapes,
-  generics, and thrown exceptions, and for public API summaries. Do not repeat
-  native types in PHPDoc without adding information.
+- Use PHPDoc for essential information native types cannot express, such as
+  array shapes, generics, or thrown exceptions, and required API documentation.
+  Do not repeat native types.
 - Use strict comparison (`===`, `!==`, `in_array(..., true)`) unless loose
   comparison is intended.
 

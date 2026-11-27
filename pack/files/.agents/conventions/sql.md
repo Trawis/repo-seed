@@ -65,7 +65,8 @@ engines.
 - Run the project's SQL linter and migrations against a real or containerized
   database of the target engine when the project's tests do. Do not treat a
   different engine, such as SQLite in place of PostgreSQL, as proof.
-- Comment non-obvious invariants, locking assumptions, and data-migration steps.
+- Document essential invariants and locking or migration constraints only when
+  they are not evident from the code.
 
 ## References
 

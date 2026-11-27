@@ -56,10 +56,10 @@ rules take precedence. Do not introduce a new CSS framework or methodology.
 - Do not hide content that assistive technology needs with `display: none`;
   use the project's visually-hidden utility instead.
 
-## Comments and Validation
+## Validation
 
-- Comment non-obvious constraints, such as browser workarounds, magic numbers,
-  and stacking-context dependencies.
+- Preserve essential browser-workaround and stacking-context constraints that
+  code cannot express.
 - Run the project's configured formatter and Stylelint, and check changed UI at
   its supported viewport sizes and themes.
 

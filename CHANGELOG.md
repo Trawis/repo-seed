@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.18.1 - 2026-11-27
+
+Clarified that comments and documentation are necessary only when they convey essential information or satisfy project requirements. Reduced redundant documentation guidance across language conventions.
+
 ## 6.18.0 - 2026-11-24
 
 Added a reference-only session handoff template, `docs/templates/handoff.template.md`, for every profile. When a user asks to hand off unfinished work to another agent session, the agent can copy it to a path or channel the user chooses, outside `docs/project/`. It records the governing task and scope, the branch, base commit, and pull request, working-tree changes including ones to preserve, completed and remaining work, validation status, blockers, the next action, and links to authoritative sources. The template states that a handoff is temporary and non-authoritative and never overrides current source, requirements, designs, or issues. The receiving session must verify the current repository state before acting on it, and secrets, conversation transcripts, and undecided choices stay out. Like the TSD reference, it has no scaffold target: sync never creates, updates, or deletes live handoffs, and no skill, flag, or required workflow is added.

@@ -44,9 +44,8 @@ precedence. Runtime and framework conventions, when selected, add to this file.
 
 ## Documentation and Validation
 
-- Document exported APIs with TSDoc or JSDoc comments following the project's
-  style. Describe behavior and constraints; do not repeat types already in the
-  signature.
+- Use TSDoc or JSDoc for required documentation or caller-relevant contracts not
+  evident from signatures and code.
 - Run the project's type check, such as `tsc --noEmit` or its build script,
   plus its lint and test scripts.
 
