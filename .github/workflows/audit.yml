@@ -108,7 +108,10 @@ jobs:
               echo "Review the changes with \`sync-docs.py --diff\` using the new pack, then update. This issue is kept up to date by the scheduled audit and closes itself when the audit is clean."
             } > "$RUNNER_TEMP/body.md"
             if [ -n "$number" ]; then
-              gh issue edit "$number" --body-file "$RUNNER_TEMP/body.md"
+              current=$(gh issue view "$number" --json body --jq .body)
+              if [ "$current" != "$(cat "$RUNNER_TEMP/body.md")" ]; then
+                gh issue edit "$number" --body-file "$RUNNER_TEMP/body.md"
+              fi
             else
               gh issue create --title "$ISSUE_TITLE" --body-file "$RUNNER_TEMP/body.md"
             fi

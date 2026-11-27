@@ -94,7 +94,6 @@ jobs:
         if: env.CAN_SYNC == 'true'
         run: |
           set -euo pipefail
-          # Neither step passes --profile, --conventions, or any --scaffold-* flag.
           python "$PACK_DIR/files/scripts/sync-docs.py" \
             --source "$PACK_DIR" --target "$GITHUB_WORKSPACE" --dry-run \
             | tee "$RUNNER_TEMP/preview.txt"
@@ -171,6 +170,7 @@ jobs:
 
           git add -A
           desired_tree=$(git write-tree)
+          head=
           if [ -n "$remote" ]; then
             remote_git fetch --no-tags --depth=1 origin "$ref"
             if [ "$(git rev-parse FETCH_HEAD)" != "$remote" ]; then

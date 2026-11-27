@@ -428,7 +428,8 @@ class SyncWorkflowTests(unittest.TestCase):
 
     def test_the_download_is_verified_and_no_scaffold_or_selection_flag_is_passed(self):
         self.assertIn("sha256sum --check", self.text)
-        self.assertEqual(self.text.count('/sync-docs.py"'), 2)
+        self.assertEqual(self.text.count('/sync-docs.py"'), 3)
+        self.assertIn('--target "$GITHUB_WORKSPACE" --audit', self.text)
         for flag in ("--scaffold", "--profile", "--conventions"):
             self.assertNotIn(flag + " ", self.text.replace("# Neither step passes", ""))
 
@@ -460,6 +461,197 @@ class SyncWorkflowTests(unittest.TestCase):
         self.assertIn("Trawis/repo-seed/.github/workflows/sync.yml@v__PACK_VERSION__", template)
         self.assertIn("contents: write", template)
         self.assertIn("pull-requests: write", template)
+
+
+@unittest.skipUnless(
+    os.name != "nt" and all(shutil.which(tool) for tool in ("bash", "git", "jq", "python3")),
+    "sync workflow lifecycle requires bash, git, jq and python3 on a POSIX host",
+)
+class SyncWorkflowLifecycleTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.origin = self.root / "origin.git"
+        self.state = self.root / "prs.json"
+        self.actions = self.root / "actions.txt"
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.state.write_text("[]", encoding="utf-8")
+        self.actions.touch()
+        self.git("init", "--bare", str(self.origin))
+        initial = self.root / "initial"
+        self.git("init", "-b", "main", str(initial))
+        self.git("config", "user.name", "Test", cwd=initial)
+        self.git("config", "user.email", "test@example.invalid", cwd=initial)
+        (initial / "AGENTS.md").write_text("old\n", encoding="utf-8")
+        self.git("add", ".", cwd=initial)
+        self.git("commit", "-m", "Initial", cwd=initial)
+        self.git("remote", "add", "origin", str(self.origin), cwd=initial)
+        self.git("push", "origin", "main", cwd=initial)
+        self.sequence = 0
+
+        workflow = SYNC_WORKFLOW.read_text(encoding="utf-8")
+        body = workflow.split("      - name: Open, update, or close the sync pull request\n", 1)[1]
+        self.step = re.sub(r"(?m)^ {10}", "", body.split("        run: |\n", 1)[1])
+        self.gh = self.bin / "gh"
+        self.gh.write_text(
+            '''#!/usr/bin/env python3
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+args = sys.argv[1:]
+state = Path(os.environ["SYNC_PR_STATE"])
+actions = Path(os.environ["SYNC_PR_ACTIONS"])
+prs = json.loads(state.read_text())
+assert args[0] == "pr", args
+operation = args[1]
+
+def head():
+    return subprocess.check_output(
+        ["git", "--git-dir", os.environ["SYNC_ORIGIN"], "rev-parse",
+         "refs/heads/" + os.environ["SYNC_BRANCH"]], text=True,
+    ).strip()
+
+if operation == "list":
+    for pr in prs:
+        if pr["state"] == "OPEN":
+            pr["headRefOid"] = head()
+    selected = args[args.index("--state") + 1]
+    print(json.dumps([pr for pr in prs if selected == "all" or pr["state"] == "OPEN"]))
+    sys.exit(0)
+
+if operation == "create":
+    prs.append({"number": len(prs) + 1, "state": "OPEN",
+                "headRefOid": head(), "isCrossRepository": False,
+                "body": Path(args[args.index("--body-file") + 1]).read_text()})
+elif operation in ("edit", "close"):
+    pr = next(pr for pr in prs if pr["number"] == int(args[2]))
+    if operation == "edit":
+        pr["headRefOid"] = head()
+        pr["body"] = Path(args[args.index("--body-file") + 1]).read_text()
+    else:
+        pr["state"] = "CLOSED"
+else:
+    raise AssertionError(args)
+state.write_text(json.dumps(prs))
+with actions.open("a") as log:
+    print(operation, file=log)
+''',
+            encoding="utf-8",
+        )
+        self.gh.chmod(0o755)
+        (self.root / "preview.txt").write_text("copy AGENTS.md\n", encoding="utf-8")
+        (self.root / "residual-audit.txt").write_text("no drift detected\n", encoding="utf-8")
+
+    def git(self, *args, cwd=None):
+        result = subprocess.run(
+            ["git", *args], cwd=cwd, text=True, capture_output=True, check=True,
+        )
+        return result.stdout.strip()
+
+    def clone(self, branch="main"):
+        self.sequence += 1
+        target = self.root / f"checkout-{self.sequence}"
+        self.git("clone", "--branch", branch, str(self.origin), str(target))
+        self.git("config", "user.name", "Test", cwd=target)
+        self.git("config", "user.email", "test@example.invalid", cwd=target)
+        return target
+
+    def run_sync(self, content="new\n", *, changed=True, target=None):
+        target = target or self.clone()
+        if changed:
+            (target / "AGENTS.md").write_text(content, encoding="utf-8")
+        env = {
+            **os.environ,
+            "PATH": str(self.bin) + os.pathsep + os.environ["PATH"],
+            "SYNC_ORIGIN": str(self.origin),
+            "SYNC_PR_STATE": str(self.state),
+            "SYNC_PR_ACTIONS": str(self.actions),
+            "SYNC_BRANCH": "chore/repo-seed-sync",
+            "SYNC_BASE": "main",
+            "CHANGED": "true" if changed else "false",
+            "GH_TOKEN": "test-token",
+            "RUNNER_TEMP": str(self.root),
+            "PACK_TAG": "v6.19.0",
+        }
+        return subprocess.run(
+            ["bash", "-c", self.step], cwd=target, env=env, text=True, capture_output=True,
+        )
+
+    def head(self):
+        return self.git("--git-dir", str(self.origin), "rev-parse", "refs/heads/chore/repo-seed-sync")
+
+    def assert_success(self, result):
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_create_noop_update_close_and_reopen(self):
+        self.assert_success(self.run_sync(changed=False))
+        self.assertEqual(self.actions.read_text(), "")
+        self.assert_success(self.run_sync())
+        first = self.head()
+        self.assertIn(first, json.loads(self.state.read_text())[0]["body"])
+        self.assert_success(self.run_sync())
+        self.assertEqual(self.head(), first)
+        self.assertEqual(self.actions.read_text().splitlines(), ["create"])
+        self.assert_success(self.run_sync("newer\n"))
+        updated = self.head()
+        self.assertNotEqual(updated, first)
+        self.assertEqual(self.actions.read_text().splitlines(), ["create", "edit"])
+        self.assert_success(self.run_sync(changed=False))
+        self.assertEqual(self.head(), updated)
+        self.assert_success(self.run_sync("newer\n"))
+        self.assertEqual(self.head(), updated)
+        self.assertEqual(self.actions.read_text().splitlines(), ["create", "edit", "close", "create"])
+
+    def test_refuse_human_commit_on_owned_branch(self):
+        self.assert_success(self.run_sync())
+        target = self.clone("chore/repo-seed-sync")
+        (target / "human.txt").write_text("preserve me\n", encoding="utf-8")
+        self.git("add", ".", cwd=target)
+        self.git("commit", "-m", "Human edit", cwd=target)
+        self.git("push", "origin", "chore/repo-seed-sync", cwd=target)
+        current = self.head()
+        result = self.run_sync("newer\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not verified", result.stdout)
+        self.assertEqual(self.head(), current)
+        self.assertEqual(self.actions.read_text().splitlines(), ["create"])
+
+    def test_refuse_legacy_or_unowned_branch(self):
+        target = self.clone()
+        self.git("push", "origin", "HEAD:refs/heads/chore/repo-seed-sync", cwd=target)
+        current = self.head()
+        result = self.run_sync()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no verified ownership", result.stdout)
+        self.assertEqual(self.head(), current)
+        self.assertEqual(self.actions.read_text(), "")
+
+    def test_refuse_stale_base(self):
+        stale = self.clone()
+        current = self.clone()
+        (current / "project.txt").write_text("new base\n", encoding="utf-8")
+        self.git("add", ".", cwd=current)
+        self.git("commit", "-m", "Update base", cwd=current)
+        self.git("push", "origin", "main", cwd=current)
+        result = self.run_sync(target=stale)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("default branch changed", result.stdout)
+        self.assertEqual(self.actions.read_text(), "")
+
+    def test_manual_findings_remain_in_update(self):
+        (self.root / "residual-audit.txt").write_text(
+            "tombstone: needs manual review\n1 finding(s) reported above\n", encoding="utf-8",
+        )
+        self.assert_success(self.run_sync())
+        body = json.loads(self.state.read_text())[0]["body"]
+        self.assertIn("Remaining audit findings", body)
+        self.assertIn("tombstone: needs manual review", body)
+
 
 
 if __name__ == "__main__":
