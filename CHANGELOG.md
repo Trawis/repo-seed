@@ -9,6 +9,10 @@ this file.
 
 Use newest entries first. Do not dump raw git commits here.
 
+## 6.19.0 - 2026-11-27
+
+Added independent sync and audit workflow scaffolding while retaining the existing both-workflow option. Sync now avoids rewriting identical updates, checks branch ownership before replacing an update, protects writes with a lease, and reports residual audit findings. Existing project-owned callers are preserved.
+
 ## 6.18.3 - 2026-11-27
 
 Corrected sync pull-request approval guidance for GitHub's default workflow token and documented how to distinguish hosted job startup failures from sync-script failures.

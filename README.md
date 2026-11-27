@@ -218,7 +218,9 @@ Optional scaffolding:
 
 - `--scaffold-project-files`: missing README and CHANGELOG, or verified unchanged Markdown upgrades;
 - `--scaffold-github-templates`: missing Issue Forms, chooser config, and `.github/pull_request_template.md`; existing files, including legacy `.md` templates, are kept;
-- `--scaffold-workflows`: the optional drift-check and sync workflows `.github/workflows/repo-seed-audit.yml` and `.github/workflows/repo-seed-sync.yml`, each only when missing (see Automatic Drift Check and Automatic Sync Pull Request);
+- `--scaffold-sync-workflow`: the optional sync pull-request caller, recommended for automatic updates;
+- `--scaffold-audit-workflow`: the optional drift-issue caller for audit-only repositories;
+- `--scaffold-workflows`: both callers (existing behavior); all workflow scaffolds create missing files only;
 - `--scaffold-editorconfig`: `.editorconfig`, only when missing;
 - `--scaffold <name>`: one on-demand document; repeat for more.
 
@@ -227,7 +229,7 @@ verified unchanged and can be upgraded safely. `.gitignore` is entirely
 project-owned and never touched. `.editorconfig` is project-owned too, but
 may be created once as a missing-only scaffold. The `.github/workflows/` tree is
 always project-owned and never managed. The only files the pack can create there
-are the optional drift check and sync callers (`--scaffold-workflows`), once each, and only when missing.
+are the optional drift check and sync callers, once each, and only when missing.
 
 ## Update an Existing Project
 
@@ -248,7 +250,7 @@ lack newer fixes. Pass `--profile` to change the profile.
 Optional. A target repository can find out on its own when a newer pack is
 released or its managed files drift, instead of waiting for someone to run the
 script. Add a workflow that calls the reusable audit workflow in this
-repository. Either run `sync-docs.py --scaffold-workflows`, which creates the
+repository. Either run `sync-docs.py --scaffold-audit-workflow`, which creates the
 file below once, pinned to the pack release that created it, and never changes
 an existing file, or write it yourself:
 
@@ -291,7 +293,7 @@ with a notice instead of failing.
 ## Automatic Sync Pull Request
 
 Optional. Instead of running the script by hand, a target repository can let a
-workflow open the update. `sync-docs.py --scaffold-workflows` creates
+workflow open the update. `sync-docs.py --scaffold-sync-workflow` creates
 `.github/workflows/repo-seed-sync.yml` once, pinned to the pack release that
 created it, and never changes an existing file. Delete the file to turn the
 sync off. It calls the reusable sync workflow in this repository:
